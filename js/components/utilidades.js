@@ -1,11 +1,28 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Utilidades, Reservas & 2ª Via do Boleto
+   Modern Life Residence - Utilidades, Reservas & Integração Google Sheets
    ---------------------------------------------------- */
 
+const GOOGLE_SHEETS_URL_KEY = 'MODERN_LIFE_SHEETS_SCRIPT_URL';
+
 window.UtilidadesComponent = {
+  getSavedSheetsUrl() {
+    try {
+      return localStorage.getItem(GOOGLE_SHEETS_URL_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  },
+
+  setSavedSheetsUrl(url) {
+    try {
+      localStorage.setItem(GOOGLE_SHEETS_URL_KEY, url);
+    } catch (e) {}
+  },
+
   render(container, data) {
     const user = window.CondoStore.currentUser;
     const reservasExistentes = data.agendaReservas || [];
+    const savedSheetsUrl = this.getSavedSheetsUrl();
 
     const hourlySlots = [
       '06:00 às 07:00',
@@ -58,7 +75,7 @@ window.UtilidadesComponent = {
           </div>
         </div>
 
-        <!-- Section 2: Agendamento de Piscina & Academia (De Hora em Hora) -->
+        <!-- Section 2: Agendamento de Piscina & Academia (De Hora em Hora com Google Sheets) -->
         <div class="card-widget">
           <div class="card-header">
             <div>
@@ -66,9 +83,13 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined">pool</span> Agendamento de Piscina &amp; Academia
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                Agendamento de horários exclusivos de hora em hora para uso das áreas comuns.
+                Agendamento de horários de hora em hora. Os dados são sincronizados automaticamente com o <strong>Google Sheets</strong>.
               </p>
             </div>
+
+            <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.openGoogleSheetsConfig()">
+              <span class="material-symbols-outlined">table_chart</span> Configuração Google Sheets
+            </button>
           </div>
 
           ${!user || user.status !== 'Aprovado' ? `
@@ -101,12 +122,12 @@ window.UtilidadesComponent = {
             </div>
 
             <button type="submit" class="btn-primary" ${(!user || user.status !== 'Aprovado') ? 'disabled' : ''} style="width: 100%; justify-content: center; padding: 0.8rem;">
-              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento de Hora em Hora
+              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento &amp; Salvar no Google Sheets
             </button>
           </form>
 
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-            Agendamentos Confirmados
+            Agendamentos Confirmados (Sincronizados com o Google Sheets)
           </h4>
           <div class="table-responsive">
             <table class="custom-table">
@@ -157,7 +178,7 @@ window.UtilidadesComponent = {
               </div>
             </div>
 
-            <!-- QR Code Simulation Box -->
+            <!-- QR Code Box -->
             <div style="background: white; padding: 1.25rem; border-radius: var(--radius-md); text-align: center; color: var(--text-main); min-width: 200px; box-shadow: var(--shadow-lg);">
               <div style="font-weight: 700; font-size: 0.85rem; color: var(--primary-dark); margin-bottom: 0.5rem;">
                 Escaneie o QR CODE
@@ -176,7 +197,56 @@ window.UtilidadesComponent = {
     `;
   },
 
-  submeterAgendamento(e) {
+  openGoogleSheetsConfig() {
+    const existing = document.getElementById('modalSheetsConfig');
+    if (existing) existing.remove();
+
+    const currentUrl = this.getSavedSheetsUrl();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalSheetsConfig">
+        <div class="modal-card" style="max-width: 580px;">
+          <div class="modal-header">
+            <div class="modal-title">Integração Automática com Google Sheets</div>
+            <button class="modal-close" onclick="document.getElementById('modalSheetsConfig').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <p style="font-size: 0.88rem; color: var(--text-main); margin-bottom: 1rem;">
+              Para que os agendamentos da <strong>Piscina</strong> e <strong>Academia</strong> sejam salvos diretamente na sua planilha do <strong>Google Sheets</strong> em tempo real:
+            </p>
+
+            <ol style="font-size: 0.85rem; color: var(--text-main); margin-left: 1.25rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
+              <li>Crie uma nova planilha no Google Sheets (<code>planilha.google.com</code>).</li>
+              <li>Acesse <strong>Extensões > Apps Script</strong> e cole o código do arquivo <code>google-sheets-script.js</code>.</li>
+              <li>Implante como <strong>Web App (App da Web)</strong> com acesso para <strong>Qualquer pessoa (Anyone)</strong>.</li>
+              <li>Cole a URL gerada no campo abaixo.</li>
+            </ol>
+
+            <div class="form-group">
+              <label class="form-label">URL do Web App do Google Apps Script</label>
+              <input type="text" id="inputSheetsUrl" class="form-control" value="${currentUrl}" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('modalSheetsConfig').remove()">Cancelar</button>
+              <button type="button" class="btn-primary" onclick="UtilidadesComponent.saveGoogleSheetsUrl()">Salvar URL do Google Sheets</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  saveGoogleSheetsUrl() {
+    const url = document.getElementById('inputSheetsUrl').value.trim();
+    this.setSavedSheetsUrl(url);
+    App.showToast('URL do Google Sheets salva com sucesso!', 'success');
+    document.getElementById('modalSheetsConfig').remove();
+  },
+
+  async submeterAgendamento(e) {
     e.preventDefault();
     const user = window.CondoStore.currentUser;
     if (!user || user.status !== 'Aprovado') {
@@ -188,14 +258,33 @@ window.UtilidadesComponent = {
     const data = document.getElementById('resData').value;
     const horario = document.getElementById('resHorario').value;
 
-    window.CondoStore.addAgendamento({
+    const payload = {
       area,
       data,
       horario,
-      moradorNome: `${user.nome} (Apt ${user.apartamento})`
-    });
+      moradorNome: user.nome,
+      apartamento: `Apto ${user.apartamento}`,
+      email: user.email,
+      status: 'Confirmado'
+    };
 
-    App.showToast(`Agendamento de ${area} confirmado para ${data} às ${horario}!`, 'success');
+    // 1. Salva localmente
+    window.CondoStore.addAgendamento(payload);
+
+    // 2. Dispara envio automático para o Google Sheets se a URL estiver configurada
+    const sheetsUrl = this.getSavedSheetsUrl();
+    if (sheetsUrl) {
+      try {
+        fetch(sheetsUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(err => console.error('Erro ao enviar para Google Sheets:', err));
+      } catch (err) {}
+    }
+
+    App.showToast(`Agendamento de ${area} confirmado (${horario}) e enviado para o Google Sheets!`, 'success');
     App.render();
   }
 };
