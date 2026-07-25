@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Modern Life Residence - Portal da Transparência &amp; Prestação de Contas</title>
-  <meta name="description" content="Portal de prestação de contas, transparência financeira e gestão do condomínio Modern Life Residence.">
+  <meta name="description" content="Portal de prestação de contas, transparência financeira e gestão do condomínio Modern Life Residence. Síndico Alessandro Cristiano da Silva (Apt 903).">
 
   <!-- PWA Manifest & Theme -->
   <link rel="manifest" href="./manifest.json">
@@ -77,7 +77,6 @@
         </a>
         <a class="nav-item" data-route="ocorrencias" onclick="App.navigateTo('ocorrencias')">
           <span class="material-symbols-outlined">report_problem</span> Reclamações &amp; Ocorrências
-          <span class="nav-badge" id="navOcorrenciasBadge">1</span>
         </a>
         <a class="nav-item" data-route="utilidades" onclick="App.navigateTo('utilidades')">
           <span class="material-symbols-outlined">widgets</span> Utilidades &amp; Reservas
@@ -91,12 +90,12 @@
 
         <div class="menu-section-title">Administração</div>
         <a class="nav-item" data-route="admin" onclick="App.navigateTo('admin')">
-          <span class="material-symbols-outlined">admin_panel_settings</span> Painel Administrativo
+          <span class="material-symbols-outlined">admin_panel_settings</span> Painel do Síndico (Apt 903)
         </a>
       </nav>
 
       <!-- Sidebar User Profile Footer -->
-      <div class="sidebar-footer" onclick="AuthComponent.renderAuthModal()" style="cursor: pointer;" title="Clique para gerenciar perfil ou fazer login com Google">
+      <div class="sidebar-footer" onclick="AuthComponent.renderAuthModal()" style="cursor: pointer;" title="Clique para gerenciar perfil ou fazer login">
         <div class="user-avatar" id="sidebarUserAvatar">?</div>
         <div class="user-info">
           <div class="user-name" id="sidebarUserName">Visitante</div>
@@ -135,13 +134,13 @@
           </button>
 
           <!-- Notifications Center -->
-          <button class="icon-btn" onclick="alert('Notificações:\n• Nova ata da assembleia publicada.\n• Balancete de Julho/2026 aprovado.')" title="Notificações do Portal">
+          <button class="icon-btn" onclick="alert('Notificações:\n• Solicitado e-mail de autorização para o Síndico (Apt 903).\n• Balancetes publicados.')" title="Notificações do Portal">
             <span class="material-symbols-outlined">notifications</span>
             <span class="badge-dot"></span>
           </button>
 
           <!-- WhatsApp Direct Launcher -->
-          <button class="btn-whatsapp-header" onclick="window.open('https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro,%20gostaria%20de%20falar%20sobre%20o%20condomínio', '_blank')">
+          <button class="btn-whatsapp-header" onclick="window.open('https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro%20(Apt%20903),%20gostaria%20de%20falar%20sobre%20o%20condomínio', '_blank')">
             <span class="material-symbols-outlined" style="font-size: 1.1rem;">chat</span>
             <span>Falar com o Síndico</span>
           </button>
@@ -153,11 +152,11 @@
         <div class="banner-content">
           <div class="banner-text" style="max-width: 680px;">
             <h2>Portal da Transparência Modern Life Residence</h2>
-            <p>Gestão do Síndico <strong>Alessandro Cristiano da Silva</strong> &bull; Total transparência, prestação de contas, mural de recados e serviços para moradores.</p>
+            <p>Gestão do Síndico <strong>Alessandro Cristiano da Silva (Apt 903)</strong> &bull; E-mail oficial: <code>condominio.modern.life@gmail.com</code> &bull; O acesso exige cadastro e aprovação por e-mail.</p>
             <div class="banner-tags">
+              <span class="banner-tag"><span class="material-symbols-outlined">domain</span> Síndico: Apt 903</span>
+              <span class="banner-tag"><span class="material-symbols-outlined">mark_email_unread</span> Autorização por E-mail</span>
               <span class="banner-tag"><span class="material-symbols-outlined">verified_user</span> Gestão Transparente</span>
-              <span class="banner-tag"><span class="material-symbols-outlined">login</span> Autenticação via Google</span>
-              <span class="banner-tag"><span class="material-symbols-outlined">domain</span> Torre Modern Life</span>
             </div>
           </div>
           <div style="background: white; padding: 12px 18px; border-radius: 12px; box-shadow: var(--shadow-lg);">
@@ -177,12 +176,12 @@
           <span class="material-symbols-outlined">domain</span> Modern Life Residence &bull; Portal da Transparência
         </div>
         <div>
-          Síndico: <strong>Alessandro Cristiano da Silva</strong> &bull; E-mail: <strong>condominio.modern.life@gmail.com</strong>
+          Síndico: <strong>Alessandro Cristiano da Silva (Apt 903)</strong> &bull; E-mail: <strong>condominio.modern.life@gmail.com</strong>
         </div>
         <div class="footer-links">
           <a href="#" onclick="App.navigateTo('transparencia')">Demonstrativo Financeiro</a>
           <a href="#" onclick="App.navigateTo('documentos')">Regimento Interno</a>
-          <a href="#" onclick="AuthComponent.renderAuthModal()">Entrar com Google</a>
+          <a href="#" onclick="AuthComponent.renderAuthModal()">Solicitar Acesso</a>
         </div>
       </footer>
     </main>
@@ -190,7 +189,7 @@
   </div>
 
   <!-- Floating WhatsApp Launcher Button -->
-  <a href="https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro,%20gostaria%20de%20falar%20sobre%20o%20condomínio" target="_blank" class="floating-whatsapp" title="Falar com o Síndico pelo WhatsApp">
+  <a href="https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro%20(Apt%20903),%20gostaria%20de%20falar%20sobre%20o%20condomínio" target="_blank" class="floating-whatsapp" title="Falar com o Síndico pelo WhatsApp">
     <span class="material-symbols-outlined" style="font-size: 2rem;">chat</span>
   </a>
 

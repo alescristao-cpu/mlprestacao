@@ -1,70 +1,115 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Painel Administrativo Component
+   Modern Life Residence - Painel Administrativo do Síndico
+   Síndico: Alessandro Cristiano da Silva (Apt 903)
    ---------------------------------------------------- */
 
 window.AdminComponent = {
   render(container, data) {
     const user = window.CondoStore.currentUser;
+
     if (!user || user.role !== 'Administrador') {
       container.innerHTML = `
-        <div class="card-widget" style="text-align: center; padding: 3rem;">
-          <span class="material-symbols-outlined" style="font-size: 3.5rem; color: #C62828;">lock</span>
-          <h2 style="font-family: var(--font-heading); color: #C62828; margin-top: 1rem;">Acesso Restrito ao Síndico / Administrador</h2>
-          <p style="color: var(--text-muted); margin-top: 0.5rem;">
-            Você precisa estar logado com uma conta de Administrador para acessar as configurações de gestão do condomínio.
+        <div class="card-widget" style="text-align: center; padding: 3rem 1.5rem; max-width: 550px; margin: 2rem auto;">
+          <span class="material-symbols-outlined" style="font-size: 3rem; color: #C62828;">admin_panel_settings</span>
+          <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.3rem; margin-top: 0.5rem;">
+            Acesso Restrito à Administração
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0;">
+            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva (Apt 903)</strong> para aprovação de cadastros de moradores e gerenciamento.
           </p>
-          <button class="btn-primary" style="margin-top: 1.5rem;" onclick="AuthComponent.renderAuthModal()">
-            Fazer Login como Administrador
+          <button class="btn-primary" onclick="AuthComponent.renderAuthModal()">
+            <span class="material-symbols-outlined">login</span> Entrar como Síndico (Apt 903)
           </button>
         </div>
       `;
       return;
     }
 
-    const pendingMoradores = data.moradores.filter(m => m.status === 'Pendente');
-    const allMoradores = data.moradores;
+    const moradores = data.moradores || [];
+    const pendentes = moradores.filter(m => m.status === 'Pendente');
+    const aprovados = moradores.filter(m => m.status === 'Aprovado');
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <!-- Header -->
+        
+        <!-- Header Banner Síndico -->
         <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
-              <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 4px;">PAINEL EXCLUSIVO DA GESTÃO</span>
-              <h2 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800;">
-                Painel Administrativo &amp; Controle do Condomínio
+              <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.4rem;">
+                <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL DO SÍNDICO - APT 903
+              </span>
+              <h2 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700;">
+                Gestão Alessandro Cristiano da Silva
               </h2>
-              <p style="font-size: 0.9rem; opacity: 0.9;">
-                Aprovação de cadastros, publicação de balancetes, contratos e respostas a moradores.
+              <p style="font-size: 0.88rem; opacity: 0.9;">
+                E-mail de Notificações: <code>condominio.modern.life@gmail.com</code>
               </p>
             </div>
-
-            <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700;" onclick="AdminComponent.openFirebaseSettingsModal()">
-              <span class="material-symbols-outlined">cloud_sync</span> Configurar Firebase Cloud
-            </button>
+            <div style="text-align: right;">
+              <span class="badge badge-warning" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
+                ${pendentes.length} Solicitação(ões) Pendente(s)
+              </span>
+            </div>
           </div>
         </div>
 
-        <!-- Quick Action Bar -->
+        <!-- Solicitações de Cadastro Pendentes de Aceite -->
         <div class="card-widget">
-          <div class="card-title" style="margin-bottom: 1rem;">
-            <span class="material-symbols-outlined">add_circle</span> Publicar Novos Registros
+          <div class="card-header">
+            <div class="card-title" style="color: #E65100;">
+              <span class="material-symbols-outlined">mark_email_unread</span> Solicitações de Autorização por E-mail (${pendentes.length})
+            </div>
           </div>
-          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <button class="btn-primary btn-sm" onclick="AdminComponent.openPublishModal('prestacao')">+ Nova Prestação de Contas</button>
-            <button class="btn-primary btn-sm" onclick="AdminComponent.openPublishModal('balancete')">+ Novo Balancete</button>
-            <button class="btn-primary btn-sm" onclick="AdminComponent.openPublishModal('contrato')">+ Novo Contrato</button>
-            <button class="btn-primary btn-sm" onclick="AdminComponent.openPublishModal('documento')">+ Novo Documento</button>
-            <button class="btn-primary btn-sm" onclick="AdminComponent.openPublishModal('noticia')">+ Publicar Notícia Blog</button>
-          </div>
+
+          ${pendentes.length === 0 ? `
+            <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+              Nenhuma solicitação de cadastro pendente no momento. Todos os moradores cadastrados já foram avaliados.
+            </div>
+          ` : `
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Nome do Morador</th>
+                    <th>Unidade</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th>Data do Pedido</th>
+                    <th style="text-align: center;">Ação do Síndico</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${pendentes.map(p => `
+                    <tr>
+                      <td><strong>${p.nome}</strong></td>
+                      <td>Apto ${p.apartamento}</td>
+                      <td>${p.email}</td>
+                      <td>${p.telefone || 'Não informado'}</td>
+                      <td>${p.dataCadastro}</td>
+                      <td style="text-align: center;">
+                        <div style="display: flex; gap: 0.4rem; justify-content: center;">
+                          <button class="btn-primary btn-sm" style="background: #2E6B42;" onclick="AdminComponent.aprovarMorador('${p.id}')">
+                            <span class="material-symbols-outlined">check_circle</span> Autorizar Acesso
+                          </button>
+                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.rejeitarMorador('${p.id}')">
+                            Rejeitar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `}
         </div>
 
-        <!-- Pending Approvals Section -->
+        <!-- Moradores Aprovados com Acesso Liberado -->
         <div class="card-widget">
           <div class="card-header">
             <div class="card-title">
-              <span class="material-symbols-outlined">person_add</span> Aprovação de Cadastros de Moradores
-              ${pendingMoradores.length ? `<span class="badge badge-warning">${pendingMoradores.length} Pendentes</span>` : '<span class="badge badge-success">Nenhum Pendente</span>'}
+              <span class="material-symbols-outlined">groups</span> Moradores Com Acesso Liberado (${aprovados.length})
             </div>
           </div>
 
@@ -72,95 +117,41 @@ window.AdminComponent = {
             <table class="custom-table">
               <thead>
                 <tr>
-                  <th>Nome do Morador</th>
-                  <th>Apto / Bloco</th>
-                  <th>CPF</th>
-                  <th>Telefone / E-mail</th>
-                  <th>Data Solicitação</th>
-                  <th style="text-align: center;">Ações de Aprovação</th>
+                  <th>Nome Completo</th>
+                  <th>Unidade</th>
+                  <th>E-mail</th>
+                  <th>Perfil</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                ${allMoradores.map(m => `
+                ${aprovados.map(m => `
                   <tr>
                     <td><strong>${m.nome}</strong></td>
-                    <td>Apto ${m.apartamento} - ${m.bloco}</td>
-                    <td>${m.cpf}</td>
-                    <td>${m.telefone}<br><small style="color: var(--text-muted);">${m.email}</small></td>
-                    <td>${m.dataCadastro}</td>
-                    <td style="text-align: center;">
-                      ${m.status === 'Pendente' ? `
-                        <button class="btn-primary btn-sm" onclick="AdminComponent.approveUser('${m.id}')" style="background: #2E7D32;">Aprovar</button>
-                        <button class="btn-secondary btn-sm btn-danger" onclick="AdminComponent.rejectUser('${m.id}')" style="margin-left: 4px;">Rejeitar</button>
-                      ` : `
-                        <span class="badge ${m.status === 'Aprovado' ? 'badge-success' : 'badge-danger'}">${m.status} (${m.role})</span>
-                      `}
-                    </td>
+                    <td>Apto ${m.apartamento} - Bloco ${m.bloco || 'A'}</td>
+                    <td>${m.email}</td>
+                    <td><span class="badge badge-info">${m.role}</span></td>
+                    <td><span class="badge badge-success">${m.status}</span></td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
           </div>
         </div>
+
       </div>
     `;
   },
 
-  approveUser(id) {
+  aprovarMorador(id) {
     window.CondoStore.updateMoradorStatus(id, 'Aprovado');
-    App.showToast('Morador aprovado com sucesso! Acesso liberado.', 'success');
+    App.showToast('Acesso do morador autorizado com sucesso!', 'success');
     App.render();
   },
 
-  rejectUser(id) {
+  rejeitarMorador(id) {
     window.CondoStore.updateMoradorStatus(id, 'Rejeitado');
     App.showToast('Solicitação de cadastro rejeitada.', 'info');
     App.render();
-  },
-
-  openFirebaseSettingsModal() {
-    const saved = localStorage.getItem('MODERN_LIFE_FIREBASE_CONFIG') || '';
-    const modalHtml = `
-      <div class="modal-overlay active" id="modalFbConfig">
-        <div class="modal-card">
-          <div class="modal-header">
-            <div class="modal-title">Configurar Firebase Backend Cloud</div>
-            <button class="modal-close" onclick="document.getElementById('modalFbConfig').remove()">✕</button>
-          </div>
-          <form onsubmit="AdminComponent.saveFirebaseSettings(event)">
-            <div class="modal-body">
-              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
-                Cole as chaves do seu projeto Firebase (Authentication, Firestore, Storage) em formato JSON:
-              </p>
-              <div class="form-group">
-                <textarea id="fbJson" class="form-control" rows="8" placeholder='{ "apiKey": "AIzaSy...", "authDomain": "...", "projectId": "..." }'>${saved}</textarea>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn-secondary" onclick="document.getElementById('modalFbConfig').remove()">Cancelar</button>
-              <button type="submit" class="btn-primary">Salvar Chaves Cloud</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-  },
-
-  saveFirebaseSettings(e) {
-    e.preventDefault();
-    const raw = document.getElementById('fbJson').value;
-    try {
-      const parsed = JSON.parse(raw);
-      window.FirebaseService.saveConfig(parsed);
-      document.getElementById('modalFbConfig').remove();
-      App.showToast('Configurações do Firebase salvas com sucesso!', 'success');
-    } catch (err) {
-      alert('Formato JSON inválido. Verifique o código inserido.');
-    }
-  },
-
-  openPublishModal(type) {
-    alert(`Módulo de cadastro rápido ativado para: ${type.toUpperCase()}. Os dados postados são sincronizados instantaneamente no sistema.`);
   }
 };

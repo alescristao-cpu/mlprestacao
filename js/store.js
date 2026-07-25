@@ -1,17 +1,18 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Mock Data
-   Dados Financeiros Fiéis extraídos dos Relatórios Oficiais
+   Síndico: Alessandro Cristiano da Silva (Apt 903)
+   Fluxo Estrito de Aprovação por E-mail
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V3';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V4';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER';
 
 const INITIAL_DATA = {
   moradores: [
     {
-      id: 'usr_admin',
+      id: 'usr_sindico',
       nome: 'Alessandro Cristiano da Silva',
-      apartamento: '152',
+      apartamento: '903',
       bloco: 'A',
       cpf: '123.456.789-00',
       telefone: '(11) 98765-4321',
@@ -55,7 +56,7 @@ const INITIAL_DATA = {
       email: 'fernanda.oliveira@gmail.com',
       status: 'Pendente',
       role: 'Morador',
-      dataCadastro: '2026-07-20'
+      dataCadastro: '2026-07-24'
     }
   ],
 
@@ -75,7 +76,7 @@ const INITIAL_DATA = {
       categoriasDespesa: [
         { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 12574.41 },
         { nome: 'Manutenção e Conservação Predial', valor: 4561.11 },
-        { nome: 'Despesas Administrativas & Síndico', valor: 7943.33 },
+        { nome: 'Despesas Administrativas & Síndico (Apt 903)', valor: 7943.33 },
         { nome: 'Taxa Extra / Obras Calçada', valor: 1361.00 },
         { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 39121.61 },
         { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4305.34 }
@@ -95,7 +96,7 @@ const INITIAL_DATA = {
       categoriasDespesa: [
         { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 11406.96 },
         { nome: 'Manutenção e Conservação Predial', valor: 6855.48 },
-        { nome: 'Despesas Administrativas & Síndico', valor: 3625.52 },
+        { nome: 'Despesas Administrativas & Síndico (Apt 903)', valor: 3625.52 },
         { nome: 'Taxa Extra / Obras Calçada', valor: 9730.66 },
         { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 39069.72 },
         { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4017.75 }
@@ -115,7 +116,7 @@ const INITIAL_DATA = {
       categoriasDespesa: [
         { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 12211.96 },
         { nome: 'Manutenção e Conservação Predial', valor: 3533.29 },
-        { nome: 'Despesas Administrativas & Síndico', valor: 5167.52 },
+        { nome: 'Despesas Administrativas & Síndico (Apt 903)', valor: 5167.52 },
         { nome: 'Taxa Extra / Obra Calçada', valor: 16164.26 },
         { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 40828.32 },
         { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 3974.13 }
@@ -135,7 +136,7 @@ const INITIAL_DATA = {
       categoriasDespesa: [
         { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 15697.96 },
         { nome: 'Manutenção e Conservação Predial', valor: 5854.78 },
-        { nome: 'Despesas Administrativas & Síndico', valor: 3221.55 },
+        { nome: 'Despesas Administrativas & Síndico (Apt 903)', valor: 3221.55 },
         { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 35965.62 },
         { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4071.75 }
       ]
@@ -211,24 +212,6 @@ const INITIAL_DATA = {
       vigenciaInicio: '2024-06-01',
       vigenciaFim: '2026-06-01',
       status: 'Em Renovação'
-    },
-    {
-      id: 'ctr_03',
-      empresa: 'Verde Vida Paisagismo',
-      objeto: 'Manutenção dos Jardins e Áreas Verdes Externa',
-      valorMensal: 3800.00,
-      vigenciaInicio: '2025-03-01',
-      vigenciaFim: '2026-03-01',
-      status: 'Ativo'
-    },
-    {
-      id: 'ctr_04',
-      empresa: 'Porto Seguro Cia de Seguros',
-      objeto: 'Apólice de Seguro Condominial Compreensivo',
-      valorMensal: 2950.00,
-      vigenciaInicio: '2026-01-01',
-      vigenciaFim: '2027-01-01',
-      status: 'Ativo'
     }
   ],
 
@@ -259,7 +242,7 @@ const INITIAL_DATA = {
     },
     {
       id: 'doc_04',
-      nome: 'Edital Convocação AGE 11.08.2026 (Assinado)',
+      nome: 'Edital Convocação AGE 11.08.2026 (Assinado pelo Síndico Alessandro - Apt 903)',
       categoria: 'Assembleias',
       dataUpload: '2026-07-23',
       tamanho: '181 KB',
@@ -272,41 +255,15 @@ const INITIAL_DATA = {
       id: 'rec_01',
       titulo: 'Modernização da Iluminação das Áreas Comuns para LED',
       data: '2026-07-15',
-      autor: 'Síndico Alessandro Cristiano da Silva',
+      autor: 'Síndico Alessandro Cristiano da Silva (Apt 903)',
       imagem: './assets/images/IMG_2909.JPG',
       resumo: 'Concluímos a substituição das lâmpadas da garagem e corredores por iluminação LED ecoeficiente, gerando redução estimada de 18% na conta de energia.',
       texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio. Todas as lâmpadas fluorescentes dos subsolos, corredores e hall principal foram substituídas por painéis e refletores LED de alta durabilidade.\n\nEstimamos uma economia mensal de cerca de R$ 3.200,00 na fatura de energia elétrica, além de melhorar substancialmente a iluminação e segurança de nossas garagens.',
-      comentarios: [
-        { autor: 'Mariana Castro (Apt 84B)', data: '2026-07-15 14:30', texto: 'Excelente iniciativa! A iluminação da garagem ficou ótima!' }
-      ]
-    },
-    {
-      id: 'rec_02',
-      titulo: 'Manutenção Preventiva das Bombas d\'Água e Reservatório',
-      data: '2026-07-02',
-      autor: 'Síndico Alessandro Cristiano da Silva',
-      imagem: './assets/images/IMG_2930.jpg',
-      resumo: 'Realizada higienização anual das caixas d\'água e revisão no sistema de recalque preventivo.',
-      texto: 'Informamos a todos os moradores que realizamos com sucesso a limpeza e desinfecção periódica de ambos os reservatórios (superior e inferior), bem como o teste de estanqueidade e troca dos selos mecânicos das bombas.',
       comentarios: []
     }
   ],
 
-  ocorrencias: [
-    {
-      id: 'oco_01',
-      moradorNome: 'Mariana Castro',
-      apartamento: '84B',
-      categoria: 'Sugestão',
-      assunto: 'Instalação de tomadas para veículos elétricos na garagem',
-      descricao: 'Gostaria de sugerir que o condomínio avalie um estudo de viabilidade técnica para pontos de recarga individualizados no subsolo.',
-      fotos: ['./assets/images/IMG_2955.jpg'],
-      data: '2026-07-18',
-      status: 'Em análise',
-      respostaAdmin: 'Prezada Mariana, a administração já contratou um engenheiro eletricista para apresentar parecer técnico na próxima assembleia.'
-    }
-  ],
-
+  ocorrencias: [],
   agenda: [
     {
       id: 'evt_01',
@@ -316,35 +273,12 @@ const INITIAL_DATA = {
       tipo: 'Assembleia',
       local: 'Salão de Festas Principal / Formato Híbrido',
       descricao: 'Deliberação sobre a aprovação das contas do 1º semestre e orçamento da reforma do playground.'
-    },
-    {
-      id: 'evt_02',
-      titulo: 'Manutenção Mensal dos Elevadores',
-      data: '2026-07-28',
-      hora: '08:00 - 12:00',
-      tipo: 'Manutenção',
-      local: 'Torre Principal',
-      descricao: 'Interrupção alternada de 1 elevador social por vez para substituição preventiva de cabos.'
     }
   ],
-
   galeria: [
-    { id: 'gal_01', titulo: 'Torre Modern Life Residence', categoria: 'Fachada', imagem: './assets/images/IMG_2956.jpg' },
-    { id: 'gal_02', titulo: 'Fachada Principal & Entrada', categoria: 'Fachada', imagem: './assets/images/IMG_2909.JPG' },
-    { id: 'gal_03', titulo: 'Vista Panorâmica da Entrada', categoria: 'Fachada', imagem: './assets/images/IMG_2930.jpg' },
-    { id: 'gal_04', titulo: 'Praça de Acesso', categoria: 'Eventos', imagem: './assets/images/IMG_2955.jpg' }
+    { id: 'gal_01', titulo: 'Torre Modern Life Residence', categoria: 'Fachada', imagem: './assets/images/IMG_2956.jpg' }
   ],
-
-  reservas: [
-    {
-      id: 'res_01',
-      espaco: 'Salão de Festas',
-      moradorNome: 'Mariana Castro',
-      apartamento: '84B',
-      data: '2026-08-15',
-      status: 'Confirmada'
-    }
-  ]
+  reservas: []
 };
 
 class StoreEngine {
@@ -376,7 +310,7 @@ class StoreEngine {
       const raw = localStorage.getItem(CURRENT_USER_KEY);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
-    return null; // Default to unauthenticated visitors so Access Gate is active by default
+    return null; // Default to unauthenticated visitors
   }
 
   setCurrentUser(user) {
@@ -400,16 +334,21 @@ class StoreEngine {
     this.listeners.forEach(l => l(this.data, this.currentUser));
   }
 
+  // Cadastra novo morador em estado PENDENTE e simula envio do e-mail de autorização para o Síndico Alessandro (Apt 903)
   addMorador(morador) {
     const newMorador = {
       id: 'usr_' + Date.now(),
       dataCadastro: new Date().toISOString().split('T')[0],
-      status: 'Pendente',
+      status: 'Pendente', // Exige autorização formal por e-mail pelo Síndico
       role: 'Morador',
       ...morador
     };
     this.data.moradores.push(newMorador);
     this.saveData();
+
+    // Log simulated email dispatch
+    console.log(`[E-mail Enviado] Para: condominio.modern.life@gmail.com | Assunto: Solicitação de Autorização de Acesso - ${newMorador.nome} (Apto ${newMorador.apartamento})`);
+
     return newMorador;
   }
 
@@ -418,31 +357,13 @@ class StoreEngine {
     if (item) {
       item.status = newStatus;
       this.saveData();
+
+      // If updating current user status, sync current user state
+      if (this.currentUser && this.currentUser.id === id) {
+        this.currentUser.status = newStatus;
+        this.setCurrentUser(this.currentUser);
+      }
     }
-  }
-
-  addOcorrencia(oco) {
-    const newOco = {
-      id: 'oco_' + Date.now(),
-      data: new Date().toISOString().split('T')[0],
-      status: 'Recebido',
-      respostaAdmin: '',
-      ...oco
-    };
-    this.data.ocorrencias.unshift(newOco);
-    this.saveData();
-    return newOco;
-  }
-
-  addRecado(post) {
-    const newRecado = {
-      id: 'rec_' + Date.now(),
-      data: new Date().toISOString().split('T')[0],
-      comentarios: [],
-      ...post
-    };
-    this.data.recados.unshift(newRecado);
-    this.saveData();
   }
 }
 
