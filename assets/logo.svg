@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 120" width="100%" height="100%">
+  <defs>
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E6B42"/>
+      <stop offset="100%" stop-color="#1F4D30"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4CAF50"/>
+      <stop offset="100%" stop-color="#2E6B42"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Emblem Icon -->
+  <g transform="translate(10, 10)" filter="url(#shadow)">
+    <!-- Base Circle -->
+    <circle cx="50" cy="50" r="46" fill="url(#primaryGrad)"/>
+    <!-- Outer Ring accent -->
+    <circle cx="50" cy="50" r="43" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.3"/>
+    
+    <!-- Building Silhouette -->
+    <path d="M 32 75 V 38 L 50 25 L 68 38 V 75 Z" fill="#FFFFFF" fill-opacity="0.95"/>
+    <path d="M 42 75 V 28 L 50 22 L 58 28 V 75 Z" fill="#E8F5E9"/>
+    
+    <!-- Building Windows -->
+    <rect x="36" y="42" width="6" height="7" rx="1" fill="#2E6B42"/>
+    <rect x="46" y="42" width="6" height="7" rx="1" fill="#2E6B42"/>
+    <rect x="56" y="42" width="6" height="7" rx="1" fill="#2E6B42"/>
+    
+    <rect x="36" y="53" width="6" height="7" rx="1" fill="#2E6B42"/>
+    <rect x="46" y="53" width="6" height="7" rx="1" fill="#2E6B42"/>
+    <rect x="56" y="53" width="6" height="7" rx="1" fill="#2E6B42"/>
+    
+    <rect x="36" y="64" width="6" height="7" rx="1" fill="#2E6B42"/>
+    <rect x="46" y="64" width="6" height="7" rx="1" fill="#2E6B42"/>
+    <rect x="56" y="64" width="6" height="7" rx="1" fill="#2E6B42"/>
+
+    <!-- Green Eco Leaf Accent -->
+    <path d="M 50 25 C 65 15, 80 25, 75 42 C 70 30, 58 28, 50 25 Z" fill="url(#accentGrad)"/>
+  </g>
+
+  <!-- Typography -->
+  <!-- Main Brand Title -->
+  <text x="120" y="52" font-family="'Outfit', 'Inter', 'Segoe UI', sans-serif" font-size="30" font-weight="800" fill="#2E6B42" letter-spacing="0.5">
+    MODERN LIFE
+  </text>
+  <text x="120" y="80" font-family="'Outfit', 'Inter', 'Segoe UI', sans-serif" font-size="20" font-weight="600" fill="#1F4D30" letter-spacing="3">
+    RESIDENCE
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="120" y="98" font-family="'Inter', 'Segoe UI', sans-serif" font-size="11" font-weight="500" fill="#666666" letter-spacing="1">
+    PORTAL DA TRANSPARÊNCIA &amp; GESTÃO
+  </text>
+</svg>

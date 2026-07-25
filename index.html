@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Life Residence - Portal da Transparência &amp; Prestação de Contas</title>
+  <meta name="description" content="Portal de prestação de contas, transparência financeira e gestão do condomínio Modern Life Residence.">
+
+  <!-- PWA Manifest & Theme -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#2E6B42">
+
+  <!-- Google Fonts & Material Symbols Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+  <!-- Chart.js CDN for Financial Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Application Stylesheets -->
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+
+  <!-- Main App Layout Container -->
+  <div id="app-layout">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="./assets/logo.svg" class="sidebar-logo" alt="Logo Modern Life Residence">
+        <div class="sidebar-brand-text">
+          <span class="sidebar-brand-title">MODERN LIFE</span>
+          <span class="sidebar-brand-sub">TRANSPARÊNCIA</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <div class="menu-section-title">Menu Principal</div>
+        <a class="nav-item active" data-route="dashboard" onclick="App.navigateTo('dashboard')">
+          <span class="material-symbols-outlined">dashboard</span> Página Inicial
+        </a>
+        <a class="nav-item" data-route="prestacao" onclick="App.navigateTo('prestacao')">
+          <span class="material-symbols-outlined">receipt_long</span> Prestação de Contas
+        </a>
+        <a class="nav-item" data-route="balancetes" onclick="App.navigateTo('balancetes')">
+          <span class="material-symbols-outlined">analytics</span> Balancetes
+        </a>
+        <a class="nav-item" data-route="contratos" onclick="App.navigateTo('contratos')">
+          <span class="material-symbols-outlined">gavel</span> Contratos
+        </a>
+        <a class="nav-item" data-route="transparencia" onclick="App.navigateTo('transparencia')">
+          <span class="material-symbols-outlined">monitoring</span> Transparência
+        </a>
+
+        <div class="menu-section-title">Comunicação &amp; Serviços</div>
+        <a class="nav-item" data-route="documentos" onclick="App.navigateTo('documentos')">
+          <span class="material-symbols-outlined">folder</span> Biblioteca de Documentos
+        </a>
+        <a class="nav-item" data-route="blog" onclick="App.navigateTo('blog')">
+          <span class="material-symbols-outlined">newspaper</span> Blog do Síndico
+        </a>
+        <a class="nav-item" data-route="canal" onclick="App.navigateTo('canal')">
+          <span class="material-symbols-outlined">mail</span> Canal Direto
+        </a>
+        <a class="nav-item" data-route="ocorrencias" onclick="App.navigateTo('ocorrencias')">
+          <span class="material-symbols-outlined">report_problem</span> Reclamações &amp; Ocorrências
+          <span class="nav-badge" id="navOcorrenciasBadge">2</span>
+        </a>
+        <a class="nav-item" data-route="utilidades" onclick="App.navigateTo('utilidades')">
+          <span class="material-symbols-outlined">widgets</span> Utilidades &amp; Reservas
+        </a>
+        <a class="nav-item" data-route="agenda" onclick="App.navigateTo('agenda')">
+          <span class="material-symbols-outlined">calendar_month</span> Agenda &amp; Calendário
+        </a>
+        <a class="nav-item" data-route="galeria" onclick="App.navigateTo('galeria')">
+          <span class="material-symbols-outlined">collections</span> Galeria do Condomínio
+        </a>
+
+        <div class="menu-section-title">Administração</div>
+        <a class="nav-item" data-route="admin" onclick="App.navigateTo('admin')">
+          <span class="material-symbols-outlined">admin_panel_settings</span> Painel Administrativo
+        </a>
+      </nav>
+
+      <!-- Sidebar User Profile Footer -->
+      <div class="sidebar-footer" onclick="AuthComponent.renderAuthModal()" style="cursor: pointer;" title="Clique para gerenciar perfil ou fazer login">
+        <div class="user-avatar" id="sidebarUserAvatar">C</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarUserName">Carlos Eduardo</div>
+          <div class="user-role" id="sidebarUserRole">Síndico / Admin</div>
+        </div>
+        <span class="material-symbols-outlined" style="font-size: 1.2rem; color: rgba(255,255,255,0.7);">settings</span>
+      </div>
+    </aside>
+
+    <!-- Main Content Shell -->
+    <main class="app-main">
+      
+      <!-- Top Navbar Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <button class="btn-mobile-toggle" onclick="App.toggleMobileSidebar()">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+          <div class="header-title-container">
+            <h1 id="headerPageTitle">Modern Life Residence</h1>
+            <p>Portal Oficial de Gestão e Transparência</p>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Global Search Button -->
+          <button class="global-search-btn" onclick="App.openGlobalSearchModal()">
+            <span class="material-symbols-outlined" style="font-size: 1.2rem;">search</span>
+            <span class="search-text">Pesquisa Global</span>
+            <span class="search-shortcut">Ctrl+K</span>
+          </button>
+
+          <!-- Theme Switcher -->
+          <button class="icon-btn" onclick="App.toggleTheme()" title="Alternar Modo Escuro / Claro">
+            <span class="material-symbols-outlined">dark_mode</span>
+          </button>
+
+          <!-- Notifications Center -->
+          <button class="icon-btn" onclick="alert('Notificações:\n• Nova ata da assembleia publicada.\n• Balancete de Julho/2026 aprovado.')" title="Notificações do Portal">
+            <span class="material-symbols-outlined">notifications</span>
+            <span class="badge-dot"></span>
+          </button>
+
+          <!-- WhatsApp Direct Launcher -->
+          <button class="btn-whatsapp-header" onclick="window.open('https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico,%20gostaria%20de%20falar%20sobre%20o%20condomínio', '_blank')">
+            <span class="material-symbols-outlined" style="font-size: 1.1rem;">chat</span>
+            <span>Falar com o Síndico</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Banner Superior de Boas-Vindas -->
+      <section class="condo-banner">
+        <div class="banner-content">
+          <div class="banner-text">
+            <h2>Bem-vindo ao Portal do Condomínio Modern Life Residence</h2>
+            <p>Acesse com total transparência os demonstrativos financeiros, balancetes, contratos e regulamentos.</p>
+            <div class="banner-tags">
+              <span class="banner-tag"><span class="material-symbols-outlined">verified_user</span> Gestão Transparente</span>
+              <span class="banner-tag"><span class="material-symbols-outlined">shield</span> Acesso Seguro Moradores</span>
+              <span class="banner-tag"><span class="material-symbols-outlined">workspace_premium</span> Padrão Modern Life</span>
+            </div>
+          </div>
+          <img src="./assets/logo.svg" style="height: 90px; width: auto; filter: brightness(0) invert(1);" alt="Logo Modern Life" class="banner-logo-img">
+        </div>
+      </section>
+
+      <!-- Dynamic Page Render Area -->
+      <section class="page-container" id="pageContent">
+        <!-- Rendered dynamically by App.render() -->
+      </section>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <div class="footer-brand">
+          <span class="material-symbols-outlined">domain</span> Modern Life Residence &bull; Portal da Transparência v2.4.0
+        </div>
+        <div>
+          Contato Síndico: (11) 98765-4321 | email: <strong>sindico@modernlife.com.br</strong>
+        </div>
+        <div class="footer-links">
+          <a href="#" onclick="App.navigateTo('transparencia')">Demonstrativo Financeiro</a>
+          <a href="#" onclick="App.navigateTo('documentos')">Regimento Interno</a>
+          <a href="#" onclick="AuthComponent.renderAuthModal()">Painel Morador</a>
+        </div>
+      </footer>
+    </main>
+
+  </div>
+
+  <!-- Floating WhatsApp Launcher Button -->
+  <a href="https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico,%20gostaria%20de%20falar%20sobre%20o%20condomínio" target="_blank" class="floating-whatsapp" title="Falar com o Síndico pelo WhatsApp">
+    <span class="material-symbols-outlined" style="font-size: 2rem;">chat</span>
+  </a>
+
+  <!-- Application Modules -->
+  <script src="./js/store.js"></script>
+  <script src="./js/firebase-config.js"></script>
+  <script src="./js/pdf-export.js"></script>
+  <script src="./js/charts.js"></script>
+
+  <!-- UI Components -->
+  <script src="./js/components/auth.js"></script>
+  <script src="./js/components/dashboard.js"></script>
+  <script src="./js/components/prestacao.js"></script>
+  <script src="./js/components/balancetes.js"></script>
+  <script src="./js/components/contratos.js"></script>
+  <script src="./js/components/transparencia.js"></script>
+  <script src="./js/components/documentos.js"></script>
+  <script src="./js/components/blog.js"></script>
+  <script src="./js/components/canal.js"></script>
+  <script src="./js/components/ocorrencias.js"></script>
+  <script src="./js/components/utilidades.js"></script>
+  <script src="./js/components/agenda.js"></script>
+  <script src="./js/components/galeria.js"></script>
+  <script src="./js/components/admin.js"></script>
+
+  <!-- Main Orchestrator -->
+  <script src="./js/app.js"></script>
+
+</body>
+</html>
