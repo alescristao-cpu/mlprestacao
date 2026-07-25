@@ -1,25 +1,35 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Mural de Recados Component
+   Modern Life Residence - Mural de Recados (Blog do Síndico)
    ---------------------------------------------------- */
 
 window.RecadosComponent = {
   render(container, data) {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && user.role === 'Administrador';
     const recados = data.recados || [];
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         <!-- Banner Header -->
         <div class="card-widget" style="background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white;">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <span class="material-symbols-outlined" style="font-size: 2.5rem;">campaign</span>
-            <div>
-              <h2 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700;">
-                Mural de Recados da Administração
-              </h2>
-              <p style="font-size: 0.9rem; opacity: 0.9;">
-                Comunicados oficiais, avisos urgentes e informes do Síndico Alessandro Cristiano da Silva.
-              </p>
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <span class="material-symbols-outlined" style="font-size: 2.5rem;">campaign</span>
+              <div>
+                <h2 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700;">
+                  Mural de Recados &amp; Blog da Administração
+                </h2>
+                <p style="font-size: 0.9rem; opacity: 0.9;">
+                  Informes oficiais, comunicados urgentes e atualizações do Síndico <strong>Alessandro Cristiano da Silva</strong>.
+                </p>
+              </div>
             </div>
+
+            ${isSindico ? `
+              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700;" onclick="RecadosComponent.openNewPostModal()">
+                <span class="material-symbols-outlined">add_circle</span> Criar Novo Informe (Síndico)
+              </button>
+            ` : ''}
           </div>
         </div>
 
@@ -80,6 +90,77 @@ window.RecadosComponent = {
         `).join('')}
       </div>
     `;
+  },
+
+  openNewPostModal() {
+    const existing = document.getElementById('modalNewPost');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalNewPost">
+        <div class="modal-card" style="max-width: 600px;">
+          <div class="modal-header">
+            <div class="modal-title">Novo Informe / Publicação no Blog do Síndico</div>
+            <button class="modal-close" onclick="document.getElementById('modalNewPost').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <form onsubmit="RecadosComponent.submitPost(event)">
+              <div class="form-group">
+                <label class="form-label">Título do Recado / Informe</label>
+                <input type="text" id="postTitulo" class="form-control" placeholder="Ex: Manutenção Preventiva dos Portões Automáticos" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Resumo Curto (para o feed)</label>
+                <input type="text" id="postResumo" class="form-control" placeholder="Ex: Informamos a interrupção temporária do portão social..." required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Texto Completo do Comunicado</label>
+                <textarea id="postTexto" class="form-control" rows="5" placeholder="Escreva aqui todo o detalhamento da publicação..." required></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">URL da Imagem Ilustrativa</label>
+                <input type="text" id="postImagem" class="form-control" value="./assets/images/IMG_2956.jpg" placeholder="./assets/images/IMG_2956.jpg">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Nome do Documento Anexo (Opcional)</label>
+                <input type="text" id="postAnexo" class="form-control" placeholder="Ex: Comunicado_Oficial_Junho.pdf">
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem;">
+                <span class="material-symbols-outlined">publish</span> Publicar Informe no Mural
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  submitPost(e) {
+    e.preventDefault();
+    const titulo = document.getElementById('postTitulo').value;
+    const resumo = document.getElementById('postResumo').value;
+    const texto = document.getElementById('postTexto').value;
+    const imagem = document.getElementById('postImagem').value || './assets/images/IMG_2956.jpg';
+    const anexo = document.getElementById('postAnexo').value;
+
+    window.CondoStore.addRecado({
+      titulo,
+      resumo,
+      texto,
+      imagem,
+      anexo
+    });
+
+    App.showToast('Novo informe publicado com sucesso no Mural de Recados!', 'success');
+    document.getElementById('modalNewPost').remove();
+    App.render();
   },
 
   addComment(recadoId) {

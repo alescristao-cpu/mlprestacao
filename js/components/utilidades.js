@@ -1,153 +1,201 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Utilidades & Reservas Component
+   Modern Life Residence - Utilidades, Reservas & 2ª Via do Boleto
    ---------------------------------------------------- */
 
 window.UtilidadesComponent = {
   render(container, data) {
-    const reservas = data.reservas || [];
+    const user = window.CondoStore.currentUser;
+    const reservasExistentes = data.agendaReservas || [];
+
+    const hourlySlots = [
+      '06:00 às 07:00',
+      '07:00 às 08:00',
+      '08:00 às 09:00',
+      '09:00 às 10:00',
+      '10:00 às 11:00',
+      '11:00 às 12:00',
+      '12:00 às 13:00',
+      '13:00 às 14:00',
+      '14:00 às 15:00',
+      '15:00 às 16:00',
+      '16:00 às 17:00',
+      '17:00 às 18:00',
+      '18:00 às 19:00',
+      '19:00 às 20:00',
+      '20:00 às 21:00',
+      '21:00 às 22:00'
+    ];
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <!-- Links Rápidos Card -->
-        <div class="card-widget">
+        
+        <!-- Section 1: 2ª Via do Boleto -->
+        <div class="card-widget" style="border-left: 5px solid #2E6B42;">
           <div class="card-header">
-            <div class="card-title">
-              <span class="material-symbols-outlined">link</span> Links Rápidos &amp; Serviços do Condomínio
+            <div>
+              <div class="card-title" style="color: var(--primary-dark);">
+                <span class="material-symbols-outlined" style="font-size: 1.6rem;">receipt_long</span> 2ª Via do Boleto Condominial
+              </div>
+              <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">
+                Emita seu boleto atualizado diretamente no portal oficial da administradora.
+              </p>
             </div>
           </div>
 
-          <div class="grid-cards">
-            <div class="card-widget" style="background: var(--bg-app); cursor: pointer;" onclick="UtilidadesComponent.emite2ViaBoleto()">
-              <div style="display: flex; align-items: center; gap: 1rem;">
-                <span class="material-symbols-outlined" style="font-size: 2.2rem; color: var(--primary);">receipt_long</span>
-                <div>
-                  <h4 style="font-weight: 700; color: var(--primary-dark);">Segunda Via do Boleto</h4>
-                  <p style="font-size: 0.8rem; color: var(--text-muted);">Gerar código PIX / código de barras</p>
-                </div>
-              </div>
+          <div style="background: var(--bg-app); padding: 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h4 style="font-weight: 700; color: var(--primary-dark); margin-bottom: 0.25rem;">
+                Acesse o Sistema da Real Administradora
+              </h4>
+              <p style="font-size: 0.85rem; color: var(--text-main);">
+                Entre ou faça seu cadastro para visualizar boletos, demonstrativos e saldo da sua unidade.
+              </p>
             </div>
 
-            <div class="card-widget" style="background: var(--bg-app); cursor: pointer;" onclick="UtilidadesComponent.openReservaModal('Salão de Festas')">
-              <div style="display: flex; align-items: center; gap: 1rem;">
-                <span class="material-symbols-outlined" style="font-size: 2.2rem; color: var(--primary);">celebration</span>
-                <div>
-                  <h4 style="font-weight: 700; color: var(--primary-dark);">Reserva do Salão de Festas</h4>
-                  <p style="font-size: 0.8rem; color: var(--text-muted);">Verificar datas e reservar</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="card-widget" style="background: var(--bg-app); cursor: pointer;" onclick="UtilidadesComponent.openReservaModal('Churrasqueira')">
-              <div style="display: flex; align-items: center; gap: 1rem;">
-                <span class="material-symbols-outlined" style="font-size: 2.2rem; color: var(--primary);">outdoor_grill</span>
-                <div>
-                  <h4 style="font-weight: 700; color: var(--primary-dark);">Reserva da Churrasqueira</h4>
-                  <p style="font-size: 0.8rem; color: var(--text-muted);">Espaço gourmet e quiosque</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="card-widget" style="background: var(--bg-app); cursor: pointer;" onclick="UtilidadesComponent.openReservaModal('Piscina')">
-              <div style="display: flex; align-items: center; gap: 1rem;">
-                <span class="material-symbols-outlined" style="font-size: 2.2rem; color: var(--primary);">pool</span>
-                <div>
-                  <h4 style="font-weight: 700; color: var(--primary-dark);">Reserva da Piscina / Espaço</h4>
-                  <p style="font-size: 0.8rem; color: var(--text-muted);">Consultar normas e horários</p>
-                </div>
-              </div>
-            </div>
+            <a href="https://realadministradoraapp.com21.com.br/frontend/public/#/login" target="_blank" class="btn-primary" style="text-decoration: none; padding: 0.8rem 1.25rem; font-weight: 700;">
+              <span class="material-symbols-outlined">open_in_new</span> Emitir 2ª Via do Boleto
+            </a>
           </div>
         </div>
 
-        <!-- Minhas Reservas Efetuadas -->
+        <!-- Section 2: Agendamento de Piscina & Academia (De Hora em Hora) -->
         <div class="card-widget">
           <div class="card-header">
-            <div class="card-title">
-              <span class="material-symbols-outlined">event_available</span> Reservas Confirmadas
+            <div>
+              <div class="card-title">
+                <span class="material-symbols-outlined">pool</span> Agendamento de Piscina &amp; Academia
+              </div>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                Agendamento de horários exclusivos de hora em hora para uso das áreas comuns.
+              </p>
             </div>
           </div>
 
+          ${!user || user.status !== 'Aprovado' ? `
+            <div style="background: #FFF3E0; padding: 1rem; border-radius: var(--radius-sm); color: #E65100; font-size: 0.88rem; margin-bottom: 1rem;">
+              🔒 <strong>Atenção:</strong> Faça login para realizar o agendamento da piscina ou academia.
+            </div>
+          ` : ''}
+
+          <form onsubmit="UtilidadesComponent.submeterAgendamento(event)" style="margin-bottom: 1.5rem;">
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Selecione a Área Comum</label>
+                <select id="resArea" class="form-control" required>
+                  <option value="Piscina">🏊 Piscina</option>
+                  <option value="Academia">🏋️ Academia</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Data do Uso</label>
+                <input type="date" id="resData" class="form-control" value="${new Date().toISOString().split('T')[0]}" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Horário (Slots de Hora em Hora)</label>
+                <select id="resHorario" class="form-control" required>
+                  ${hourlySlots.map(h => `<option value="${h}">${h}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary" ${(!user || user.status !== 'Aprovado') ? 'disabled' : ''} style="width: 100%; justify-content: center; padding: 0.8rem;">
+              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento de Hora em Hora
+            </button>
+          </form>
+
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
+            Agendamentos Confirmados
+          </h4>
           <div class="table-responsive">
             <table class="custom-table">
               <thead>
                 <tr>
-                  <th>Espaço Reservado</th>
+                  <th>Área</th>
+                  <th>Data</th>
+                  <th>Horário</th>
                   <th>Morador</th>
-                  <th>Data da Reserva</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                ${reservas.map(res => `
+                ${reservasExistentes.length === 0 ? `
+                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum agendamento registrado ainda.</td></tr>
+                ` : reservasExistentes.map(r => `
                   <tr>
-                    <td><strong>${res.espaco}</strong></td>
-                    <td>${res.moradorNome} (Apt ${res.apartamento})</td>
-                    <td>${res.data}</td>
-                    <td><span class="badge badge-success">${res.status}</span></td>
+                    <td><strong>${r.area}</strong></td>
+                    <td>${r.data}</td>
+                    <td><span class="badge badge-info">${r.horario}</span></td>
+                    <td>${r.moradorNome}</td>
+                    <td><span class="badge badge-success">${r.status}</span></td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
           </div>
         </div>
-      </div>
-    `;
-  },
 
-  emite2ViaBoleto() {
-    const user = window.CondoStore.currentUser || { apartamento: '101', bloco: 'A' };
-    alert(`2ª VIA DE BOLETO CONDOMINIAL\nCompetência: Julho/2026\nApartamento: ${user.apartamento || '152'}\nValor: R$ 850,00\nVencimento: 10/08/2026\n\nCódigo de Barras PIX: 00020126580014BR.GOV.BCB.PIX0136modernlife-pix-key`);
-  },
+        <!-- Section 3: Reserva de Salão de Festas & Churrasqueira (Aplicativo Real Administradora) -->
+        <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white;">
+          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 280px;">
+              <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.5rem;">
+                <span class="material-symbols-outlined" style="font-size: 0.85rem;">phone_iphone</span> APLICATIVO OFICIAL
+              </span>
+              <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">
+                Reserva de Salão de Festas &amp; Churrasqueira
+              </h3>
+              <p style="font-size: 0.9rem; opacity: 0.95; line-height: 1.6; margin-bottom: 1.25rem;">
+                Para solicitar a reserva do Salão de Festas ou da Churrasqueira, baixe o aplicativo oficial no link abaixo e escaneie o QR CODE de acordo com o sistema do seu aparelho:
+              </p>
 
-  openReservaModal(espaco) {
-    const modalHtml = `
-      <div class="modal-overlay active" id="modalReserva">
-        <div class="modal-card">
-          <div class="modal-header">
-            <div class="modal-title">Reserva de Espaço - ${espaco}</div>
-            <button class="modal-close" onclick="document.getElementById('modalReserva').remove()">✕</button>
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a href="https://realadministradoraapp.com21.com.br/frontend/public/#/login" target="_blank" class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; text-decoration: none;">
+                  <span class="material-symbols-outlined">download_for_offline</span> Abrir Link do App Real Administradora
+                </a>
+              </div>
+            </div>
+
+            <!-- QR Code Simulation Box -->
+            <div style="background: white; padding: 1.25rem; border-radius: var(--radius-md); text-align: center; color: var(--text-main); min-width: 200px; box-shadow: var(--shadow-lg);">
+              <div style="font-weight: 700; font-size: 0.85rem; color: var(--primary-dark); margin-bottom: 0.5rem;">
+                Escaneie o QR CODE
+              </div>
+              <div style="width: 140px; height: 140px; background: #000; margin: 0 auto 0.5rem auto; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="white">
+                  <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm9-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm13-2h2v2h-2v-2zm-4 0h2v2h-2v-2zm2 4h2v2h-2v-2zm2-2h2v2h-2v-2zm0 4h2v2h-2v-2zm-4 0h2v2h-2v-2z"/>
+                </svg>
+              </div>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">iOS &amp; Android App</span>
+            </div>
           </div>
-          <form onsubmit="UtilidadesComponent.submitReserva(event, '${espaco}')">
-            <div class="modal-body">
-              <div class="form-group">
-                <label class="form-label">Data Desejada para a Reserva</label>
-                <input type="date" id="resData" class="form-control" required min="${new Date().toISOString().split('T')[0]}">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Declaração de Aceite das Normas</label>
-                <label style="font-size: 0.82rem; display: flex; align-items: center; gap: 6px;">
-                  <input type="checkbox" required> Declaro estar ciente das regras de limpeza e silêncio após às 22h.
-                </label>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn-secondary" onclick="document.getElementById('modalReserva').remove()">Cancelar</button>
-              <button type="submit" class="btn-primary">Confirmar Reserva</button>
-            </div>
-          </form>
         </div>
+
       </div>
     `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
-  submitReserva(e, espaco) {
+  submeterAgendamento(e) {
     e.preventDefault();
-    const data = document.getElementById('resData').value;
-    const user = window.CondoStore.currentUser || { nome: 'Morador', apartamento: '101' };
+    const user = window.CondoStore.currentUser;
+    if (!user || user.status !== 'Aprovado') {
+      App.showToast('Você precisa estar logado e aprovado para agendar.', 'error');
+      return;
+    }
 
-    window.CondoStore.data.reservas.unshift({
-      id: 'res_' + Date.now(),
-      espaco,
-      moradorNome: user.nome,
-      apartamento: `${user.apartamento || '101'}${user.bloco || 'A'}`,
+    const area = document.getElementById('resArea').value;
+    const data = document.getElementById('resData').value;
+    const horario = document.getElementById('resHorario').value;
+
+    window.CondoStore.addAgendamento({
+      area,
       data,
-      status: 'Confirmada'
+      horario,
+      moradorNome: `${user.nome} (Apt ${user.apartamento})`
     });
 
-    window.CondoStore.saveData();
-    document.getElementById('modalReserva').remove();
-    App.showToast(`Reserva do ${espaco} confirmada para ${data}!`, 'success');
+    App.showToast(`Agendamento de ${area} confirmado para ${data} às ${horario}!`, 'success');
     App.render();
   }
 };

@@ -105,27 +105,6 @@ window.App = {
   },
 
   updateNavigationUI() {
-    const routeTitles = {
-      dashboard: 'Página Inicial - Dashboard',
-      prestacao: 'Prestação de Contas Mensal',
-      balancetes: 'Balancetes Consolidados',
-      contratos: 'Contratos Firmados',
-      transparencia: 'Demonstrativo Financeiro & Gráficos',
-      documentos: 'Biblioteca de Documentos',
-      recados: 'Mural de Recados da Administração',
-      canal: 'Canal Direto com o Síndico',
-      ocorrencias: 'Reclamações & Ocorrências',
-      utilidades: 'Utilidades & Reservas',
-      agenda: 'Agenda & Calendário',
-      galeria: 'Galeria do Condomínio',
-      admin: 'Painel Administrativo Restrito'
-    };
-
-    const headerTitle = document.getElementById('headerPageTitle');
-    if (headerTitle) {
-      headerTitle.innerText = routeTitles[this.currentRoute] || 'Modern Life Residence';
-    }
-
     document.querySelectorAll('.nav-item').forEach(item => {
       const route = item.getAttribute('data-route');
       if (route === this.currentRoute) {

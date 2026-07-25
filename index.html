@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Modern Life Residence - Portal da Transparência &amp; Prestação de Contas</title>
-  <meta name="description" content="Portal de prestação de contas, transparência financeira e gestão do condomínio Modern Life Residence. Síndico Alessandro Cristiano da Silva (Apt 903).">
+  <meta name="description" content="Portal de prestação de contas, transparência financeira e gestão do condomínio Modern Life Residence. Síndico Alessandro Cristiano da Silva.">
 
   <!-- PWA Manifest & Theme -->
   <link rel="manifest" href="./manifest.json">
@@ -28,7 +28,7 @@
     .condo-banner-hero {
       background: linear-gradient(135deg, rgba(31, 77, 48, 0.92) 0%, rgba(46, 107, 66, 0.88) 100%), url('./assets/images/IMG_2956.jpg') center/cover no-repeat;
       color: white;
-      padding: 2.5rem 2.5rem;
+      padding: 2.25rem 2.5rem;
       position: relative;
       overflow: hidden;
       box-shadow: var(--shadow-md);
@@ -90,7 +90,7 @@
 
         <div class="menu-section-title">Administração</div>
         <a class="nav-item" data-route="admin" onclick="App.navigateTo('admin')">
-          <span class="material-symbols-outlined">admin_panel_settings</span> Painel do Síndico (Apt 903)
+          <span class="material-symbols-outlined">admin_panel_settings</span> Painel do Síndico
         </a>
       </nav>
 
@@ -115,8 +115,7 @@
             <span class="material-symbols-outlined">menu</span>
           </button>
           <div class="header-title-container">
-            <h1 id="headerPageTitle">Modern Life Residence</h1>
-            <p>Portal Oficial de Gestão e Transparência</p>
+            <h1 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: var(--primary-dark);">Modern Life Residence</h1>
           </div>
         </div>
 
@@ -134,13 +133,13 @@
           </button>
 
           <!-- Notifications Center -->
-          <button class="icon-btn" onclick="alert('Notificações:\n• Solicitado e-mail de autorização para o Síndico (Apt 903).\n• Balancetes publicados.')" title="Notificações do Portal">
+          <button class="icon-btn" onclick="alert('Notificações do Condomínio Modern Life Residence')" title="Notificações do Portal">
             <span class="material-symbols-outlined">notifications</span>
             <span class="badge-dot"></span>
           </button>
 
           <!-- WhatsApp Direct Launcher -->
-          <button class="btn-whatsapp-header" onclick="window.open('https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro%20(Apt%20903),%20gostaria%20de%20falar%20sobre%20o%20condomínio', '_blank')">
+          <button class="btn-whatsapp-header" onclick="window.open('https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro,%20gostaria%20de%20falar%20sobre%20o%20condomínio', '_blank')">
             <span class="material-symbols-outlined" style="font-size: 1.1rem;">chat</span>
             <span>Falar com o Síndico</span>
           </button>
@@ -151,10 +150,8 @@
       <section class="condo-banner-hero">
         <div class="banner-content">
           <div class="banner-text" style="max-width: 680px;">
-            <h2>Portal da Transparência Modern Life Residence</h2>
-            <p>Gestão do Síndico <strong>Alessandro Cristiano da Silva (Apt 903)</strong> &bull; E-mail oficial: <code>condominio.modern.life@gmail.com</code> &bull; O acesso exige cadastro e aprovação por e-mail.</p>
-            <div class="banner-tags">
-              <span class="banner-tag"><span class="material-symbols-outlined">domain</span> Síndico: Apt 903</span>
+            <h2>Portal do Condomínio Modern Life Residence</h2>
+            <div class="banner-tags" style="margin-top: 1rem;">
               <span class="banner-tag"><span class="material-symbols-outlined">mark_email_unread</span> Autorização por E-mail</span>
               <span class="banner-tag"><span class="material-symbols-outlined">verified_user</span> Gestão Transparente</span>
             </div>
@@ -172,11 +169,11 @@
 
       <!-- Footer -->
       <footer class="app-footer">
-        <div class="footer-brand">
-          <span class="material-symbols-outlined">domain</span> Modern Life Residence &bull; Portal da Transparência
+        <div class="footer-brand" style="margin-bottom: 0.5rem; width: 100%;">
+          <span class="material-symbols-outlined">domain</span> Modern Life Residence &bull; Portal de Transparência
         </div>
-        <div>
-          Síndico: <strong>Alessandro Cristiano da Silva (Apt 903)</strong> &bull; E-mail: <strong>condominio.modern.life@gmail.com</strong>
+        <div style="font-size: 0.88rem; color: var(--text-main); font-weight: 500; margin-bottom: 0.75rem; width: 100%; background: var(--primary-light); padding: 0.85rem 1.25rem; border-radius: var(--radius-sm); border-left: 4px solid var(--primary);">
+          Gestão do Síndico Alessandro Cristiano da Silva &bull; E-mail oficial: <code>condominio.modern.life@gmail.com</code> &bull; O acesso exige cadastro e aprovação por e-mail.
         </div>
         <div class="footer-links">
           <a href="#" onclick="App.navigateTo('transparencia')">Demonstrativo Financeiro</a>
@@ -189,7 +186,7 @@
   </div>
 
   <!-- Floating WhatsApp Launcher Button -->
-  <a href="https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro%20(Apt%20903),%20gostaria%20de%20falar%20sobre%20o%20condomínio" target="_blank" class="floating-whatsapp" title="Falar com o Síndico pelo WhatsApp">
+  <a href="https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro,%20gostaria%20de%20falar%20sobre%20o%20condomínio" target="_blank" class="floating-whatsapp" title="Falar com o Síndico pelo WhatsApp">
     <span class="material-symbols-outlined" style="font-size: 2rem;">chat</span>
   </a>
 

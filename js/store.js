@@ -1,10 +1,9 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Mock Data
-   Síndico: Alessandro Cristiano da Silva (Apt 903)
-   Fluxo Estrito de Aprovação por E-mail
+   Síndico: Alessandro Cristiano da Silva
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V4';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V5';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER';
 
 const INITIAL_DATA = {
@@ -12,13 +11,13 @@ const INITIAL_DATA = {
     {
       id: 'usr_sindico',
       nome: 'Alessandro Cristiano da Silva',
-      apartamento: '903',
+      apartamento: '152',
       bloco: 'A',
       cpf: '123.456.789-00',
       telefone: '(11) 98765-4321',
       email: 'condominio.modern.life@gmail.com',
-      status: 'Aprovado', // Aprovado, Pendente, Rejeitado
-      role: 'Administrador', // Administrador, Conselheiro, Morador
+      status: 'Aprovado',
+      role: 'Administrador',
       dataCadastro: '2025-01-10',
       photoURL: 'https://lh3.googleusercontent.com/a/default-user'
     },
@@ -45,22 +44,9 @@ const INITIAL_DATA = {
       status: 'Aprovado',
       role: 'Morador',
       dataCadastro: '2025-03-01'
-    },
-    {
-      id: 'usr_04_pendente',
-      nome: 'Fernanda Oliveira',
-      apartamento: '43',
-      bloco: 'A',
-      cpf: '456.789.012-33',
-      telefone: '(11) 95432-1098',
-      email: 'fernanda.oliveira@gmail.com',
-      status: 'Pendente',
-      role: 'Morador',
-      dataCadastro: '2026-07-24'
     }
   ],
 
-  // Dados reais consolidados dos PDFs da Gestão
   prestacaoContas: [
     {
       id: 'pc_2026_05',
@@ -76,7 +62,7 @@ const INITIAL_DATA = {
       categoriasDespesa: [
         { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 12574.41 },
         { nome: 'Manutenção e Conservação Predial', valor: 4561.11 },
-        { nome: 'Despesas Administrativas & Síndico (Apt 903)', valor: 7943.33 },
+        { nome: 'Despesas Administrativas & Síndico', valor: 7943.33 },
         { nome: 'Taxa Extra / Obras Calçada', valor: 1361.00 },
         { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 39121.61 },
         { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4305.34 }
@@ -96,7 +82,7 @@ const INITIAL_DATA = {
       categoriasDespesa: [
         { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 11406.96 },
         { nome: 'Manutenção e Conservação Predial', valor: 6855.48 },
-        { nome: 'Despesas Administrativas & Síndico (Apt 903)', valor: 3625.52 },
+        { nome: 'Despesas Administrativas & Síndico', valor: 3625.52 },
         { nome: 'Taxa Extra / Obras Calçada', valor: 9730.66 },
         { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 39069.72 },
         { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4017.75 }
@@ -116,7 +102,7 @@ const INITIAL_DATA = {
       categoriasDespesa: [
         { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 12211.96 },
         { nome: 'Manutenção e Conservação Predial', valor: 3533.29 },
-        { nome: 'Despesas Administrativas & Síndico (Apt 903)', valor: 5167.52 },
+        { nome: 'Despesas Administrativas & Síndico', valor: 5167.52 },
         { nome: 'Taxa Extra / Obra Calçada', valor: 16164.26 },
         { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 40828.32 },
         { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 3974.13 }
@@ -136,7 +122,7 @@ const INITIAL_DATA = {
       categoriasDespesa: [
         { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 15697.96 },
         { nome: 'Manutenção e Conservação Predial', valor: 5854.78 },
-        { nome: 'Despesas Administrativas & Síndico (Apt 903)', valor: 3221.55 },
+        { nome: 'Despesas Administrativas & Síndico', valor: 3221.55 },
         { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 35965.62 },
         { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4071.75 }
       ]
@@ -198,7 +184,7 @@ const INITIAL_DATA = {
     {
       id: 'ctr_01',
       empresa: 'Otis Elevadores S.A.',
-      objeto: 'Manutenção Preventiva e Corretiva dos 4 Elevadores',
+      objeto: 'Manutenção Preventiva e Corretiva dos Elevadores',
       valorMensal: 14500.00,
       vigenciaInicio: '2025-01-01',
       vigenciaFim: '2027-01-01',
@@ -242,7 +228,7 @@ const INITIAL_DATA = {
     },
     {
       id: 'doc_04',
-      nome: 'Edital Convocação AGE 11.08.2026 (Assinado pelo Síndico Alessandro - Apt 903)',
+      nome: 'Edital Convocação AGE 11.08.2026 (Assinado pelo Síndico Alessandro)',
       categoria: 'Assembleias',
       dataUpload: '2026-07-23',
       tamanho: '181 KB',
@@ -255,7 +241,7 @@ const INITIAL_DATA = {
       id: 'rec_01',
       titulo: 'Modernização da Iluminação das Áreas Comuns para LED',
       data: '2026-07-15',
-      autor: 'Síndico Alessandro Cristiano da Silva (Apt 903)',
+      autor: 'Síndico Alessandro Cristiano da Silva',
       imagem: './assets/images/IMG_2909.JPG',
       resumo: 'Concluímos a substituição das lâmpadas da garagem e corredores por iluminação LED ecoeficiente, gerando redução estimada de 18% na conta de energia.',
       texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio. Todas as lâmpadas fluorescentes dos subsolos, corredores e hall principal foram substituídas por painéis e refletores LED de alta durabilidade.\n\nEstimamos uma economia mensal de cerca de R$ 3.200,00 na fatura de energia elétrica, além de melhorar substancialmente a iluminação e segurança de nossas garagens.',
@@ -264,6 +250,26 @@ const INITIAL_DATA = {
   ],
 
   ocorrencias: [],
+
+  agendaReservas: [
+    {
+      id: 'res_01',
+      area: 'Piscina',
+      data: '2026-07-28',
+      horario: '10:00 às 11:00',
+      moradorNome: 'Mariana Castro',
+      status: 'Confirmado'
+    },
+    {
+      id: 'res_02',
+      area: 'Academia',
+      data: '2026-07-28',
+      horario: '07:00 às 08:00',
+      moradorNome: 'Roberto Almeida',
+      status: 'Confirmado'
+    }
+  ],
+
   agenda: [
     {
       id: 'evt_01',
@@ -275,10 +281,10 @@ const INITIAL_DATA = {
       descricao: 'Deliberação sobre a aprovação das contas do 1º semestre e orçamento da reforma do playground.'
     }
   ],
+
   galeria: [
     { id: 'gal_01', titulo: 'Torre Modern Life Residence', categoria: 'Fachada', imagem: './assets/images/IMG_2956.jpg' }
-  ],
-  reservas: []
+  ]
 };
 
 class StoreEngine {
@@ -310,7 +316,7 @@ class StoreEngine {
       const raw = localStorage.getItem(CURRENT_USER_KEY);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
-    return null; // Default to unauthenticated visitors
+    return null;
   }
 
   setCurrentUser(user) {
@@ -334,21 +340,16 @@ class StoreEngine {
     this.listeners.forEach(l => l(this.data, this.currentUser));
   }
 
-  // Cadastra novo morador em estado PENDENTE e simula envio do e-mail de autorização para o Síndico Alessandro (Apt 903)
   addMorador(morador) {
     const newMorador = {
       id: 'usr_' + Date.now(),
       dataCadastro: new Date().toISOString().split('T')[0],
-      status: 'Pendente', // Exige autorização formal por e-mail pelo Síndico
+      status: 'Pendente',
       role: 'Morador',
       ...morador
     };
     this.data.moradores.push(newMorador);
     this.saveData();
-
-    // Log simulated email dispatch
-    console.log(`[E-mail Enviado] Para: condominio.modern.life@gmail.com | Assunto: Solicitação de Autorização de Acesso - ${newMorador.nome} (Apto ${newMorador.apartamento})`);
-
     return newMorador;
   }
 
@@ -358,12 +359,38 @@ class StoreEngine {
       item.status = newStatus;
       this.saveData();
 
-      // If updating current user status, sync current user state
       if (this.currentUser && this.currentUser.id === id) {
         this.currentUser.status = newStatus;
         this.setCurrentUser(this.currentUser);
       }
     }
+  }
+
+  addRecado(post) {
+    const newRecado = {
+      id: 'rec_' + Date.now(),
+      data: new Date().toISOString().split('T')[0],
+      autor: 'Síndico Alessandro Cristiano da Silva',
+      imagem: post.imagem || './assets/images/IMG_2956.jpg',
+      comentarios: [],
+      ...post
+    };
+    if (!this.data.recados) this.data.recados = [];
+    this.data.recados.unshift(newRecado);
+    this.saveData();
+    return newRecado;
+  }
+
+  addAgendamento(reserva) {
+    if (!this.data.agendaReservas) this.data.agendaReservas = [];
+    const newReserva = {
+      id: 'res_' + Date.now(),
+      status: 'Confirmado',
+      ...reserva
+    };
+    this.data.agendaReservas.unshift(newReserva);
+    this.saveData();
+    return newReserva;
   }
 }
 
