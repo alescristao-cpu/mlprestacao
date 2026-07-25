@@ -1,10 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Mock Data
-   Síndico: Alessandro Cristiano da Silva
-   Ocorrências Privadas (Reclamações, Elogios, Sugestões)
+   Síndico: Alessandro Cristiano da Silva (Sem número de unidade)
+   Aprovação Direta no Painel do Administrador
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V6';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V7';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER';
 
 const INITIAL_DATA = {
@@ -12,8 +12,8 @@ const INITIAL_DATA = {
     {
       id: 'usr_sindico',
       nome: 'Alessandro Cristiano da Silva',
-      apartamento: '152',
-      bloco: 'A',
+      apartamento: 'Administração',
+      bloco: 'Geral',
       cpf: '123.456.789-00',
       telefone: '(11) 98765-4321',
       email: 'condominio.modern.life@gmail.com',
@@ -250,59 +250,8 @@ const INITIAL_DATA = {
     }
   ],
 
-  // Ocorrências Estritamente Privadas (Reclamações, Elogios, Sugestões)
-  ocorrencias: [
-    {
-      id: 'oco_01',
-      moradorId: 'usr_02',
-      moradorNome: 'Mariana Castro',
-      moradorEmail: 'mariana.castro@gmail.com',
-      apartamento: '84B',
-      categoria: 'Sugestão',
-      assunto: 'Instalação de tomadas para veículos elétricos na garagem',
-      descricao: 'Gostaria de sugerir que o condomínio avalie um estudo de viabilidade técnica para pontos de recarga no subsolo.',
-      data: '2026-07-18',
-      status: 'Respondido pelo Síndico',
-      respostas: [
-        {
-          autor: 'Síndico Alessandro Cristiano da Silva',
-          data: '2026-07-19 10:15',
-          texto: 'Prezada Mariana, recebemos sua sugestão com satisfação. Já contratamos um engenheiro eletricista para parecer técnico.'
-        }
-      ]
-    },
-    {
-      id: 'oco_02',
-      moradorId: 'usr_03',
-      moradorNome: 'Roberto Almeida',
-      moradorEmail: 'roberto.almeida@hotmail.com',
-      apartamento: '121A',
-      categoria: 'Elogio',
-      assunto: 'Limpeza e manutenção da área da piscina',
-      descricao: 'Parabéns à equipe de manutenção e limpeza da área da piscina no último final de semana.',
-      data: '2026-07-20',
-      status: 'Respondido pelo Síndico',
-      respostas: [
-        {
-          autor: 'Síndico Alessandro Cristiano da Silva',
-          data: '2026-07-20 14:00',
-          texto: 'Obrigado pelo reconhecimento, Roberto! Repassarei o elogio à equipe de conservação.'
-        }
-      ]
-    }
-  ],
-
-  agendaReservas: [
-    {
-      id: 'res_01',
-      area: 'Piscina',
-      data: '2026-07-28',
-      horario: '10:00 às 11:00',
-      moradorNome: 'Mariana Castro',
-      status: 'Confirmado'
-    }
-  ],
-
+  ocorrencias: [],
+  agendaReservas: [],
   agenda: [
     {
       id: 'evt_01',
@@ -314,7 +263,6 @@ const INITIAL_DATA = {
       descricao: 'Deliberação sobre a aprovação das contas do 1º semestre e orçamento da reforma do playground.'
     }
   ],
-
   galeria: [
     { id: 'gal_01', titulo: 'Torre Modern Life Residence', categoria: 'Fachada', imagem: './assets/images/IMG_2956.jpg' }
   ]
@@ -377,7 +325,7 @@ class StoreEngine {
     const newMorador = {
       id: 'usr_' + Date.now(),
       dataCadastro: new Date().toISOString().split('T')[0],
-      status: 'Pendente',
+      status: 'Pendente', // Aguarda aprovação direta pelo Síndico no Painel do Administrador
       role: 'Morador',
       ...morador
     };

@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Cadastro de Moradores & Envio Real de E-mail
-   Síndico: Alessandro Cristiano da Silva
+   Modern Life Residence - Cadastro & Autenticação de Moradores
+   Aprovação Direta no Painel do Administrador (Síndico)
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -73,7 +73,7 @@ window.AuthComponent = {
           Entrar com a Conta Google
         </button>
         <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.4rem;">
-          Moradores previamente autorizados pelo Síndico acessam diretamente via Google.
+          Moradores autorizados pela administração acessam diretamente via Google.
         </div>
       </div>
 
@@ -87,7 +87,7 @@ window.AuthComponent = {
       <form id="formLogin" onsubmit="AuthComponent.handleLogin(event)">
         <div class="form-group">
           <label class="form-label">E-mail do Morador</label>
-          <input type="email" id="loginEmail" class="form-control" placeholder="condominio.modern.life@gmail.com" required value="condominio.modern.life@gmail.com">
+          <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required>
         </div>
 
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.8rem;">
@@ -100,8 +100,8 @@ window.AuthComponent = {
   renderRegisterForm() {
     return `
       <div style="background: var(--primary-light); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 4px solid var(--primary);">
-        ✉️ <strong>Envio Real de E-mail de Autorização:</strong><br>
-        Ao clicar em cadastrar, um e-mail com botão de autorização será enviado automaticamente para <code>condominio.modern.life@gmail.com</code>. O acesso às pastas só será liberado após a aprovação do Síndico Alessandro.
+        📋 <strong>Cadastro do Morador:</strong><br>
+        Preencha os dados abaixo. Após o envio, a sua solicitação ficará disponível no <strong>Painel do Administrador (Síndico)</strong> para aprovação imediata.
       </div>
 
       <form id="formRegister" onsubmit="AuthComponent.handleRegister(event)">
@@ -111,7 +111,7 @@ window.AuthComponent = {
         </div>
 
         <div class="form-group">
-          <label class="form-label">E-mail do Morador</label>
+          <label class="form-label">E-mail Principal</label>
           <input type="email" id="regEmail" class="form-control" placeholder="seu.email@exemplo.com" required>
         </div>
 
@@ -128,7 +128,7 @@ window.AuthComponent = {
         </div>
 
         <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-          <span class="material-symbols-outlined">send</span> Cadastrar &amp; Enviar E-mail de Autorização
+          <span class="material-symbols-outlined">send</span> Finalizar Cadastro &amp; Solicitar Autorização
         </button>
       </form>
     `;
@@ -150,10 +150,9 @@ window.AuthComponent = {
 
       ${!isApproved ? `
         <div style="background: #FFF3E0; border: 1px solid #FFE0B2; padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: #E65100; margin-bottom: 1.25rem; text-align: center;">
-          <span class="material-symbols-outlined" style="font-size: 2rem; display: block; margin-bottom: 0.25rem;">mark_email_unread</span>
-          <strong>Aguardando Autorização do Síndico!</strong><br>
-          Foi enviado um e-mail de solicitação para <code>condominio.modern.life@gmail.com</code>.<br>
-          O acesso aos balancetes e documentos será liberado assim que o Síndico aceitar.
+          <span class="material-symbols-outlined" style="font-size: 2rem; display: block; margin-bottom: 0.25rem;">hourglass_top</span>
+          <strong>Aguardando Autorização da Administração!</strong><br>
+          Seu cadastro foi enviado com sucesso. O acesso às informações do portal será liberado assim que o Síndico aprovar sua solicitação no Painel do Administrador.
         </div>
       ` : ''}
 
@@ -175,7 +174,7 @@ window.AuthComponent = {
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         ${user.role === 'Administrador' ? `
           <button onclick="document.getElementById('modalAuth').remove(); App.navigateTo('admin');" class="btn-primary" style="justify-content: center;">
-            <span class="material-symbols-outlined">admin_panel_settings</span> Acessar Painel Administrativo do Síndico
+            <span class="material-symbols-outlined">admin_panel_settings</span> Acessar Painel do Administrador (Síndico)
           </button>
         ` : ''}
         <button onclick="AuthComponent.logout()" class="btn-secondary btn-danger" style="justify-content: center; background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2;">
@@ -198,7 +197,7 @@ window.AuthComponent = {
 
   async handleLogin(e) {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
+    const email = document.getElementById('loginEmail').value.trim();
     const user = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === email.toLowerCase());
 
     if (user) {
@@ -206,7 +205,7 @@ window.AuthComponent = {
       if (user.status === 'Aprovado') {
         App.showToast(`Bem-vindo(a), ${user.nome}!`, 'success');
       } else {
-        App.showToast('Seu cadastro ainda está aguardando a aprovação do Síndico Alessandro por e-mail.', 'info');
+        App.showToast('Seu cadastro está aguardando aprovação no Painel do Administrador (Síndico).', 'info');
       }
       document.getElementById('modalAuth').remove();
       App.render();
@@ -215,20 +214,14 @@ window.AuthComponent = {
     }
   },
 
-  async handleRegister(e) {
+  handleRegister(e) {
     e.preventDefault();
-    const btnSubmit = document.getElementById('btnSubmitRegister');
-    if (btnSubmit) {
-      btnSubmit.disabled = true;
-      btnSubmit.innerHTML = `<span class="material-symbols-outlined" style="animation: spin 1s infinite linear;">sync</span> Enviando E-mail ao Síndico...`;
-    }
-
     const nome = document.getElementById('regNome').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const telefone = document.getElementById('regTelefone').value.trim();
     const unidade = document.getElementById('regUnidade').value.trim();
 
-    // 1. Cadastra no banco de dados local com status PENDENTE
+    // Cadastra o morador com status PENDENTE
     const newMorador = window.CondoStore.addMorador({
       nome,
       email,
@@ -240,38 +233,7 @@ window.AuthComponent = {
 
     window.CondoStore.setCurrentUser(newMorador);
 
-    // 2. Cria o link direto de autorização que o Síndico clicará no e-mail
-    const baseUrl = window.location.href.split('?')[0];
-    const approveLink = `${baseUrl}?approve_email=${encodeURIComponent(email)}`;
-
-    // 3. Envia o E-MAIL REAL via API de serviço de correio (FormSubmit)
-    try {
-      await fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          _subject: `[SOLICITAÇÃO DE ACESSO] Autorização de Morador: ${nome} (${unidade})`,
-          "Nome do Morador": nome,
-          "E-mail do Morador": email,
-          "Telefone": telefone,
-          "Unidade": unidade,
-          "Link de Autorização (Clique para Aprovar)": approveLink,
-          "Instrução": "Clique no link de autorização acima ou acesse o Painel Administrativo no portal para liberar o acesso aos arquivos."
-        })
-      });
-    } catch (err) {
-      console.log('Envio de segundo plano falhou, acionando cliente de e-mail de reserva...');
-    }
-
-    // 4. Aciona cliente de e-mail local como plano B (Mailto)
-    const emailSubject = encodeURIComponent(`[SOLICITAÇÃO DE ACESSO] Autorização de Morador - ${nome} (${unidade})`);
-    const emailBody = encodeURIComponent(`Solicitação de Cadastro no Portal Modern Life Residence:\n\nNome: ${nome}\nUnidade: ${unidade}\nE-mail: ${email}\nTelefone: ${telefone}\n\nClique no link abaixo para APROVAR o acesso deste morador:\n${approveLink}`);
-    window.open(`mailto:condominio.modern.life@gmail.com?subject=${emailSubject}&body=${emailBody}`, '_blank');
-
-    alert(`E-mail enviado com sucesso para condominio.modern.life@gmail.com!\n\nFoi encaminhada uma mensagem com os dados de ${nome} (${unidade}) e o link de autorização.\n\nO acesso aos arquivos e balancetes será liberado assim que o Síndico aprovar.`);
+    alert(`Cadastro realizado com sucesso!\n\nA sua solicitação foi registrada e enviada para o Painel do Administrador.\n\nO seu acesso às pastas e balancetes será liberado assim que o Síndico (Alessandro) aprovar a sua solicitação no painel.`);
 
     document.getElementById('modalAuth').remove();
     App.render();

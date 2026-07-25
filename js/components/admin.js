@@ -1,6 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
-   Síndico: Alessandro Cristiano da Silva (Apt 903)
+   Síndico: Alessandro Cristiano da Silva (Sem número de unidade)
+   Aprovação Direta de Cadastros de Moradores
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -15,10 +16,10 @@ window.AdminComponent = {
             Acesso Restrito à Administração
           </h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0;">
-            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva (Apt 903)</strong> para aprovação de cadastros de moradores e gerenciamento.
+            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação de cadastros de moradores e gestão condominial.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()">
-            <span class="material-symbols-outlined">login</span> Entrar como Síndico (Apt 903)
+            <span class="material-symbols-outlined">login</span> Entrar como Síndico / Administrador
           </button>
         </div>
       `;
@@ -37,37 +38,41 @@ window.AdminComponent = {
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
               <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.4rem;">
-                <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL DO SÍNDICO - APT 903
+                <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL ADMINISTRATIVO MASTER
               </span>
               <h2 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700;">
-                Gestão Alessandro Cristiano da Silva
+                Gestão do Síndico Alessandro Cristiano da Silva
               </h2>
               <p style="font-size: 0.88rem; opacity: 0.9;">
-                E-mail de Notificações: <code>condominio.modern.life@gmail.com</code>
+                E-mail do Condomínio: <code>condominio.modern.life@gmail.com</code>
               </p>
             </div>
             <div style="text-align: right;">
-              <span class="badge badge-warning" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">
-                ${pendentes.length} Solicitação(ões) Pendente(s)
+              <span class="badge badge-warning" style="font-size: 0.95rem; padding: 0.5rem 0.9rem;">
+                ${pendentes.length} Cadastros Aguardando Aprovação
               </span>
             </div>
           </div>
         </div>
 
-        <!-- Solicitações de Cadastro Pendentes de Aceite -->
-        <div class="card-widget">
-          <div class="card-header">
+        <!-- Solicitações de Cadastro Pendentes de Aprovação Direta -->
+        <div class="card-widget" style="border: 2px solid #FFE0B2;">
+          <div class="card-header" style="background: #FFF8E1; padding: 1rem; border-radius: var(--radius-sm);">
             <div class="card-title" style="color: #E65100;">
-              <span class="material-symbols-outlined">mark_email_unread</span> Solicitações de Autorização por E-mail (${pendentes.length})
+              <span class="material-symbols-outlined" style="font-size: 1.6rem;">how_to_reg</span> Solicitações de Cadastro de Moradores (${pendentes.length})
             </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
+              Clique em <strong>"Autorizar Acesso"</strong> para liberar o acesso do morador às pastas e balancetes imediatamente.
+            </p>
           </div>
 
           ${pendentes.length === 0 ? `
-            <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-              Nenhuma solicitação de cadastro pendente no momento. Todos os moradores cadastrados já foram avaliados.
+            <div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.92rem;">
+              <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.5; display: block; margin-bottom: 0.4rem;">check_circle</span>
+              Nenhum cadastro de morador aguardando aprovação no momento. Todos os cadastros foram avaliados.
             </div>
           ` : `
-            <div class="table-responsive">
+            <div class="table-responsive" style="margin-top: 1rem;">
               <table class="custom-table">
                 <thead>
                   <tr>
@@ -75,7 +80,7 @@ window.AdminComponent = {
                     <th>Unidade</th>
                     <th>E-mail</th>
                     <th>Telefone</th>
-                    <th>Data do Pedido</th>
+                    <th>Data do Cadastro</th>
                     <th style="text-align: center;">Ação do Síndico</th>
                   </tr>
                 </thead>
@@ -88,9 +93,9 @@ window.AdminComponent = {
                       <td>${p.telefone || 'Não informado'}</td>
                       <td>${p.dataCadastro}</td>
                       <td style="text-align: center;">
-                        <div style="display: flex; gap: 0.4rem; justify-content: center;">
-                          <button class="btn-primary btn-sm" style="background: #2E6B42;" onclick="AdminComponent.aprovarMorador('${p.id}')">
-                            <span class="material-symbols-outlined">check_circle</span> Autorizar Acesso
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                          <button class="btn-primary btn-sm" style="background: #2E6B42; padding: 0.5rem 0.85rem; font-weight: 700;" onclick="AdminComponent.aprovarMorador('${p.id}')">
+                            <span class="material-symbols-outlined" style="font-size: 1rem;">check_circle</span> Autorizar Acesso
                           </button>
                           <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.rejeitarMorador('${p.id}')">
                             Rejeitar
@@ -105,11 +110,11 @@ window.AdminComponent = {
           `}
         </div>
 
-        <!-- Moradores Aprovados com Acesso Liberado -->
+        <!-- Lista de Moradores Com Acesso Liberado -->
         <div class="card-widget">
           <div class="card-header">
             <div class="card-title">
-              <span class="material-symbols-outlined">groups</span> Moradores Com Acesso Liberado (${aprovados.length})
+              <span class="material-symbols-outlined">groups</span> Moradores Com Acesso Autorizado (${aprovados.length})
             </div>
           </div>
 
@@ -121,7 +126,7 @@ window.AdminComponent = {
                   <th>Unidade</th>
                   <th>E-mail</th>
                   <th>Perfil</th>
-                  <th>Status</th>
+                  <th>Status do Acesso</th>
                 </tr>
               </thead>
               <tbody>
