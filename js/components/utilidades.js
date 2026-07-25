@@ -83,13 +83,19 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined">pool</span> Agendamento de Piscina &amp; Academia
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                Agendamento de horários de hora em hora. Os dados são sincronizados automaticamente com o <strong>Google Sheets</strong>.
+                Agendamento de horários de hora em hora.
               </p>
             </div>
 
-            <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.openGoogleSheetsConfig()">
-              <span class="material-symbols-outlined">table_chart</span> Configuração Google Sheets
-            </button>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.exportarPlanilhaGoogleSheets()">
+                <span class="material-symbols-outlined">download</span> Baixar Planilha (.CSV / Google Sheets)
+              </button>
+
+              <button class="btn-primary btn-sm" style="background: #2E6B42;" onclick="UtilidadesComponent.openGoogleSheetsConfig()">
+                <span class="material-symbols-outlined">table_chart</span> Conectar Google Sheets
+              </button>
+            </div>
           </div>
 
           ${!user || user.status !== 'Aprovado' ? `
@@ -122,15 +128,15 @@ window.UtilidadesComponent = {
             </div>
 
             <button type="submit" class="btn-primary" ${(!user || user.status !== 'Aprovado') ? 'disabled' : ''} style="width: 100%; justify-content: center; padding: 0.8rem;">
-              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento &amp; Salvar no Google Sheets
+              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento
             </button>
           </form>
 
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-            Agendamentos Confirmados (Sincronizados com o Google Sheets)
+            Agendamentos Confirmados (Sincronizados)
           </h4>
           <div class="table-responsive">
-            <table class="custom-table">
+            <table class="custom-table" id="tableReservas">
               <thead>
                 <tr>
                   <th>Área</th>
@@ -205,31 +211,39 @@ window.UtilidadesComponent = {
 
     const modalHtml = `
       <div class="modal-overlay active" id="modalSheetsConfig">
-        <div class="modal-card" style="max-width: 580px;">
-          <div class="modal-header">
-            <div class="modal-title">Integração Automática com Google Sheets</div>
-            <button class="modal-close" onclick="document.getElementById('modalSheetsConfig').remove()">✕</button>
+        <div class="modal-card" style="max-width: 620px;">
+          <div class="modal-header" style="background: var(--primary-dark); color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700;">
+              📊 Passo a Passo Simplificado para Criar no Google Sheets
+            </div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalSheetsConfig').remove()">✕</button>
           </div>
           <div class="modal-body">
-            <p style="font-size: 0.88rem; color: var(--text-main); margin-bottom: 1rem;">
-              Para que os agendamentos da <strong>Piscina</strong> e <strong>Academia</strong> sejam salvos diretamente na sua planilha do <strong>Google Sheets</strong> em tempo real:
-            </p>
+            <div style="background: var(--primary-light); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 4px solid var(--primary);">
+              💡 <strong>Não se preocupe!</strong> É muito fácil e leva menos de 1 minuto. Siga apenas estes 4 passos:
+            </div>
 
-            <ol style="font-size: 0.85rem; color: var(--text-main); margin-left: 1.25rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
-              <li>Crie uma nova planilha no Google Sheets (<code>planilha.google.com</code>).</li>
-              <li>Acesse <strong>Extensões > Apps Script</strong> e cole o código do arquivo <code>google-sheets-script.js</code>.</li>
-              <li>Implante como <strong>Web App (App da Web)</strong> com acesso para <strong>Qualquer pessoa (Anyone)</strong>.</li>
-              <li>Cole a URL gerada no campo abaixo.</li>
+            <ol style="font-size: 0.88rem; color: var(--text-main); margin-left: 1.25rem; margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem;">
+              <li>Acesse <strong><a href="https://sheets.new" target="_blank" style="color: var(--primary); font-weight: 700;">sheets.new</a></strong> no seu navegador para abrir uma nova planilha em branco.</li>
+              <li>No menu do topo da planilha, clique em <strong>Extensões > Apps Script</strong>.</li>
+              <li>Apague qualquer texto que estiver lá e cole o código do arquivo <strong><code>google-sheets-script.js</code></strong>.</li>
+              <li>Clique no botão azul <strong>Implantar > Nova Implantação</strong>. Em <i>"Quem tem acesso"</i> escolha <strong>Qualquer Pessoa</strong>. Copie o link gerado e cole no campo abaixo:</li>
             </ol>
 
             <div class="form-group">
-              <label class="form-label">URL do Web App do Google Apps Script</label>
+              <label class="form-label" style="font-weight: 700;">Link do Web App do Google Apps Script</label>
               <input type="text" id="inputSheetsUrl" class="form-control" value="${currentUrl}" placeholder="https://script.google.com/macros/s/.../exec">
             </div>
 
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-              <button type="button" class="btn-secondary" onclick="document.getElementById('modalSheetsConfig').remove()">Cancelar</button>
-              <button type="button" class="btn-primary" onclick="UtilidadesComponent.saveGoogleSheetsUrl()">Salvar URL do Google Sheets</button>
+            <div style="display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+              <button type="button" class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.exportarPlanilhaGoogleSheets()">
+                <span class="material-symbols-outlined">file_download</span> Baixar Planilha em Excel (.CSV)
+              </button>
+
+              <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('modalSheetsConfig').remove()">Fechar</button>
+                <button type="button" class="btn-primary" onclick="UtilidadesComponent.saveGoogleSheetsUrl()">Salvar Integração</button>
+              </div>
             </div>
           </div>
         </div>
@@ -242,8 +256,28 @@ window.UtilidadesComponent = {
   saveGoogleSheetsUrl() {
     const url = document.getElementById('inputSheetsUrl').value.trim();
     this.setSavedSheetsUrl(url);
-    App.showToast('URL do Google Sheets salva com sucesso!', 'success');
+    App.showToast('URL do Google Sheets conectada com sucesso!', 'success');
     document.getElementById('modalSheetsConfig').remove();
+  },
+
+  exportarPlanilhaGoogleSheets() {
+    const data = window.CondoStore.data.agendaReservas || [];
+    let csv = '\uFEFF'; // UTF-8 BOM for Excel/Google Sheets
+    csv += 'Área Comum;Data do Uso;Horário;Morador;Status\n';
+
+    data.forEach(r => {
+      csv += `"${r.area}";"${r.data}";"${r.horario}";"${r.moradorNome}";"${r.status}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `Agendamentos_ModernLife_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    App.showToast('Planilha de agendamentos gerada! Você pode abri-la diretamente no Google Sheets ou Excel.', 'success');
   },
 
   async submeterAgendamento(e) {
@@ -284,7 +318,7 @@ window.UtilidadesComponent = {
       } catch (err) {}
     }
 
-    App.showToast(`Agendamento de ${area} confirmado (${horario}) e enviado para o Google Sheets!`, 'success');
+    App.showToast(`Agendamento de ${area} confirmado (${horario})!`, 'success');
     App.render();
   }
 };
