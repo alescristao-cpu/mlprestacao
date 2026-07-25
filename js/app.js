@@ -1,11 +1,13 @@
 /* ----------------------------------------------------
    Modern Life Residence - Main Application Orchestrator
+   Processador de Links de Autorização de E-mail
    ---------------------------------------------------- */
 
 window.App = {
   currentRoute: 'dashboard',
 
   init() {
+    this.checkEmailApprovalParams();
     this.bindEvents();
     this.initTheme();
     this.registerServiceWorker();
@@ -14,6 +16,23 @@ window.App = {
     window.CondoStore.subscribe(() => {
       this.render();
     });
+  },
+
+  checkEmailApprovalParams() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const emailToApprove = params.get('approve_email');
+      if (emailToApprove) {
+        const moradores = window.CondoStore.data.moradores;
+        const target = moradores.find(m => m.email.toLowerCase() === emailToApprove.toLowerCase());
+        if (target) {
+          window.CondoStore.updateMoradorStatus(target.id, 'Aprovado');
+          setTimeout(() => {
+            alert(`✅ AUTORIZAÇÃO CONCLUÍDA!\n\nO morador ${target.nome} (${target.email} - Apto ${target.apartamento}) foi APROVADO pelo Síndico com sucesso! O acesso aos arquivos e balancetes foi liberado.`);
+          }, 300);
+        }
+      }
+    } catch (e) {}
   },
 
   initTheme() {
@@ -121,7 +140,7 @@ window.App = {
 
     if (user) {
       if (userNameEl) userNameEl.innerText = user.nome;
-      if (userRoleEl) userRoleEl.innerHTML = `<span class="material-symbols-outlined" style="font-size: 0.85rem;">shield</span> ${user.role} (Apto ${user.apartamento})`;
+      if (userRoleEl) userRoleEl.innerHTML = `<span class="material-symbols-outlined" style="font-size: 0.85rem;">shield</span> ${user.role} (${user.status})`;
       if (userAvatarEl) userAvatarEl.innerText = user.nome.charAt(0);
     } else {
       if (userNameEl) userNameEl.innerText = 'Visitante';
