@@ -11,7 +11,6 @@ window.App = {
     this.registerServiceWorker();
     this.render();
 
-    // Listen to store updates
     window.CondoStore.subscribe(() => {
       this.render();
     });
@@ -31,7 +30,6 @@ window.App = {
   },
 
   bindEvents() {
-    // Keyboard shortcut Ctrl+K for Global Search
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -42,25 +40,22 @@ window.App = {
 
   navigateTo(route) {
     this.currentRoute = route;
-    // Close mobile drawer if open
-    document.getElementById('sidebar').classList.remove('mobile-open');
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.remove('mobile-open');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.render();
   },
 
   toggleMobileSidebar() {
     const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('mobile-open');
+    if (sidebar) sidebar.classList.toggle('mobile-open');
   },
 
   render() {
     const data = window.CondoStore.data;
-    const currentUser = window.CondoStore.currentUser;
 
-    // 1. Update Header Title & Navigation Highlights
     this.updateNavigationUI();
 
-    // 2. Render Page Content
     const pageContainer = document.getElementById('pageContent');
     if (!pageContainer) return;
 
@@ -83,8 +78,8 @@ window.App = {
       case 'documentos':
         window.DocumentosComponent.render(pageContainer, data);
         break;
-      case 'blog':
-        window.BlogComponent.render(pageContainer, data);
+      case 'recados':
+        window.RecadosComponent.render(pageContainer, data);
         break;
       case 'canal':
         window.CanalComponent.render(pageContainer, data);
@@ -117,12 +112,12 @@ window.App = {
       contratos: 'Contratos Firmados',
       transparencia: 'Demonstrativo Financeiro & Gráficos',
       documentos: 'Biblioteca de Documentos',
-      blog: 'Blog do Síndico & Notícias',
-      canal: 'Canal Direto com a Administração',
-      ocorrencias: 'Reclamações & Chamados Internos',
-      utilidades: 'Utilidades & Reservas de Espaços',
-      agenda: 'Agenda & Calendário de Eventos',
-      galeria: 'Galeria de Fotos do Condomínio',
+      recados: 'Mural de Recados da Administração',
+      canal: 'Canal Direto com o Síndico',
+      ocorrencias: 'Reclamações & Ocorrências',
+      utilidades: 'Utilidades & Reservas',
+      agenda: 'Agenda & Calendário',
+      galeria: 'Galeria do Condomínio',
       admin: 'Painel Administrativo Restrito'
     };
 
@@ -131,7 +126,6 @@ window.App = {
       headerTitle.innerText = routeTitles[this.currentRoute] || 'Modern Life Residence';
     }
 
-    // Update active nav items
     document.querySelectorAll('.nav-item').forEach(item => {
       const route = item.getAttribute('data-route');
       if (route === this.currentRoute) {
@@ -141,7 +135,6 @@ window.App = {
       }
     });
 
-    // Update User Info in Sidebar
     const user = window.CondoStore.currentUser;
     const userNameEl = document.getElementById('sidebarUserName');
     const userRoleEl = document.getElementById('sidebarUserRole');
@@ -168,7 +161,7 @@ window.App = {
           <div class="modal-header">
             <div style="display: flex; align-items: center; gap: 0.5rem; width: 100%;">
               <span class="material-symbols-outlined" style="color: var(--primary);">search</span>
-              <input type="text" id="globalSearchInput" class="form-control" placeholder="Buscar documentos, contratos, noticias ou regras..." autofocus onkeyup="App.executeGlobalSearch()">
+              <input type="text" id="globalSearchInput" class="form-control" placeholder="Buscar documentos, contratos, recados..." autofocus onkeyup="App.executeGlobalSearch()">
             </div>
             <button class="modal-close" onclick="document.getElementById('modalSearch').remove()">✕</button>
           </div>
@@ -197,24 +190,21 @@ window.App = {
     const data = window.CondoStore.data;
     const matches = [];
 
-    // Search in documents
     data.documentos.forEach(d => {
       if (d.nome.toLowerCase().includes(q) || d.categoria.toLowerCase().includes(q)) {
         matches.push({ title: d.nome, category: 'Documento', route: 'documentos' });
       }
     });
 
-    // Search in contracts
     data.contratos.forEach(c => {
       if (c.empresa.toLowerCase().includes(q) || c.objeto.toLowerCase().includes(q)) {
         matches.push({ title: `${c.empresa} - ${c.objeto}`, category: 'Contrato', route: 'contratos' });
       }
     });
 
-    // Search in blog posts
-    data.blogPosts.forEach(b => {
-      if (b.titulo.toLowerCase().includes(q) || b.resumo.toLowerCase().includes(q)) {
-        matches.push({ title: b.titulo, category: 'Notícia Blog', route: 'blog' });
+    data.recados.forEach(r => {
+      if (r.titulo.toLowerCase().includes(q) || r.resumo.toLowerCase().includes(q)) {
+        matches.push({ title: r.titulo, category: 'Mural de Recados', route: 'recados' });
       }
     });
 
@@ -255,24 +245,16 @@ window.App = {
     `;
 
     container.appendChild(toast);
-
-    setTimeout(() => {
-      toast.remove();
-    }, 4000);
+    setTimeout(() => toast.remove(), 4000);
   },
 
   registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').then(() => {
-        console.log('[PWA] Service Worker registrado com sucesso!');
-      }).catch(err => {
-        console.warn('[PWA] Falha ao registrar Service Worker:', err);
-      });
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
   }
 };
 
-// Initialize App when DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   App.init();
 });

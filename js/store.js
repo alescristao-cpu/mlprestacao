@@ -2,22 +2,23 @@
    Modern Life Residence - Global Data Store & Mock Data
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V1';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V2';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER';
 
 const INITIAL_DATA = {
   moradores: [
     {
       id: 'usr_admin',
-      nome: 'Carlos Eduardo Silva',
+      nome: 'Alessandro Cristiano da Silva',
       apartamento: '152',
       bloco: 'A',
       cpf: '123.456.789-00',
       telefone: '(11) 98765-4321',
-      email: 'sindico@modernlife.com.br',
+      email: 'condominio.modern.life@gmail.com',
       status: 'Aprovado', // Aprovado, Pendente, Rejeitado
       role: 'Administrador', // Administrador, Conselheiro, Morador
-      dataCadastro: '2025-01-10'
+      dataCadastro: '2025-01-10',
+      photoURL: 'https://lh3.googleusercontent.com/a/default-user'
     },
     {
       id: 'usr_02',
@@ -50,7 +51,7 @@ const INITIAL_DATA = {
       bloco: 'A',
       cpf: '456.789.012-33',
       telefone: '(11) 95432-1098',
-      email: 'fernanda.oliveira@outlook.com',
+      email: 'fernanda.oliveira@gmail.com',
       status: 'Pendente',
       role: 'Morador',
       dataCadastro: '2026-07-20'
@@ -164,7 +165,7 @@ const INITIAL_DATA = {
       valorMensal: 14500.00,
       vigenciaInicio: '2025-01-01',
       vigenciaFim: '2027-01-01',
-      status: 'Ativo', // Ativo, Encerrado, Em Renovação
+      status: 'Ativo',
       arquivo: 'Contrato_Otis_Elevadores_2025_2027.pdf'
     },
     {
@@ -242,12 +243,12 @@ const INITIAL_DATA = {
     }
   ],
 
-  blogPosts: [
+  recados: [
     {
-      id: 'post_01',
+      id: 'rec_01',
       titulo: 'Modernização da Iluminação das Áreas Comuns para LED',
       data: '2026-07-15',
-      autor: 'Síndico Carlos Eduardo',
+      autor: 'Síndico Alessandro Cristiano da Silva',
       imagem: './assets/images/IMG_2909.JPG',
       resumo: 'Concluímos a substituição das lâmpadas da garagem e corredores por iluminação LED ecoeficiente, gerando redução estimada de 18% na conta de energia.',
       texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio. Todas as lâmpadas fluorescentes dos subsolos, corredores e hall principal foram substituídas por painéis e refletores LED de alta durabilidade.\n\nEstimamos uma economia mensal de cerca de R$ 3.200,00 na fatura de energia elétrica, além de melhorar substancialmente a iluminação e segurança de nossas garagens.',
@@ -258,10 +259,10 @@ const INITIAL_DATA = {
       ]
     },
     {
-      id: 'post_02',
+      id: 'rec_02',
       titulo: 'Manutenção Preventiva das Bombas d\'Água e Reservatório',
       data: '2026-07-02',
-      autor: 'Síndico Carlos Eduardo',
+      autor: 'Síndico Alessandro Cristiano da Silva',
       imagem: './assets/images/IMG_2930.jpg',
       resumo: 'Realizada higienização anual das caixas d\'água e revisão no sistema de recalque preventivo.',
       texto: 'Informamos a todos os moradores que realizamos com sucesso a limpeza e desinfecção periódica de ambos os reservatórios (superior e inferior), bem como o teste de estanqueidade e troca dos selos mecânicos das bombas.',
@@ -280,7 +281,7 @@ const INITIAL_DATA = {
       descricao: 'Gostaria de sugerir que o condomínio avalie um estudo de viabilidade técnica para pontos de recarga individualizados no subsolo.',
       fotos: ['./assets/images/IMG_2955.jpg'],
       data: '2026-07-18',
-      status: 'Em análise', // Recebido, Em análise, Respondido, Finalizado
+      status: 'Em análise',
       respostaAdmin: 'Prezada Mariana, a administração já contratou um engenheiro eletricista para apresentar parecer técnico na próxima assembleia.'
     },
     {
@@ -303,7 +304,7 @@ const INITIAL_DATA = {
       titulo: 'Assembleia Geral Extraordinária (AGE)',
       data: '2026-08-10',
       hora: '19:30',
-      tipo: 'Assembleia', // Assembleia, Manutenção, Evento, Reserva
+      tipo: 'Assembleia',
       local: 'Salão de Festas Principal / Formato Híbrido',
       descricao: 'Deliberação sobre a aprovação das contas do 1º semestre e orçamento da reforma do playground.'
     },
@@ -328,10 +329,10 @@ const INITIAL_DATA = {
   ],
 
   galeria: [
-    { id: 'gal_01', titulo: 'Fachada Principal & Entrada', categoria: 'Fachada', imagem: './assets/images/IMG_2909.JPG' },
-    { id: 'gal_02', titulo: 'Torre Modern Life Residence', categoria: 'Fachada', imagem: './assets/images/IMG_2930.jpg' },
-    { id: 'gal_03', titulo: 'Vista Panorâmica da Entrada', categoria: 'Fachada', imagem: './assets/images/IMG_2955.jpg' },
-    { id: 'gal_04', titulo: 'Praça de Acesso e Entorno', categoria: 'Eventos', imagem: './assets/images/IMG_2956.jpg' }
+    { id: 'gal_01', titulo: 'Torre Modern Life Residence & Entorno', categoria: 'Fachada', imagem: './assets/images/IMG_2956.jpg' },
+    { id: 'gal_02', titulo: 'Fachada Principal & Entrada', categoria: 'Fachada', imagem: './assets/images/IMG_2909.JPG' },
+    { id: 'gal_03', titulo: 'Vista Panorâmica da Torre', categoria: 'Fachada', imagem: './assets/images/IMG_2930.jpg' },
+    { id: 'gal_04', titulo: 'Praça de Acesso', categoria: 'Eventos', imagem: './assets/images/IMG_2955.jpg' }
   ],
 
   reservas: [
@@ -354,7 +355,6 @@ const INITIAL_DATA = {
   ]
 };
 
-// Store Engine Class
 class StoreEngine {
   constructor() {
     this.data = this.loadData();
@@ -365,13 +365,8 @@ class StoreEngine {
   loadData() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        return JSON.parse(raw);
-      }
-    } catch (e) {
-      console.warn('Error loading localStorage data:', e);
-    }
-    // Initialize default seed
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
     this.saveData(INITIAL_DATA);
     return INITIAL_DATA;
   }
@@ -380,9 +375,7 @@ class StoreEngine {
     this.data = data || this.data;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-    } catch (e) {
-      console.error('Error saving to localStorage:', e);
-    }
+    } catch (e) {}
     this.notify();
   }
 
@@ -391,7 +384,6 @@ class StoreEngine {
       const raw = localStorage.getItem(CURRENT_USER_KEY);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
-    // Default logged in user for demo (Admin so evaluator can see full features immediately, easily switchable)
     return INITIAL_DATA.moradores[0];
   }
 
@@ -416,7 +408,6 @@ class StoreEngine {
     this.listeners.forEach(l => l(this.data, this.currentUser));
   }
 
-  // Helper mutations
   addMorador(morador) {
     const newMorador = {
       id: 'usr_' + Date.now(),
@@ -451,43 +442,14 @@ class StoreEngine {
     return newOco;
   }
 
-  addBlogPost(post) {
-    const newPost = {
-      id: 'post_' + Date.now(),
+  addRecado(post) {
+    const newRecado = {
+      id: 'rec_' + Date.now(),
       data: new Date().toISOString().split('T')[0],
       comentarios: [],
       ...post
     };
-    this.data.blogPosts.unshift(newPost);
-    this.saveData();
-  }
-
-  addContrato(contrato) {
-    const newContrato = {
-      id: 'ctr_' + Date.now(),
-      ...contrato
-    };
-    this.data.contratos.unshift(newContrato);
-    this.saveData();
-  }
-
-  addBalancete(bal) {
-    const newBal = {
-      id: 'bal_' + Date.now(),
-      dataPublicacao: new Date().toISOString().split('T')[0],
-      ...bal
-    };
-    this.data.balancetes.unshift(newBal);
-    this.saveData();
-  }
-
-  addDocumento(doc) {
-    const newDoc = {
-      id: 'doc_' + Date.now(),
-      dataUpload: new Date().toISOString().split('T')[0],
-      ...doc
-    };
-    this.data.documentos.unshift(newDoc);
+    this.data.recados.unshift(newRecado);
     this.saveData();
   }
 }

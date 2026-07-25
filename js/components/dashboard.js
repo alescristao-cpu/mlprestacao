@@ -8,7 +8,7 @@ window.DashboardComponent = {
     const latestBal = data.balancetes[0] || {};
     const nextEvent = data.agenda.find(a => a.tipo === 'Assembleia') || data.agenda[0] || {};
     const recentDocs = data.documentos.slice(0, 3);
-    const recentPosts = data.blogPosts.slice(0, 2);
+    const recentRecados = data.recados.slice(0, 2);
 
     container.innerHTML = `
       <!-- Metric Cards Grid -->
@@ -20,7 +20,7 @@ window.DashboardComponent = {
           <div class="metric-data">
             <div class="metric-label">Última Prestação (${latestPC.mesAno || 'Jul/2026'})</div>
             <div class="metric-value">R$ ${(latestPC.receitas || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-            <div class="metric-sub">
+            <div class="metric-sub" onclick="App.navigateTo('prestacao')" style="cursor: pointer;">
               <span class="material-symbols-outlined" style="font-size: 1rem;">trending_up</span> Receita Bruta Arrecadada
             </div>
           </div>
@@ -33,7 +33,7 @@ window.DashboardComponent = {
           <div class="metric-data">
             <div class="metric-label">Saldo em Caixa</div>
             <div class="metric-value">R$ ${(latestPC.saldo || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-            <div class="metric-sub">
+            <div class="metric-sub" onclick="App.navigateTo('transparencia')" style="cursor: pointer;">
               <span class="material-symbols-outlined" style="font-size: 1rem;">verified</span> Balanço Superavitário
             </div>
           </div>
@@ -59,7 +59,7 @@ window.DashboardComponent = {
           <div class="metric-data">
             <div class="metric-label">Próxima Assembleia</div>
             <div class="metric-value" style="font-size: 1.15rem;">${nextEvent.data ? new Date(nextEvent.data + 'T00:00:00').toLocaleDateString('pt-BR') : '10/08/2026'}</div>
-            <div class="metric-sub">
+            <div class="metric-sub" onclick="App.navigateTo('agenda')" style="cursor: pointer;">
               <span class="material-symbols-outlined" style="font-size: 1rem;">schedule</span> ${nextEvent.hora || '19:30'} h
             </div>
           </div>
@@ -68,20 +68,20 @@ window.DashboardComponent = {
 
       <!-- Main Section: 2 Column Layout -->
       <div class="grid-2col">
-        <!-- Left Column: Announcements & Blog Feed -->
+        <!-- Left Column: Announcements & Mural de Recados -->
         <div>
           <!-- Avisos Importantes Banner Card -->
           <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white; margin-bottom: 1.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-              <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+              <div style="flex: 1;">
                 <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.5rem;">
-                  <span class="material-symbols-outlined" style="font-size: 0.9rem;">campaign</span> AVISO DA GESTÃO
+                  <span class="material-symbols-outlined" style="font-size: 0.9rem;">campaign</span> COMUNICADO OFICIAL DO SÍNDICO
                 </span>
                 <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem;">
                   Assembleia Geral Ordinária de Aprovação de Contas
                 </h3>
                 <p style="font-size: 0.9rem; opacity: 0.9;">
-                  A convocação oficial e a pauta da assembleia do dia 10 de Agosto já estão disponíveis para consulta no portal de documentos.
+                  A convocação oficial feita pelo Síndico <strong>Alessandro Cristiano da Silva</strong> já está disponível para consulta na Biblioteca de Documentos.
                 </p>
               </div>
               <button class="btn-primary" onclick="App.navigateTo('documentos')" style="background: white; color: var(--primary-dark); font-weight: 700; flex-shrink: 0;">
@@ -90,28 +90,28 @@ window.DashboardComponent = {
             </div>
           </div>
 
-          <!-- Feed de Notícias do Blog -->
+          <!-- Feed do Mural de Recados -->
           <div class="card-widget" style="margin-bottom: 1.5rem;">
             <div class="card-header">
               <div class="card-title">
-                <span class="material-symbols-outlined">newspaper</span> Comunicados do Síndico
+                <span class="material-symbols-outlined">campaign</span> Mural de Recados
               </div>
-              <button class="btn-outline-primary btn-sm" onclick="App.navigateTo('blog')">Ver Todos</button>
+              <button class="btn-outline-primary btn-sm" onclick="App.navigateTo('recados')">Ver Todos</button>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-              ${recentPosts.map(post => `
+              ${recentRecados.map(item => `
                 <div style="display: flex; gap: 1.25rem; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light);">
-                  <img src="${post.imagem}" style="width: 110px; height: 80px; object-fit: cover; border-radius: var(--radius-sm);" alt="${post.titulo}">
+                  <img src="${item.imagem}" style="width: 110px; height: 80px; object-fit: cover; border-radius: var(--radius-sm);" alt="${item.titulo}">
                   <div style="flex: 1;">
                     <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 2px;">
-                      ${post.data} &bull; Por ${post.autor}
+                      ${item.data} &bull; Por ${item.autor}
                     </div>
-                    <h4 style="font-family: var(--font-heading); font-size: 1rem; color: var(--primary-dark); font-weight: 700; cursor: pointer;" onclick="App.navigateTo('blog')">
-                      ${post.titulo}
+                    <h4 style="font-family: var(--font-heading); font-size: 1rem; color: var(--primary-dark); font-weight: 700; cursor: pointer;" onclick="App.navigateTo('recados')">
+                      ${item.titulo}
                     </h4>
                     <p style="font-size: 0.85rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px;">
-                      ${post.resumo}
+                      ${item.resumo}
                     </p>
                   </div>
                 </div>

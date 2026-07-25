@@ -33,14 +33,14 @@ class FirebaseService {
 
   initFirebase() {
     if (!this.config || !window.firebase) {
-      console.log('[FirebaseService] Running in Local Hybrid Mock Mode (No external key required).');
+      console.log('[FirebaseService] Running in Local Hybrid Mock Mode.');
       return false;
     }
 
     try {
       if (!firebase.apps.length) {
         firebase.initializeApp(this.config);
-        console.log('[FirebaseService] Firebase initialized successfully with cloud backend!');
+        console.log('[FirebaseService] Firebase initialized successfully!');
       }
       this.isInitialized = true;
       return true;
@@ -50,7 +50,50 @@ class FirebaseService {
     }
   }
 
-  // Cloud auth wrappers (delegates to firebase auth or store fallback)
+  // Google Authentication Flow
+  async loginWithGoogle() {
+    if (this.isInitialized && window.firebase.auth) {
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const res = await firebase.auth().signInWithPopup(provider);
+        const gUser = res.user;
+
+        // Check if user already exists in moradores
+        let existingUser = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === gUser.email.toLowerCase());
+        if (!existingUser) {
+          existingUser = window.CondoStore.addMorador({
+            nome: gUser.displayName || 'Morador Google',
+            email: gUser.email,
+            apartamento: 'Pendente',
+            bloco: 'A',
+            cpf: 'Autenticado via Google',
+            telefone: gUser.phoneNumber || '',
+            photoURL: gUser.photoURL
+          });
+        }
+        window.CondoStore.setCurrentUser(existingUser);
+        return { success: true, user: existingUser };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    // Interactive Google Auth Simulation for local demo
+    const googleAccounts = [
+      { nome: 'Alessandro Cristiano da Silva', email: 'condominio.modern.life@gmail.com', role: 'Administrador', status: 'Aprovado', apartamento: '152', bloco: 'A' },
+      { nome: 'Mariana Castro', email: 'mariana.castro@gmail.com', role: 'Conselheiro', status: 'Aprovado', apartamento: '84', bloco: 'B' },
+      { nome: 'Roberto Almeida', email: 'roberto.almeida@hotmail.com', role: 'Morador', status: 'Aprovado', apartamento: '121', bloco: 'A' }
+    ];
+
+    const selected = googleAccounts[0]; // Default to Síndico login via Google
+    let localUser = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === selected.email.toLowerCase());
+    if (!localUser) {
+      localUser = window.CondoStore.addMorador(selected);
+    }
+    window.CondoStore.setCurrentUser(localUser);
+    return { success: true, user: localUser };
+  }
+
   async loginWithEmailPassword(email, password) {
     if (this.isInitialized && window.firebase.auth) {
       try {
@@ -60,7 +103,6 @@ class FirebaseService {
         return { success: false, error: err.message };
       }
     }
-    // Fallback Mock authentication
     const user = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === email.toLowerCase());
     if (user) {
       if (user.status !== 'Aprovado') {
@@ -69,14 +111,13 @@ class FirebaseService {
       window.CondoStore.setCurrentUser(user);
       return { success: true, user };
     }
-    return { success: false, error: 'E-mail ou senha incorretos (ou usuário não cadastrado).' };
+    return { success: false, error: 'E-mail ou senha incorretos.' };
   }
 
   async registerUser(userData) {
     if (this.isInitialized && window.firebase.auth) {
       try {
         const res = await firebase.auth().createUserWithEmailAndPassword(userData.email, userData.senha);
-        // Save extra metadata to Firestore
         await firebase.firestore().collection('moradores').doc(res.user.uid).set({
           ...userData,
           id: res.user.uid,
@@ -89,7 +130,6 @@ class FirebaseService {
         return { success: false, error: err.message };
       }
     }
-    // Local Store registration
     const newMorador = window.CondoStore.addMorador(userData);
     return { success: true, user: newMorador };
   }

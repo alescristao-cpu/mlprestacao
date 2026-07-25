@@ -22,6 +22,19 @@
   <!-- Application Stylesheets -->
   <link rel="stylesheet" href="./css/main.css">
   <link rel="stylesheet" href="./css/components.css">
+  
+  <style>
+    /* Hero Banner with IMG_2956.jpg background */
+    .condo-banner-hero {
+      background: linear-gradient(135deg, rgba(31, 77, 48, 0.92) 0%, rgba(46, 107, 66, 0.88) 100%), url('./assets/images/IMG_2956.jpg') center/cover no-repeat;
+      color: white;
+      padding: 2.5rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    }
+  </style>
 </head>
 <body>
 
@@ -30,12 +43,8 @@
     
     <!-- Sidebar Navigation -->
     <aside class="app-sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <img src="./assets/logo.svg" class="sidebar-logo" alt="Logo Modern Life Residence">
-        <div class="sidebar-brand-text">
-          <span class="sidebar-brand-title">MODERN LIFE</span>
-          <span class="sidebar-brand-sub">TRANSPARÊNCIA</span>
-        </div>
+      <div class="sidebar-header" style="background: white; padding: 1.25rem;">
+        <img src="./assets/logo.png" style="width: 100%; max-height: 52px; object-fit: contain;" alt="Logo Modern Life Residence">
       </div>
 
       <nav class="sidebar-menu">
@@ -60,8 +69,8 @@
         <a class="nav-item" data-route="documentos" onclick="App.navigateTo('documentos')">
           <span class="material-symbols-outlined">folder</span> Biblioteca de Documentos
         </a>
-        <a class="nav-item" data-route="blog" onclick="App.navigateTo('blog')">
-          <span class="material-symbols-outlined">newspaper</span> Blog do Síndico
+        <a class="nav-item" data-route="recados" onclick="App.navigateTo('recados')">
+          <span class="material-symbols-outlined">campaign</span> Mural de Recados
         </a>
         <a class="nav-item" data-route="canal" onclick="App.navigateTo('canal')">
           <span class="material-symbols-outlined">mail</span> Canal Direto
@@ -87,10 +96,10 @@
       </nav>
 
       <!-- Sidebar User Profile Footer -->
-      <div class="sidebar-footer" onclick="AuthComponent.renderAuthModal()" style="cursor: pointer;" title="Clique para gerenciar perfil ou fazer login">
-        <div class="user-avatar" id="sidebarUserAvatar">C</div>
+      <div class="sidebar-footer" onclick="AuthComponent.renderAuthModal()" style="cursor: pointer;" title="Clique para gerenciar perfil ou fazer login com Google">
+        <div class="user-avatar" id="sidebarUserAvatar">A</div>
         <div class="user-info">
-          <div class="user-name" id="sidebarUserName">Carlos Eduardo</div>
+          <div class="user-name" id="sidebarUserName">Alessandro Cristiano</div>
           <div class="user-role" id="sidebarUserRole">Síndico / Admin</div>
         </div>
         <span class="material-symbols-outlined" style="font-size: 1.2rem; color: rgba(255,255,255,0.7);">settings</span>
@@ -132,26 +141,28 @@
           </button>
 
           <!-- WhatsApp Direct Launcher -->
-          <button class="btn-whatsapp-header" onclick="window.open('https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico,%20gostaria%20de%20falar%20sobre%20o%20condomínio', '_blank')">
+          <button class="btn-whatsapp-header" onclick="window.open('https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro,%20gostaria%20de%20falar%20sobre%20o%20condomínio', '_blank')">
             <span class="material-symbols-outlined" style="font-size: 1.1rem;">chat</span>
             <span>Falar com o Síndico</span>
           </button>
         </div>
       </header>
 
-      <!-- Banner Superior de Boas-Vindas -->
-      <section class="condo-banner">
+      <!-- Banner Superior Hero com IMG_2956.jpg -->
+      <section class="condo-banner-hero">
         <div class="banner-content">
-          <div class="banner-text">
-            <h2>Bem-vindo ao Portal do Condomínio Modern Life Residence</h2>
-            <p>Acesse com total transparência os demonstrativos financeiros, balancetes, contratos e regulamentos.</p>
+          <div class="banner-text" style="max-width: 680px;">
+            <h2>Portal da Transparência Modern Life Residence</h2>
+            <p>Gestão do Síndico <strong>Alessandro Cristiano da Silva</strong> &bull; Total transparência, prestação de contas, mural de recados e serviços para moradores.</p>
             <div class="banner-tags">
               <span class="banner-tag"><span class="material-symbols-outlined">verified_user</span> Gestão Transparente</span>
-              <span class="banner-tag"><span class="material-symbols-outlined">shield</span> Acesso Seguro Moradores</span>
-              <span class="banner-tag"><span class="material-symbols-outlined">workspace_premium</span> Padrão Modern Life</span>
+              <span class="banner-tag"><span class="material-symbols-outlined">login</span> Autenticação via Google</span>
+              <span class="banner-tag"><span class="material-symbols-outlined">domain</span> Torre Modern Life</span>
             </div>
           </div>
-          <img src="./assets/logo.svg" style="height: 90px; width: auto; filter: brightness(0) invert(1);" alt="Logo Modern Life" class="banner-logo-img">
+          <div style="background: white; padding: 10px; border-radius: 12px; box-shadow: var(--shadow-lg);">
+            <img src="./assets/logo.png" style="height: 75px; width: auto; object-fit: contain;" alt="Logo Oficial Modern Life">
+          </div>
         </div>
       </section>
 
@@ -163,15 +174,15 @@
       <!-- Footer -->
       <footer class="app-footer">
         <div class="footer-brand">
-          <span class="material-symbols-outlined">domain</span> Modern Life Residence &bull; Portal da Transparência v2.4.0
+          <span class="material-symbols-outlined">domain</span> Modern Life Residence &bull; Portal da Transparência
         </div>
         <div>
-          Contato Síndico: (11) 98765-4321 | email: <strong>sindico@modernlife.com.br</strong>
+          Síndico: <strong>Alessandro Cristiano da Silva</strong> &bull; E-mail: <strong>condominio.modern.life@gmail.com</strong>
         </div>
         <div class="footer-links">
           <a href="#" onclick="App.navigateTo('transparencia')">Demonstrativo Financeiro</a>
           <a href="#" onclick="App.navigateTo('documentos')">Regimento Interno</a>
-          <a href="#" onclick="AuthComponent.renderAuthModal()">Painel Morador</a>
+          <a href="#" onclick="AuthComponent.renderAuthModal()">Entrar com Google</a>
         </div>
       </footer>
     </main>
@@ -179,7 +190,7 @@
   </div>
 
   <!-- Floating WhatsApp Launcher Button -->
-  <a href="https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico,%20gostaria%20de%20falar%20sobre%20o%20condomínio" target="_blank" class="floating-whatsapp" title="Falar com o Síndico pelo WhatsApp">
+  <a href="https://api.whatsapp.com/send?phone=5511987654321&text=Olá%20Síndico%20Alessandro,%20gostaria%20de%20falar%20sobre%20o%20condomínio" target="_blank" class="floating-whatsapp" title="Falar com o Síndico pelo WhatsApp">
     <span class="material-symbols-outlined" style="font-size: 2rem;">chat</span>
   </a>
 
@@ -197,7 +208,7 @@
   <script src="./js/components/contratos.js"></script>
   <script src="./js/components/transparencia.js"></script>
   <script src="./js/components/documentos.js"></script>
-  <script src="./js/components/blog.js"></script>
+  <script src="./js/components/recados.js"></script>
   <script src="./js/components/canal.js"></script>
   <script src="./js/components/ocorrencias.js"></script>
   <script src="./js/components/utilidades.js"></script>

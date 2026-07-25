@@ -14,7 +14,7 @@ window.CanalComponent = {
               <span class="material-symbols-outlined">mark_email_unread</span> Canal Direto com a Administração
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-              Envie uma mensagem direta e sigilosa para o e-mail oficial do Síndico Carlos Eduardo.
+              Envie uma mensagem direta e sigilosa para o e-mail do Síndico <strong>Alessandro Cristiano da Silva</strong> (<code>condominio.modern.life@gmail.com</code>).
             </p>
           </div>
         </div>
@@ -38,11 +38,11 @@ window.CanalComponent = {
 
           <div class="form-group">
             <label class="form-label">Mensagem Detalhada</label>
-            <textarea class="form-control" id="canalMensagem" rows="5" placeholder="Escreva sua mensagem com clareza..." required></textarea>
+            <textarea class="form-control" id="canalMensagem" rows="5" placeholder="Escreva sua mensagem..." required></textarea>
           </div>
 
           <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.8rem;">
-            <span class="material-symbols-outlined">send</span> Enviar E-mail ao Síndico
+            <span class="material-symbols-outlined">send</span> Enviar E-mail ao Síndico Alessandro
           </button>
         </form>
       </div>
@@ -52,7 +52,7 @@ window.CanalComponent = {
   sendMessage(e) {
     e.preventDefault();
     const assunto = document.getElementById('canalAssunto').value;
-    alert(`Mensagem enviada com sucesso para o e-mail do Síndico (sindico@modernlife.com.br) com o assunto "${assunto}". Você receberá a resposta diretamente na sua caixa de entrada.`);
+    alert(`Mensagem enviada com sucesso para o e-mail oficial (condominio.modern.life@gmail.com) com o assunto "${assunto}". O Síndico Alessandro Cristiano da Silva responderá em breve.`);
     App.navigateTo('dashboard');
   }
 };

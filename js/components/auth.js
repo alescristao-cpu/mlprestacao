@@ -14,9 +14,9 @@ window.AuthComponent = {
         <div class="modal-card" style="max-width: 460px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
             <div style="display: flex; align-items: center; gap: 0.6rem;">
-              <img src="./assets/logo.svg" style="height: 32px; filter: brightness(0) invert(1);" alt="Logo">
+              <img src="./assets/logo.png" style="height: 32px; width: auto; object-fit: contain; background: white; padding: 2px 6px; border-radius: 4px;" alt="Logo">
               <span style="font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; color: white;">
-                ${currentUser ? 'Perfil do Morador' : 'Acesso ao Portal'}
+                ${currentUser ? 'Perfil do Morador' : 'Acesso com Google'}
               </span>
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalAuth').remove()">✕</button>
@@ -34,85 +34,48 @@ window.AuthComponent = {
 
   renderLoginForm() {
     return `
-      <div id="authTabs" class="tab-list">
-        <button class="tab-btn active" onclick="AuthComponent.switchTab('login')">Entrar</button>
-        <button class="tab-btn" onclick="AuthComponent.switchTab('register')">Cadastrar Morador</button>
+      <!-- Google Auth Button (Primary Requirement) -->
+      <div style="margin-bottom: 1.5rem; text-align: center;">
+        <button type="button" onclick="AuthComponent.handleGoogleLogin()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; background: #FFFFFF; color: #757575; border: 1px solid #DADCE0; padding: 0.8rem 1rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--shadow-sm); transition: var(--transition);">
+          <svg width="20" height="20" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.66 0 6.6 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.13-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.6 42.62 14.66 48 24 48z"/>
+          </svg>
+          Entrar com a Conta Google
+        </button>
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.5rem;">
+          Autenticação segura via Google Workspace para moradores.
+        </div>
       </div>
 
-      <!-- Login View -->
+      <div style="display: flex; align-items: center; margin: 1.25rem 0; color: var(--border-color);">
+        <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
+        <span style="padding: 0 0.75rem; font-size: 0.78rem; color: var(--text-muted);">ou acesse por e-mail</span>
+        <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
+      </div>
+
+      <!-- Traditional Email Login -->
       <form id="formLogin" onsubmit="AuthComponent.handleLogin(event)">
         <div class="form-group">
           <label class="form-label">E-mail Cadastrado</label>
-          <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required value="sindico@modernlife.com.br">
+          <input type="email" id="loginEmail" class="form-control" placeholder="condominio.modern.life@gmail.com" required value="condominio.modern.life@gmail.com">
         </div>
         <div class="form-group">
           <label class="form-label">Senha de Acesso</label>
           <input type="password" id="loginPass" class="form-control" placeholder="••••••••" required value="123456">
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-          <label style="font-size: 0.8rem; display: flex; align-items: center; gap: 4px; cursor: pointer;">
-            <input type="checkbox" checked> Lembrar acesso
-          </label>
-          <a href="#" onclick="alert('Instruções de redefinição enviadas para o seu e-mail cadastrado.')" style="font-size: 0.8rem; color: var(--primary); text-decoration: none;">Esqueceu a senha?</a>
-        </div>
-
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.8rem;">
-          <span class="material-symbols-outlined">login</span> Entrar no Portal
+          <span class="material-symbols-outlined">login</span> Entrar com E-mail
         </button>
 
         <div style="margin-top: 1rem; padding: 0.75rem; background: var(--primary-light); border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--primary-dark);">
-          💡 <strong>Modo de Demonstração Rápida:</strong><br>
-          • <b>Síndico / Admin:</b> sindico@modernlife.com.br<br>
-          • <b>Conselheiro:</b> mariana.castro@gmail.com<br>
-          • <b>Morador:</b> roberto.almeida@hotmail.com
+          💡 <strong>E-mail Oficial do Condomínio:</strong><br>
+          • <b>Síndico:</b> condominio.modern.life@gmail.com<br>
+          • <b>Nome do Síndico:</b> Alessandro Cristiano da Silva
         </div>
-      </form>
-
-      <!-- Register View -->
-      <form id="formRegister" onsubmit="AuthComponent.handleRegister(event)" style="display: none;">
-        <div class="form-group">
-          <label class="form-label">Nome Completo</label>
-          <input type="text" id="regNome" class="form-control" placeholder="Ex: Ana Maria Santos" required>
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Apartamento</label>
-            <input type="text" id="regApto" class="form-control" placeholder="Ex: 104" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Bloco / Torre</label>
-            <select id="regBloco" class="form-control" required>
-              <option value="A">Bloco A</option>
-              <option value="B">Bloco B</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label class="form-label">CPF</label>
-            <input type="text" id="regCPF" class="form-control" placeholder="000.000.000-00" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Telefone / WhatsApp</label>
-            <input type="text" id="regTel" class="form-control" placeholder="(11) 90000-0000" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">E-mail</label>
-          <input type="email" id="regEmail" class="form-control" placeholder="seu@email.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Crie uma Senha</label>
-          <input type="password" id="regSenha" class="form-control" placeholder="Mínimo 6 caracteres" required>
-        </div>
-
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.8rem;">
-          <span class="material-symbols-outlined">how_to_reg</span> Solicitar Cadastro
-        </button>
-        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.6rem; text-align: center;">
-          * O cadastro passará por aprovação do síndico/administração por motivos de segurança.
-        </p>
       </form>
     `;
   },
@@ -138,10 +101,6 @@ window.AuthComponent = {
           <span style="color: var(--text-muted);">E-mail:</span>
           <strong>${user.email}</strong>
         </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: var(--text-muted);">Telefone:</span>
-          <strong>${user.telefone}</strong>
-        </div>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
@@ -157,21 +116,14 @@ window.AuthComponent = {
     `;
   },
 
-  switchTab(tab) {
-    const formLogin = document.getElementById('formLogin');
-    const formRegister = document.getElementById('formRegister');
-    const btns = document.querySelectorAll('#authTabs .tab-btn');
-
-    if (tab === 'login') {
-      formLogin.style.display = 'block';
-      formRegister.style.display = 'none';
-      btns[0].classList.add('active');
-      btns[1].classList.remove('active');
+  async handleGoogleLogin() {
+    const res = await window.FirebaseService.loginWithGoogle();
+    if (res.success) {
+      App.showToast(`Autenticado via Google com sucesso como ${res.user.nome}!`, 'success');
+      document.getElementById('modalAuth').remove();
+      App.render();
     } else {
-      formLogin.style.display = 'none';
-      formRegister.style.display = 'block';
-      btns[0].classList.remove('active');
-      btns[1].classList.add('active');
+      App.showToast(res.error, 'error');
     }
   },
 
@@ -185,27 +137,6 @@ window.AuthComponent = {
       App.showToast('Login efetuado com sucesso!', 'success');
       document.getElementById('modalAuth').remove();
       App.render();
-    } else {
-      App.showToast(res.error, 'error');
-    }
-  },
-
-  async handleRegister(e) {
-    e.preventDefault();
-    const userData = {
-      nome: document.getElementById('regNome').value,
-      apartamento: document.getElementById('regApto').value,
-      bloco: document.getElementById('regBloco').value,
-      cpf: document.getElementById('regCPF').value,
-      telefone: document.getElementById('regTel').value,
-      email: document.getElementById('regEmail').value,
-      senha: document.getElementById('regSenha').value
-    };
-
-    const res = await window.FirebaseService.registerUser(userData);
-    if (res.success) {
-      alert('Cadastro enviado com sucesso! Seu acesso está pendente de aprovação pelo administrador do condomínio.');
-      document.getElementById('modalAuth').remove();
     } else {
       App.showToast(res.error, 'error');
     }
