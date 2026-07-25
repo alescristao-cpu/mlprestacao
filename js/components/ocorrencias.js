@@ -1,139 +1,201 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Reclamações & Ocorrências Component
+   Modern Life Residence - Reclamações, Elogios & Sugestões (Caixa Privada)
    ---------------------------------------------------- */
 
 window.OcorrenciasComponent = {
   render(container, data) {
-    const list = data.ocorrencias || [];
-    const user = window.CondoStore.currentUser || {};
+    const user = window.CondoStore.currentUser;
+
+    // Access Gate for non-logged-in users
+    if (!user || user.status !== 'Aprovado') {
+      container.innerHTML = `
+        <div class="card-widget" style="text-align: center; padding: 3.5rem 1.5rem; max-width: 600px; margin: 2rem auto;">
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
+            <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
+          </div>
+          <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Acesso Restrito às Suas Mensagens Privadas
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem;">
+            Para abrir ou visualizar o histórico de suas Reclamações, Elogios e Sugestões e acessar a caixa de respostas do Síndico, faça login no portal.
+          </p>
+          <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
+            <span class="material-symbols-outlined">login</span> Entrar / Cadastrar com Google
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    const isMasterAdmin = user.role === 'Administrador';
+    const allOcorrencias = data.ocorrencias || [];
+
+    // PRIVACY ENFORCEMENT:
+    // Master Admin sees ALL occurrences. Regular residents see ONLY their OWN occurrences.
+    const userOcorrencias = isMasterAdmin 
+      ? allOcorrencias 
+      : allOcorrencias.filter(o => o.moradorEmail.toLowerCase() === user.email.toLowerCase() || o.moradorId === user.id);
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <!-- Header & Action Button -->
-        <div class="card-widget" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-          <div>
-            <div class="card-title">
-              <span class="material-symbols-outlined">assignment_late</span> Gestão Interna de Chamados e Ocorrências
+        
+        <!-- Header Banner -->
+        <div class="card-widget" style="background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <span class="material-symbols-outlined" style="font-size: 2.5rem;">support_agent</span>
+              <div>
+                <h2 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700;">
+                  ${isMasterAdmin ? 'Painel Master de Reclamações, Elogios &amp; Sugestões (Síndico)' : 'Minhas Reclamações, Elogios &amp; Sugestões'}
+                </h2>
+                <p style="font-size: 0.9rem; opacity: 0.9;">
+                  ${isMasterAdmin ? 'Gerenciamento privado e envio de respostas a todas as mensagens dos moradores.' : 'Comunicação pessoal e sigilosa com a administração. Suas mensagens são estritamente privadas.'}
+                </p>
+              </div>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-              Registre e acompanhe o andamento de Reclamações, Sugestões e Elogios sobre a vida no condomínio.
-            </p>
+
+            ${!isMasterAdmin ? `
+              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700;" onclick="OcorrenciasComponent.openNewFormModal()">
+                <span class="material-symbols-outlined">add_comment</span> Nova Reclamação / Sugestão / Elogio
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- Section List of Private Occurrences -->
+        <div class="card-widget">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="material-symbols-outlined">inbox</span> ${isMasterAdmin ? 'Caixa de Entrada Geral (Todas as Mensagens dos Moradores)' : 'Minha Caixa de Respostas &amp; Ocorrências'}
+            </div>
           </div>
 
-          <button class="btn-primary" onclick="OcorrenciasComponent.openNewModal()">
-            <span class="material-symbols-outlined">add</span> Abrir Novo Chamado
-          </button>
-        </div>
+          ${userOcorrencias.length === 0 ? `
+            <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted);">
+              <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.5; display: block; margin-bottom: 0.5rem;">mail_lock</span>
+              <p style="font-size: 0.95rem;">Nenhuma mensagem encontrada na sua caixa privada.</p>
+              ${!isMasterAdmin ? `
+                <button class="btn-outline-primary" style="margin-top: 1rem;" onclick="OcorrenciasComponent.openNewFormModal()">
+                  Abrir Primeira Reclamação, Elogio ou Sugestão
+                </button>
+              ` : ''}
+            </div>
+          ` : `
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+              ${userOcorrencias.map(item => `
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: var(--shadow-sm);">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <div>
+                      <span class="badge ${item.categoria === 'Reclamação' ? 'badge-danger' : item.categoria === 'Elogio' ? 'badge-success' : 'badge-info'}" style="margin-bottom: 4px;">
+                        ${item.categoria}
+                      </span>
+                      <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--primary-dark); font-weight: 700;">
+                        ${item.assunto}
+                      </h3>
+                      <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                        Enviado em: ${item.data} &bull; Autor: <strong>${item.moradorNome} (Apto ${item.apartamento})</strong>
+                      </div>
+                    </div>
 
-        <!-- Ocorrencias List -->
-        <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-          ${list.map(oco => {
-            let badgeClass = 'badge-info';
-            if (oco.status === 'Em análise') badgeClass = 'badge-warning';
-            if (oco.status === 'Finalizado') badgeClass = 'badge-success';
-
-            return `
-              <div class="card-widget">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.85rem;">
-                  <div>
-                    <span class="badge ${badgeClass}" style="margin-bottom: 4px;">
-                      ${oco.categoria} &bull; Status: ${oco.status}
+                    <span class="badge ${item.status.includes('Respondido') ? 'badge-success' : 'badge-warning'}">
+                      <span class="material-symbols-outlined" style="font-size: 0.85rem;">mark_email_read</span> ${item.status}
                     </span>
-                    <h3 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--primary-dark); font-weight: 700;">
-                      ${oco.assunto}
-                    </h3>
-                    <div style="font-size: 0.78rem; color: var(--text-muted);">
-                      Registrado por <strong>${oco.moradorNome} (Apt ${oco.apartamento})</strong> em ${oco.data}
-                    </div>
                   </div>
+
+                  <p style="font-size: 0.92rem; color: var(--text-main); background: var(--bg-app); padding: 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1rem; white-space: pre-line;">
+                    ${item.descricao}
+                  </p>
+
+                  <!-- Respostas da Administração (Caixa de Resposta Pessoal) -->
+                  <div style="border-top: 1px solid var(--border-light); padding-top: 0.85rem; margin-top: 0.85rem;">
+                    <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 4px;">
+                      <span class="material-symbols-outlined" style="font-size: 1.1rem; color: var(--primary);">reply_all</span>
+                      Caixa de Respostas do Síndico (${item.respostas ? item.respostas.length : 0})
+                    </h4>
+
+                    ${(item.respostas && item.respostas.length > 0) ? `
+                      <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.75rem;">
+                        ${item.respostas.map(r => `
+                          <div style="background: var(--primary-light); border-left: 4px solid var(--primary); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.86rem; color: var(--primary-dark);">
+                            <div style="display: flex; justify-content: space-between; font-weight: 700; margin-bottom: 2px;">
+                              <span>${r.autor}</span>
+                              <span style="font-size: 0.72rem; opacity: 0.8;">${r.data}</span>
+                            </div>
+                            <p style="color: var(--text-main); margin-top: 2px;">${r.texto}</p>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : `
+                      <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-bottom: 0.5rem;">
+                        Aguardando resposta do Síndico. Uma cópia da resposta será enviada ao seu e-mail (${item.moradorEmail}).
+                      </p>
+                    `}
+
+                    <!-- Form de Resposta Direta para o Síndico (Master Admin) -->
+                    ${isMasterAdmin ? `
+                      <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                        <input type="text" id="inputResposta_${item.id}" class="form-control" placeholder="Escreva a resposta do Síndico para o morador..." style="font-size: 0.85rem;">
+                        <button class="btn-primary btn-sm" onclick="OcorrenciasComponent.enviarRespostaSindico('${item.id}')">
+                          Enviar Resposta
+                        </button>
+                      </div>
+                    ` : ''}
+                  </div>
+
                 </div>
-
-                <p style="font-size: 0.92rem; color: var(--text-main); margin-bottom: 1rem; background: var(--bg-app); padding: 0.85rem; border-radius: var(--radius-sm);">
-                  ${oco.descricao}
-                </p>
-
-                ${oco.fotos && oco.fotos.length ? `
-                  <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
-                    ${oco.fotos.map(f => `<img src="${f}" style="width: 100px; height: 75px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-color);" alt="Anexo">`).join('')}
-                  </div>
-                ` : ''}
-
-                <!-- Status Timeline Bar -->
-                <div style="margin-top: 1rem; border-top: 1px solid var(--border-light); padding-top: 1rem;">
-                  <div style="font-size: 0.8rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.5rem;">
-                    Linha do Tempo de Resolução:
-                  </div>
-
-                  <div style="display: flex; justify-content: space-between; position: relative; font-size: 0.75rem; font-weight: 600; text-align: center;">
-                    <div style="color: ${['Recebido', 'Em análise', 'Respondido', 'Finalizado'].includes(oco.status) ? 'var(--primary)' : 'var(--text-muted)'}; flex: 1;">
-                      <span class="material-symbols-outlined" style="font-size: 1.2rem;">inbox</span><br>Recebido
-                    </div>
-                    <div style="color: ${['Em análise', 'Respondido', 'Finalizado'].includes(oco.status) ? 'var(--primary)' : 'var(--text-muted)'}; flex: 1;">
-                      <span class="material-symbols-outlined" style="font-size: 1.2rem;">find_in_page</span><br>Em Análise
-                    </div>
-                    <div style="color: ${['Respondido', 'Finalizado'].includes(oco.status) ? 'var(--primary)' : 'var(--text-muted)'}; flex: 1;">
-                      <span class="material-symbols-outlined" style="font-size: 1.2rem;">reply</span><br>Respondido
-                    </div>
-                    <div style="color: ${oco.status === 'Finalizado' ? '#2E7D32' : 'var(--text-muted)'}; flex: 1;">
-                      <span class="material-symbols-outlined" style="font-size: 1.2rem;">check_circle</span><br>Finalizado
-                    </div>
-                  </div>
-                </div>
-
-                ${oco.respostaAdmin ? `
-                  <div style="margin-top: 1rem; background: #E8F3EB; border-left: 4px solid var(--primary); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.88rem;">
-                    <strong>Resposta da Administração / Síndico:</strong>
-                    <p style="margin-top: 4px; color: var(--primary-dark);">${oco.respostaAdmin}</p>
-                  </div>
-                ` : ''}
-              </div>
-            `;
-          }).join('')}
+              `).join('')}
+            </div>
+          `}
         </div>
+
       </div>
     `;
   },
 
-  openNewModal() {
-    const existing = document.getElementById('modalNewOco');
+  openNewFormModal() {
+    const existing = document.getElementById('modalNewOcorrencia');
     if (existing) existing.remove();
 
-    const user = window.CondoStore.currentUser || {};
+    const user = window.CondoStore.currentUser;
 
     const modalHtml = `
-      <div class="modal-overlay active" id="modalNewOco">
-        <div class="modal-card">
+      <div class="modal-overlay active" id="modalNewOcorrencia">
+        <div class="modal-card" style="max-width: 580px;">
           <div class="modal-header">
-            <div class="modal-title">Abrir Nova Ocorrência</div>
-            <button class="modal-close" onclick="document.getElementById('modalNewOco').remove()">✕</button>
+            <div class="modal-title">Nova Reclamação, Elogio ou Sugestão</div>
+            <button class="modal-close" onclick="document.getElementById('modalNewOcorrencia').remove()">✕</button>
           </div>
-          <form onsubmit="OcorrenciasComponent.submitOcorrencia(event)">
-            <div class="modal-body">
+          <div class="modal-body">
+            <div style="background: var(--primary-light); padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 3px solid var(--primary);">
+              🔒 <strong>Garantia de Privacidade:</strong> Sua mensagem será enviada exclusivamente ao e-mail do condomínio (<code>condominio.modern.life@gmail.com</code>). Nenhum outro morador terá acesso às suas informações.
+            </div>
+
+            <form onsubmit="OcorrenciasComponent.submeterForm(event)">
               <div class="form-group">
-                <label class="form-label">Tipo de Chamado</label>
-                <select id="ocoCat" class="form-control" required>
-                  <option value="Reclamação">Reclamação</option>
-                  <option value="Sugestão">Sugestão</option>
-                  <option value="Elogio">Elogio</option>
+                <label class="form-label">Tipo de Mensagem</label>
+                <select id="ocoCategoria" class="form-control" required>
+                  <option value="Reclamação">⚠️ Reclamação</option>
+                  <option value="Sugestão">💡 Sugestão</option>
+                  <option value="Elogio">👏 Elogio</option>
+                  <option value="Outros">📌 Outros</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label class="form-label">Assunto</label>
-                <input type="text" id="ocoAssunto" class="form-control" placeholder="Resumo em poucas palavras" required>
+                <input type="text" id="ocoAssunto" class="form-control" placeholder="Ex: Barulho após às 22h / Elogio à portaria" required>
               </div>
 
               <div class="form-group">
                 <label class="form-label">Descrição Detalhada</label>
-                <textarea id="ocoDesc" class="form-control" rows="4" placeholder="Descreva os fatos, local e horários envolvidos..." required></textarea>
+                <textarea id="ocoDescricao" class="form-control" rows="5" placeholder="Descreva aqui o ocorrido com todos os detalhes..." required></textarea>
               </div>
-            </div>
 
-            <div class="modal-footer">
-              <button type="button" class="btn-secondary" onclick="document.getElementById('modalNewOco').remove()">Cancelar</button>
-              <button type="submit" class="btn-primary">Registrar Ocorrência</button>
-            </div>
-          </form>
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
+                <span class="material-symbols-outlined">send</span> Registrar e Enviar ao E-mail do Condomínio
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     `;
@@ -141,21 +203,43 @@ window.OcorrenciasComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
-  submitOcorrencia(e) {
+  submeterForm(e) {
     e.preventDefault();
-    const user = window.CondoStore.currentUser || { nome: 'Morador', apartamento: '00' };
+    const user = window.CondoStore.currentUser;
+    const categoria = document.getElementById('ocoCategoria').value;
+    const assunto = document.getElementById('ocoAssunto').value;
+    const descricao = document.getElementById('ocoDescricao').value;
 
-    window.CondoStore.addOcorrencia({
+    // 1. Cadastra localmente na caixa de entrada do morador
+    const newOco = window.CondoStore.addOcorrencia({
+      moradorId: user.id,
       moradorNome: user.nome,
-      apartamento: `${user.apartamento || '101'}${user.bloco || 'A'}`,
-      categoria: document.getElementById('ocoCat').value,
-      assunto: document.getElementById('ocoAssunto').value,
-      descricao: document.getElementById('ocoDesc').value,
-      fotos: []
+      moradorEmail: user.email,
+      apartamento: `${user.apartamento}`,
+      categoria,
+      assunto,
+      descricao
     });
 
-    document.getElementById('modalNewOco').remove();
-    App.showToast('Ocorrência registrada com sucesso! Acompanhe o status nesta página.', 'success');
+    // 2. Dispara abertura do e-mail direto para condominio.modern.life@gmail.com
+    const emailSubject = encodeURIComponent(`[${categoria.toUpperCase()}] ${assunto} - Apto ${user.apartamento}`);
+    const emailBody = encodeURIComponent(`Morador: ${user.nome}\nUnidade: Apto ${user.apartamento}\nE-mail: ${user.email}\nTelefone: ${user.telefone || 'Não informado'}\n\nDetalhamento da Ocorrência:\n${descricao}`);
+    const mailtoUrl = `mailto:condominio.modern.life@gmail.com?subject=${emailSubject}&body=${emailBody}`;
+
+    window.open(mailtoUrl, '_blank');
+
+    App.showToast(`Sua ${categoria.toLowerCase()} foi registrada com sucesso e enviada ao e-mail do condomínio!`, 'success');
+    document.getElementById('modalNewOcorrencia').remove();
+    App.render();
+  },
+
+  enviarRespostaSindico(ocoId) {
+    const input = document.getElementById('inputResposta_' + ocoId);
+    const text = input ? input.value.trim() : '';
+    if (!text) return;
+
+    window.CondoStore.addRespostaOcorrencia(ocoId, text, 'Síndico Alessandro Cristiano da Silva');
+    App.showToast('Resposta enviada ao morador!', 'success');
     App.render();
   }
 };

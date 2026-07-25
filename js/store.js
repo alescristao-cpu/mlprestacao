@@ -1,9 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Mock Data
    Síndico: Alessandro Cristiano da Silva
+   Ocorrências Privadas (Reclamações, Elogios, Sugestões)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V5';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V6';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER';
 
 const INITIAL_DATA = {
@@ -244,12 +245,52 @@ const INITIAL_DATA = {
       autor: 'Síndico Alessandro Cristiano da Silva',
       imagem: './assets/images/IMG_2909.JPG',
       resumo: 'Concluímos a substituição das lâmpadas da garagem e corredores por iluminação LED ecoeficiente, gerando redução estimada de 18% na conta de energia.',
-      texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio. Todas as lâmpadas fluorescentes dos subsolos, corredores e hall principal foram substituídas por painéis e refletores LED de alta durabilidade.\n\nEstimamos uma economia mensal de cerca de R$ 3.200,00 na fatura de energia elétrica, além de melhorar substancialmente a iluminação e segurança de nossas garagens.',
+      texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio. Todas as lâmpadas fluorescentes dos subsolos, corredores e hall principal foram substituídas por painéis e refletores LED de alta durabilidade.',
       comentarios: []
     }
   ],
 
-  ocorrencias: [],
+  // Ocorrências Estritamente Privadas (Reclamações, Elogios, Sugestões)
+  ocorrencias: [
+    {
+      id: 'oco_01',
+      moradorId: 'usr_02',
+      moradorNome: 'Mariana Castro',
+      moradorEmail: 'mariana.castro@gmail.com',
+      apartamento: '84B',
+      categoria: 'Sugestão',
+      assunto: 'Instalação de tomadas para veículos elétricos na garagem',
+      descricao: 'Gostaria de sugerir que o condomínio avalie um estudo de viabilidade técnica para pontos de recarga no subsolo.',
+      data: '2026-07-18',
+      status: 'Respondido pelo Síndico',
+      respostas: [
+        {
+          autor: 'Síndico Alessandro Cristiano da Silva',
+          data: '2026-07-19 10:15',
+          texto: 'Prezada Mariana, recebemos sua sugestão com satisfação. Já contratamos um engenheiro eletricista para parecer técnico.'
+        }
+      ]
+    },
+    {
+      id: 'oco_02',
+      moradorId: 'usr_03',
+      moradorNome: 'Roberto Almeida',
+      moradorEmail: 'roberto.almeida@hotmail.com',
+      apartamento: '121A',
+      categoria: 'Elogio',
+      assunto: 'Limpeza e manutenção da área da piscina',
+      descricao: 'Parabéns à equipe de manutenção e limpeza da área da piscina no último final de semana.',
+      data: '2026-07-20',
+      status: 'Respondido pelo Síndico',
+      respostas: [
+        {
+          autor: 'Síndico Alessandro Cristiano da Silva',
+          data: '2026-07-20 14:00',
+          texto: 'Obrigado pelo reconhecimento, Roberto! Repassarei o elogio à equipe de conservação.'
+        }
+      ]
+    }
+  ],
 
   agendaReservas: [
     {
@@ -258,14 +299,6 @@ const INITIAL_DATA = {
       data: '2026-07-28',
       horario: '10:00 às 11:00',
       moradorNome: 'Mariana Castro',
-      status: 'Confirmado'
-    },
-    {
-      id: 'res_02',
-      area: 'Academia',
-      data: '2026-07-28',
-      horario: '07:00 às 08:00',
-      moradorNome: 'Roberto Almeida',
       status: 'Confirmado'
     }
   ],
@@ -366,31 +399,34 @@ class StoreEngine {
     }
   }
 
-  addRecado(post) {
-    const newRecado = {
-      id: 'rec_' + Date.now(),
+  addOcorrencia(oco) {
+    if (!this.data.ocorrencias) this.data.ocorrencias = [];
+    const newOco = {
+      id: 'oco_' + Date.now(),
       data: new Date().toISOString().split('T')[0],
-      autor: 'Síndico Alessandro Cristiano da Silva',
-      imagem: post.imagem || './assets/images/IMG_2956.jpg',
-      comentarios: [],
-      ...post
+      status: 'Enviado ao Síndico',
+      respostas: [],
+      ...oco
     };
-    if (!this.data.recados) this.data.recados = [];
-    this.data.recados.unshift(newRecado);
+    this.data.ocorrencias.unshift(newOco);
     this.saveData();
-    return newRecado;
+    return newOco;
   }
 
-  addAgendamento(reserva) {
-    if (!this.data.agendaReservas) this.data.agendaReservas = [];
-    const newReserva = {
-      id: 'res_' + Date.now(),
-      status: 'Confirmado',
-      ...reserva
-    };
-    this.data.agendaReservas.unshift(newReserva);
-    this.saveData();
-    return newReserva;
+  addRespostaOcorrencia(ocoId, respostaTexto, autorNome) {
+    const oco = (this.data.ocorrencias || []).find(o => o.id === ocoId);
+    if (oco) {
+      if (!oco.respostas) oco.respostas = [];
+      oco.respostas.push({
+        autor: autorNome || 'Síndico Alessandro',
+        data: new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
+        texto: respostaTexto
+      });
+      oco.status = 'Respondido pelo Síndico';
+      this.saveData();
+      return true;
+    }
+    return false;
   }
 }
 
