@@ -4,6 +4,29 @@
 
 window.BalancetesComponent = {
   render(container, data) {
+    const user = window.CondoStore.currentUser;
+
+    // Access Gate for non-logged-in users
+    if (!user || user.status !== 'Aprovado') {
+      container.innerHTML = `
+        <div class="card-widget" style="text-align: center; padding: 3.5rem 1.5rem; max-width: 600px; margin: 2rem auto;">
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
+            <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
+          </div>
+          <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Acesso Restrito a Moradores Cadastrados
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem;">
+            A visualização dos balancetes consolidados e auditorias financeiras é de uso exclusivo dos moradores e conselheiros do Modern Life Residence.
+          </p>
+          <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
+            <span class="material-symbols-outlined">login</span> Entrar / Cadastrar com Google
+          </button>
+        </div>
+      `;
+      return;
+    }
+
     const list = data.balancetes || [];
 
     container.innerHTML = `
@@ -11,19 +34,17 @@ window.BalancetesComponent = {
         <div class="card-header">
           <div>
             <div class="card-title">
-              <span class="material-symbols-outlined">analytics</span> Balancetes Consolidados
+              <span class="material-symbols-outlined">analytics</span> Balancetes Consolidados (Dados Fiéis da Gestão)
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-              Documentação de balanços financeiros aprovados pelo conselho fiscal.
+              Consulta aos valores consolidados da arrecadação e despesas aprovadas pelo Conselho Fiscal.
             </p>
           </div>
 
-          <!-- Filtros de Busca -->
           <div style="display: flex; gap: 0.5rem;">
             <select id="filterAnoBal" class="form-control" style="width: auto;" onchange="BalancetesComponent.applyFilter()">
               <option value="todos">Todos os Anos</option>
               <option value="2026" selected>2026</option>
-              <option value="2025">2025</option>
             </select>
           </div>
         </div>
@@ -32,12 +53,13 @@ window.BalancetesComponent = {
           <table class="custom-table" id="tableBalancetes">
             <thead>
               <tr>
-                <th>Mês / Ano</th>
+                <th>Competência</th>
                 <th>Publicado em</th>
-                <th style="text-align: right;">Receita (R$)</th>
-                <th style="text-align: right;">Despesa (R$)</th>
-                <th style="text-align: right;">Saldo (R$)</th>
-                <th style="text-align: center;">Ações</th>
+                <th style="text-align: right;">Receita Bruta (R$)</th>
+                <th style="text-align: right;">Despesa Bruta (R$)</th>
+                <th style="text-align: right;">Saldo Anterior (R$)</th>
+                <th style="text-align: right;">Saldo do Mês (R$)</th>
+                <th style="text-align: right;">Saldo Atual Acumulado (R$)</th>
               </tr>
             </thead>
             <tbody>
@@ -54,16 +76,14 @@ window.BalancetesComponent = {
                   <td style="text-align: right; color: #C62828; font-weight: 700;">
                     R$ ${bal.despesaBruta.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                   </td>
+                  <td style="text-align: right; color: var(--text-muted); font-weight: 600;">
+                    R$ ${(bal.saldoAnterior || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                  </td>
                   <td style="text-align: right; color: #1976D2; font-weight: 700;">
                     R$ ${bal.saldoMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                   </td>
-                  <td style="text-align: center;">
-                    <button class="btn-outline-primary btn-sm" onclick="BalancetesComponent.viewBalancete('${bal.id}')" title="Visualizar Balancete">
-                      <span class="material-symbols-outlined">visibility</span> Visualizar
-                    </button>
-                    <button class="btn-primary btn-sm" onclick="PDFExporter.exportPrestacaoContasPDF({mesAno: '${bal.mes} ${bal.ano}', receitas: ${bal.receitaBruta}, despesas: ${bal.despesaBruta}, saldo: ${bal.saldoMes}})" title="Baixar PDF">
-                      <span class="material-symbols-outlined">download</span> Baixar PDF
-                    </button>
+                  <td style="text-align: right; color: var(--primary-dark); font-weight: 800;">
+                    R$ ${(bal.saldoAtual || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                   </td>
                 </tr>
               `).join('')}
@@ -77,7 +97,6 @@ window.BalancetesComponent = {
   applyFilter() {
     const selectedAno = document.getElementById('filterAnoBal').value;
     const rows = document.querySelectorAll('#tableBalancetes tbody tr');
-
     rows.forEach(row => {
       const ano = row.getAttribute('data-ano');
       if (selectedAno === 'todos' || ano === selectedAno) {
@@ -86,12 +105,5 @@ window.BalancetesComponent = {
         row.style.display = 'none';
       }
     });
-  },
-
-  viewBalancete(id) {
-    const bal = window.CondoStore.data.balancetes.find(b => b.id === id);
-    if (!bal) return;
-
-    alert(`Balancete oficial de ${bal.mes}/${bal.ano}\n\n• Receita Bruta: R$ ${bal.receitaBruta.toLocaleString('pt-BR')}\n• Despesa Total: R$ ${bal.despesaBruta.toLocaleString('pt-BR')}\n• Saldo Líquido: R$ ${bal.saldoMes.toLocaleString('pt-BR')}\n\nStatus: Aprovado sem ressalvas pelo Conselho Fiscal.`);
   }
 };

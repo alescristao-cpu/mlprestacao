@@ -1,12 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Visual Identity & Core CSS
-   Color Palette:
-   - Primary Green: #2E6B42
-   - Dark Green: #1F4D30
-   - White: #FFFFFF
-   - Light Gray: #F4F4F4
-   - Medium Gray: #D9D9D9
-   - Dark Text / Surface: #222222
+   Logo: lnovo.jpeg / logo.png Expanded Display
    ---------------------------------------------------- */
 
 :root {
@@ -89,7 +83,7 @@ html, body {
 
 /* Sidebar Styles */
 .app-sidebar {
-  width: 280px;
+  width: 290px;
   background: var(--bg-sidebar);
   color: var(--text-sidebar);
   display: flex;
@@ -104,39 +98,19 @@ html, body {
 }
 
 .sidebar-header {
-  padding: 1.5rem;
+  padding: 1.25rem 1rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.15);
+  justify-content: center;
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .sidebar-logo {
-  height: 44px;
-  width: auto;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-}
-
-.sidebar-brand-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-brand-title {
-  font-family: var(--font-heading);
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #FFFFFF;
-  letter-spacing: 0.5px;
-  line-height: 1.2;
-}
-
-.sidebar-brand-sub {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.7);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  max-width: 100%;
+  height: auto;
+  max-height: 65px;
+  object-fit: contain;
 }
 
 .sidebar-menu {
@@ -148,7 +122,6 @@ html, body {
   gap: 0.25rem;
 }
 
-/* Custom Scrollbar for sidebar */
 .sidebar-menu::-webkit-scrollbar {
   width: 5px;
 }
@@ -256,7 +229,7 @@ html, body {
 /* Main Content Wrapper */
 .app-main {
   flex: 1;
-  margin-left: 280px;
+  margin-left: 290px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -405,67 +378,6 @@ html, body {
   box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
 }
 
-/* Top Banner Header */
-.condo-banner {
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-  color: white;
-  padding: 2rem 2.5rem;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-}
-
-.condo-banner::before {
-  content: '';
-  position: absolute;
-  top: -50px;
-  right: -50px;
-  width: 250px;
-  height: 250px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  pointer-events: none;
-}
-
-.banner-content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.banner-text h2 {
-  font-family: var(--font-heading);
-  font-size: 1.75rem;
-  font-weight: 800;
-  margin-bottom: 0.35rem;
-}
-
-.banner-text p {
-  font-size: 0.95rem;
-  opacity: 0.9;
-}
-
-.banner-tags {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-}
-
-.banner-tag {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(4px);
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 /* Page Container */
 .page-container {
   padding: 2rem 2.5rem;
@@ -555,8 +467,5 @@ html, body {
   }
   .page-container {
     padding: 1.25rem;
-  }
-  .condo-banner {
-    padding: 1.5rem;
   }
 }

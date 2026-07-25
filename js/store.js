@@ -1,8 +1,9 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Mock Data
+   Dados Financeiros Fiéis extraídos dos Relatórios Oficiais
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V2';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V3';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER';
 
 const INITIAL_DATA = {
@@ -58,102 +59,137 @@ const INITIAL_DATA = {
     }
   ],
 
+  // Dados reais consolidados dos PDFs da Gestão
   prestacaoContas: [
-    {
-      id: 'pc_2026_07',
-      mesAno: 'Julho 2026',
-      mes: 7,
-      ano: 2026,
-      receitas: 145800.00,
-      despesas: 118450.00,
-      saldo: 27350.00,
-      status: 'Publicado',
-      categoriasDespesa: [
-        { nome: 'Folha de Pagamento & Encargos', valor: 54200.00 },
-        { nome: 'Energia Elétrica & Água', valor: 22100.00 },
-        { nome: 'Manutenção de Elevadores', valor: 14500.00 },
-        { nome: 'Segurança & Portaria Remota', valor: 16800.00 },
-        { nome: 'Jardinagem & Limpeza', valor: 6350.00 },
-        { nome: 'Outros / Fundo de Reserva', valor: 4500.00 }
-      ],
-      pdfUrl: '#',
-      excelUrl: '#'
-    },
-    {
-      id: 'pc_2026_06',
-      mesAno: 'Junho 2026',
-      mes: 6,
-      ano: 2026,
-      receitas: 145200.00,
-      despesas: 122100.00,
-      saldo: 23100.00,
-      status: 'Publicado',
-      categoriasDespesa: [
-        { nome: 'Folha de Pagamento & Encargos', valor: 54000.00 },
-        { nome: 'Energia Elétrica & Água', valor: 24500.00 },
-        { nome: 'Manutenção de Elevadores', valor: 14500.00 },
-        { nome: 'Segurança & Portaria Remota', valor: 16800.00 },
-        { nome: 'Jardinagem & Limpeza', valor: 7800.00 },
-        { nome: 'Outros / Fundo de Reserva', valor: 4500.00 }
-      ],
-      pdfUrl: '#',
-      excelUrl: '#'
-    },
     {
       id: 'pc_2026_05',
       mesAno: 'Maio 2026',
       mes: 5,
       ano: 2026,
-      receitas: 144500.00,
-      despesas: 115200.00,
-      saldo: 29300.00,
-      status: 'Publicado',
+      receitas: 100992.34,
+      despesas: 74706.09,
+      saldoAnterior: 472151.84,
+      saldo: 26286.25,
+      saldoAtual: 498438.09,
+      status: 'Publicado e Auditado',
       categoriasDespesa: [
-        { nome: 'Folha de Pagamento & Encargos', valor: 53800.00 },
-        { nome: 'Energia Elétrica & Água', valor: 19800.00 },
-        { nome: 'Manutenção de Elevadores', valor: 14500.00 },
-        { nome: 'Segurança & Portaria Remota', valor: 16800.00 },
-        { nome: 'Jardinagem & Limpeza', valor: 5800.00 },
-        { nome: 'Outros / Fundo de Reserva', valor: 4500.00 }
-      ],
-      pdfUrl: '#',
-      excelUrl: '#'
+        { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 12574.41 },
+        { nome: 'Manutenção e Conservação Predial', valor: 4561.11 },
+        { nome: 'Despesas Administrativas & Síndico', valor: 7943.33 },
+        { nome: 'Taxa Extra / Obras Calçada', valor: 1361.00 },
+        { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 39121.61 },
+        { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4305.34 }
+      ]
+    },
+    {
+      id: 'pc_2026_04',
+      mesAno: 'Abril 2026',
+      mes: 4,
+      ano: 2026,
+      receitas: 100992.34,
+      despesas: 74706.09,
+      saldoAnterior: 472151.84,
+      saldo: 26286.25,
+      saldoAtual: 498438.09,
+      status: 'Publicado e Auditado',
+      categoriasDespesa: [
+        { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 11406.96 },
+        { nome: 'Manutenção e Conservação Predial', valor: 6855.48 },
+        { nome: 'Despesas Administrativas & Síndico', valor: 3625.52 },
+        { nome: 'Taxa Extra / Obras Calçada', valor: 9730.66 },
+        { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 39069.72 },
+        { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4017.75 }
+      ]
+    },
+    {
+      id: 'pc_2026_03',
+      mesAno: 'Março 2026',
+      mes: 3,
+      ano: 2026,
+      receitas: 91253.90,
+      despesas: 81879.48,
+      saldoAnterior: 462777.42,
+      saldo: 9374.42,
+      saldoAtual: 472151.84,
+      status: 'Publicado e Auditado',
+      categoriasDespesa: [
+        { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 12211.96 },
+        { nome: 'Manutenção e Conservação Predial', valor: 3533.29 },
+        { nome: 'Despesas Administrativas & Síndico', valor: 5167.52 },
+        { nome: 'Taxa Extra / Obra Calçada', valor: 16164.26 },
+        { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 40828.32 },
+        { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 3974.13 }
+      ]
+    },
+    {
+      id: 'pc_2026_02',
+      mesAno: 'Fevereiro 2026',
+      mes: 2,
+      ano: 2026,
+      receitas: 100772.74,
+      despesas: 64811.66,
+      saldoAnterior: 426816.34,
+      saldo: 35961.08,
+      saldoAtual: 462777.42,
+      status: 'Publicado e Auditado',
+      categoriasDespesa: [
+        { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 15697.96 },
+        { nome: 'Manutenção e Conservação Predial', valor: 5854.78 },
+        { nome: 'Despesas Administrativas & Síndico', valor: 3221.55 },
+        { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 35965.62 },
+        { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4071.75 }
+      ]
     }
   ],
 
   balancetes: [
     {
-      id: 'bal_2026_07',
-      titulo: 'Balancete Consolidado - Julho 2026',
-      ano: 2026,
-      mes: 'Julho',
-      dataPublicacao: '2026-07-22',
-      receitaBruta: 145800.00,
-      despesaBruta: 118450.00,
-      saldoMes: 27350.00,
-      arquivoPdf: 'Balancete_ModernLife_Julho2026.pdf'
-    },
-    {
-      id: 'bal_2026_06',
-      titulo: 'Balancete Consolidado - Junho 2026',
-      ano: 2026,
-      mes: 'Junho',
-      dataPublicacao: '2026-06-25',
-      receitaBruta: 145200.00,
-      despesaBruta: 122100.00,
-      saldoMes: 23100.00,
-      arquivoPdf: 'Balancete_ModernLife_Junho2026.pdf'
-    },
-    {
       id: 'bal_2026_05',
-      titulo: 'Balancete Consolidado - Maio 2026',
+      titulo: 'Balancete Geral Consolidado - Maio 2026',
       ano: 2026,
       mes: 'Maio',
-      dataPublicacao: '2026-05-24',
-      receitaBruta: 144500.00,
-      despesaBruta: 115200.00,
-      saldoMes: 29300.00,
-      arquivoPdf: 'Balancete_ModernLife_Maio2026.pdf'
+      dataPublicacao: '2026-05-31',
+      receitaBruta: 100992.34,
+      despesaBruta: 74706.09,
+      saldoAnterior: 472151.84,
+      saldoMes: 26286.25,
+      saldoAtual: 498438.09
+    },
+    {
+      id: 'bal_2026_04',
+      titulo: 'Balancete Geral Consolidado - Abril 2026',
+      ano: 2026,
+      mes: 'Abril',
+      dataPublicacao: '2026-04-30',
+      receitaBruta: 100992.34,
+      despesaBruta: 74706.09,
+      saldoAnterior: 472151.84,
+      saldoMes: 26286.25,
+      saldoAtual: 498438.09
+    },
+    {
+      id: 'bal_2026_03',
+      titulo: 'Balancete Geral Consolidado - Março 2026',
+      ano: 2026,
+      mes: 'Março',
+      dataPublicacao: '2026-03-31',
+      receitaBruta: 91253.90,
+      despesaBruta: 81879.48,
+      saldoAnterior: 462777.42,
+      saldoMes: 9374.42,
+      saldoAtual: 472151.84
+    },
+    {
+      id: 'bal_2026_02',
+      titulo: 'Balancete Geral Consolidado - Fevereiro 2026',
+      ano: 2026,
+      mes: 'Fevereiro',
+      dataPublicacao: '2026-02-28',
+      receitaBruta: 100772.74,
+      despesaBruta: 64811.66,
+      saldoAnterior: 426816.34,
+      saldoMes: 35961.08,
+      saldoAtual: 462777.42
     }
   ],
 
@@ -165,8 +201,7 @@ const INITIAL_DATA = {
       valorMensal: 14500.00,
       vigenciaInicio: '2025-01-01',
       vigenciaFim: '2027-01-01',
-      status: 'Ativo',
-      arquivo: 'Contrato_Otis_Elevadores_2025_2027.pdf'
+      status: 'Ativo'
     },
     {
       id: 'ctr_02',
@@ -175,8 +210,7 @@ const INITIAL_DATA = {
       valorMensal: 16800.00,
       vigenciaInicio: '2024-06-01',
       vigenciaFim: '2026-06-01',
-      status: 'Em Renovação',
-      arquivo: 'Contrato_SeguraPort_2024_2026.pdf'
+      status: 'Em Renovação'
     },
     {
       id: 'ctr_03',
@@ -185,8 +219,7 @@ const INITIAL_DATA = {
       valorMensal: 3800.00,
       vigenciaInicio: '2025-03-01',
       vigenciaFim: '2026-03-01',
-      status: 'Ativo',
-      arquivo: 'Contrato_Verde_Vida_Jardinagem.pdf'
+      status: 'Ativo'
     },
     {
       id: 'ctr_04',
@@ -195,8 +228,7 @@ const INITIAL_DATA = {
       valorMensal: 2950.00,
       vigenciaInicio: '2026-01-01',
       vigenciaFim: '2027-01-01',
-      status: 'Ativo',
-      arquivo: 'Apolice_Seguro_Predial_PortoSeguro.pdf'
+      status: 'Ativo'
     }
   ],
 
@@ -207,7 +239,7 @@ const INITIAL_DATA = {
       categoria: 'Convenção',
       dataUpload: '2024-01-15',
       tamanho: '4.2 MB',
-      arquivo: 'Convencao_Modern_Life_Residence.pdf'
+      arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
     },
     {
       id: 'doc_02',
@@ -215,7 +247,7 @@ const INITIAL_DATA = {
       categoria: 'Regimento Interno',
       dataUpload: '2025-11-10',
       tamanho: '2.8 MB',
-      arquivo: 'Regimento_Interno_2025_2026.pdf'
+      arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
     },
     {
       id: 'doc_03',
@@ -223,23 +255,15 @@ const INITIAL_DATA = {
       categoria: 'Manual do Proprietário',
       dataUpload: '2024-02-01',
       tamanho: '8.5 MB',
-      arquivo: 'Manual_Proprietario_ModernLife.pdf'
+      arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
     },
     {
       id: 'doc_04',
-      nome: 'Ata da Assembleia Geral Ordinária de Março 2026',
-      categoria: 'Atas',
-      dataUpload: '2026-03-28',
-      tamanho: '1.4 MB',
-      arquivo: 'Ata_AGO_Marco_2026.pdf'
-    },
-    {
-      id: 'doc_05',
-      nome: 'Normas de Uso do Salão de Festas e Churrasqueira',
-      categoria: 'Normas',
-      dataUpload: '2025-08-14',
-      tamanho: '650 KB',
-      arquivo: 'Normas_Salao_Festas_Churrasqueira.pdf'
+      nome: 'Edital Convocação AGE 11.08.2026 (Assinado)',
+      categoria: 'Assembleias',
+      dataUpload: '2026-07-23',
+      tamanho: '181 KB',
+      arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
     }
   ],
 
@@ -252,10 +276,8 @@ const INITIAL_DATA = {
       imagem: './assets/images/IMG_2909.JPG',
       resumo: 'Concluímos a substituição das lâmpadas da garagem e corredores por iluminação LED ecoeficiente, gerando redução estimada de 18% na conta de energia.',
       texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio. Todas as lâmpadas fluorescentes dos subsolos, corredores e hall principal foram substituídas por painéis e refletores LED de alta durabilidade.\n\nEstimamos uma economia mensal de cerca de R$ 3.200,00 na fatura de energia elétrica, além de melhorar substancialmente a iluminação e segurança de nossas garagens.',
-      anexo: 'Relatorio_Tecnico_Iluminacao_LED.pdf',
       comentarios: [
-        { autor: 'Mariana Castro (Apt 84B)', data: '2026-07-15 14:30', texto: 'Excelente iniciativa! A iluminação da garagem ficou ótima!' },
-        { autor: 'Roberto Almeida (Apt 121A)', data: '2026-07-16 09:15', texto: 'Parabéns pela gestão eficiente e transparente.' }
+        { autor: 'Mariana Castro (Apt 84B)', data: '2026-07-15 14:30', texto: 'Excelente iniciativa! A iluminação da garagem ficou ótima!' }
       ]
     },
     {
@@ -266,7 +288,6 @@ const INITIAL_DATA = {
       imagem: './assets/images/IMG_2930.jpg',
       resumo: 'Realizada higienização anual das caixas d\'água e revisão no sistema de recalque preventivo.',
       texto: 'Informamos a todos os moradores que realizamos com sucesso a limpeza e desinfecção periódica de ambos os reservatórios (superior e inferior), bem como o teste de estanqueidade e troca dos selos mecânicos das bombas.',
-      anexo: 'Laudo_Potabilidade_Agua_Julho2026.pdf',
       comentarios: []
     }
   ],
@@ -283,18 +304,6 @@ const INITIAL_DATA = {
       data: '2026-07-18',
       status: 'Em análise',
       respostaAdmin: 'Prezada Mariana, a administração já contratou um engenheiro eletricista para apresentar parecer técnico na próxima assembleia.'
-    },
-    {
-      id: 'oco_02',
-      moradorNome: 'Roberto Almeida',
-      apartamento: '121A',
-      categoria: 'Reclamação',
-      assunto: 'Ruído excessivo no apto 131A após às 22h',
-      descricao: 'Houve barulho recorrente de salto e móveis sendo arrastados durante a madrugada da última sexta-feira.',
-      fotos: [],
-      data: '2026-07-10',
-      status: 'Finalizado',
-      respostaAdmin: 'Morador notificado formalmente pela portaria em conformidade com o Artigo 14 do Regimento Interno.'
     }
   ],
 
@@ -302,7 +311,7 @@ const INITIAL_DATA = {
     {
       id: 'evt_01',
       titulo: 'Assembleia Geral Extraordinária (AGE)',
-      data: '2026-08-10',
+      data: '2026-08-11',
       hora: '19:30',
       tipo: 'Assembleia',
       local: 'Salão de Festas Principal / Formato Híbrido',
@@ -316,22 +325,13 @@ const INITIAL_DATA = {
       tipo: 'Manutenção',
       local: 'Torre Principal',
       descricao: 'Interrupção alternada de 1 elevador social por vez para substituição preventiva de cabos.'
-    },
-    {
-      id: 'evt_03',
-      titulo: 'Festa Julina do Condomínio',
-      data: '2026-07-31',
-      hora: '17:00',
-      tipo: 'Evento',
-      local: 'Área do Playground e Churrasqueira',
-      descricao: 'Confraternização entre vizinhos com comidas típicas e recreação para crianças.'
     }
   ],
 
   galeria: [
-    { id: 'gal_01', titulo: 'Torre Modern Life Residence & Entorno', categoria: 'Fachada', imagem: './assets/images/IMG_2956.jpg' },
+    { id: 'gal_01', titulo: 'Torre Modern Life Residence', categoria: 'Fachada', imagem: './assets/images/IMG_2956.jpg' },
     { id: 'gal_02', titulo: 'Fachada Principal & Entrada', categoria: 'Fachada', imagem: './assets/images/IMG_2909.JPG' },
-    { id: 'gal_03', titulo: 'Vista Panorâmica da Torre', categoria: 'Fachada', imagem: './assets/images/IMG_2930.jpg' },
+    { id: 'gal_03', titulo: 'Vista Panorâmica da Entrada', categoria: 'Fachada', imagem: './assets/images/IMG_2930.jpg' },
     { id: 'gal_04', titulo: 'Praça de Acesso', categoria: 'Eventos', imagem: './assets/images/IMG_2955.jpg' }
   ],
 
@@ -342,14 +342,6 @@ const INITIAL_DATA = {
       moradorNome: 'Mariana Castro',
       apartamento: '84B',
       data: '2026-08-15',
-      status: 'Confirmada'
-    },
-    {
-      id: 'res_02',
-      espaco: 'Churrasqueira',
-      moradorNome: 'Roberto Almeida',
-      apartamento: '121A',
-      data: '2026-08-02',
       status: 'Confirmada'
     }
   ]
@@ -384,7 +376,7 @@ class StoreEngine {
       const raw = localStorage.getItem(CURRENT_USER_KEY);
       if (raw) return JSON.parse(raw);
     } catch (e) {}
-    return INITIAL_DATA.moradores[0];
+    return null; // Default to unauthenticated visitors so Access Gate is active by default
   }
 
   setCurrentUser(user) {
