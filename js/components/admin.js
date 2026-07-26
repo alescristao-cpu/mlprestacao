@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
+   Otimizado 100% para Celulares (iOS / Android) & Desktop
    Síndico: Alessandro Cristiano da Silva
-   Aprovação, Exclusão & Cadastro Manual de Moradores (Cross-Device Sync)
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -11,14 +11,14 @@ window.AdminComponent = {
     if (!user || user.role !== 'Administrador') {
       container.innerHTML = `
         <div class="card-widget" style="text-align: center; padding: 3rem 1.5rem; max-width: 550px; margin: 2rem auto;">
-          <span class="material-symbols-outlined" style="font-size: 3rem; color: #C62828;">admin_panel_settings</span>
+          <span class="material-symbols-outlined" style="font-size: 3.5rem; color: #C62828; display: block; margin-bottom: 0.5rem;">admin_panel_settings</span>
           <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.3rem; margin-top: 0.5rem;">
             Acesso Restrito à Administração
           </h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0;">
-            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, gestão e exclusão de cadastros de moradores.
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0; line-height: 1.5;">
+            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, gestão e autorização de moradores.
           </p>
-          <button class="btn-primary" onclick="AuthComponent.renderAuthModal()">
+          <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="width: 100%; justify-content: center; padding: 0.85rem;">
             <span class="material-symbols-outlined">login</span> Entrar como Síndico / Administrador
           </button>
         </div>
@@ -31,135 +31,114 @@ window.AdminComponent = {
     const aprovados = moradores.filter(m => m.status === 'Aprovado');
 
     container.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         
-        <!-- Header Banner Síndico -->
-        <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white;">
-          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <!-- Banner Principal do Síndico (Otimizado para Celular) -->
+        <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white; padding: 1.25rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.85rem;">
             <div>
               <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.4rem;">
                 <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL ADMINISTRATIVO MASTER
               </span>
-              <h2 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700;">
-                Gestão do Síndico Alessandro Cristiano da Silva
+              <h2 style="font-family: var(--font-heading); font-size: 1.3rem; font-weight: 700;">
+                Gestão do Síndico Alessandro
               </h2>
-              <p style="font-size: 0.88rem; opacity: 0.9;">
-                E-mail do Condomínio: <code>condominio.modern.life@gmail.com</code>
+              <p style="font-size: 0.82rem; opacity: 0.9;">
+                E-mail oficial: <code>condominio.modern.life@gmail.com</code>
               </p>
             </div>
 
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700;" onclick="AdminComponent.openManualAddModal()">
-                <span class="material-symbols-outlined">person_add</span> Autorizar Novo Morador Manualmente
-              </button>
-            </div>
+            <!-- Botão de Autorização Rápida no Celular -->
+            <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.92rem; box-shadow: var(--shadow-md);" onclick="AdminComponent.openQuickApproveModal()">
+              <span class="material-symbols-outlined" style="color: var(--primary);">person_add</span> ➕ Aprovar / Liberar Morador no Celular
+            </button>
           </div>
         </div>
 
-        <!-- Solicitações de Cadastro Pendentes de Aprovação Direta -->
-        <div class="card-widget" style="border: 2px solid #FFE0B2;">
-          <div class="card-header" style="background: #FFF8E1; padding: 1rem; border-radius: var(--radius-sm);">
-            <div class="card-title" style="color: #E65100;">
-              <span class="material-symbols-outlined" style="font-size: 1.6rem;">how_to_reg</span> Solicitações de Cadastro Aguardando Aprovação (${pendentes.length})
+        <!-- Seção 1: Solicitações de Cadastro Pendentes (Formato Cards no Celular) -->
+        <div class="card-widget" style="border: 2px solid #FFE0B2; padding: 1.25rem;">
+          <div style="background: #FFF8E1; padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="font-weight: 700; color: #E65100; font-size: 1rem; display: flex; align-items: center; gap: 0.4rem;">
+              <span class="material-symbols-outlined" style="font-size: 1.4rem;">how_to_reg</span> Cadastros Aguardando Aprovação (${pendentes.length})
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
-              Clique em <strong>"Autorizar Acesso"</strong> para liberar o morador ou em <strong>"Excluir"</strong> para cancelar a solicitação.
-            </p>
+            <span class="badge badge-warning">${pendentes.length} Pendentes</span>
           </div>
 
           ${pendentes.length === 0 ? `
-            <div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.92rem;">
-              <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.5; display: block; margin-bottom: 0.4rem;">check_circle</span>
-              Nenhum cadastro de morador aguardando aprovação no momento.
+            <div style="padding: 1.5rem 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+              <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.4; display: block; margin-bottom: 0.3rem;">check_circle</span>
+              Nenhuma solicitação pendente no momento nesta tela.<br>
+              <span style="font-size: 0.8rem; opacity: 0.8;">Para autorizar um novo morador que se cadastrou em outro celular, use o botão verde acima!</span>
             </div>
           ` : `
-            <div class="table-responsive" style="margin-top: 1rem;">
-              <table class="custom-table">
-                <thead>
-                  <tr>
-                    <th>Nome do Morador</th>
-                    <th>Unidade / Apto</th>
-                    <th>E-mail</th>
-                    <th>Telefone</th>
-                    <th>Data Cadastro</th>
-                    <th style="text-align: center;">Ações do Síndico</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${pendentes.map(p => `
-                    <tr>
-                      <td><strong>${p.nome}</strong></td>
-                      <td>Apto ${p.apartamento}</td>
-                      <td>${p.email}</td>
-                      <td>${p.telefone || 'Não informado'}</td>
-                      <td>${p.dataCadastro}</td>
-                      <td style="text-align: center;">
-                        <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;">
-                          <button class="btn-primary btn-sm" style="background: #2E6B42; font-weight: 700;" onclick="AdminComponent.aprovarMorador('${p.id}')">
-                            <span class="material-symbols-outlined" style="font-size: 1rem;">check_circle</span> Autorizar
-                          </button>
-                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.excluirMorador('${p.id}', '${p.nome}', '${p.apartamento}')">
-                            <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span> Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
+            <!-- Cards Individuais para visualização perfeita em Celulares -->
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              ${pendentes.map(p => `
+                <div style="background: var(--bg-app); border: 1px solid #FFE0B2; border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                      <strong style="font-size: 1.05rem; color: var(--primary-dark);">${p.nome}</strong>
+                      <div style="font-size: 0.85rem; color: var(--text-main); font-weight: 600;">Unidade: Apto ${p.apartamento}</div>
+                    </div>
+                    <span class="badge badge-warning">Pendente</span>
+                  </div>
+
+                  <div style="font-size: 0.82rem; color: var(--text-muted);">
+                    <div>📧 E-mail: <strong>${p.email}</strong></div>
+                    <div>📱 Telefone: <strong>${p.telefone || 'Não informado'}</strong></div>
+                    <div>📅 Data: ${p.dataCadastro}</div>
+                  </div>
+
+                  <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem;">
+                    <button class="btn-primary btn-sm" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.75rem; font-weight: 700;" onclick="AdminComponent.aprovarMorador('${p.id}')">
+                      <span class="material-symbols-outlined" style="font-size: 1.1rem;">check_circle</span> Autorizar
+                    </button>
+                    <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.75rem;" onclick="AdminComponent.excluirMorador('${p.id}', '${p.nome}', '${p.apartamento}')">
+                      <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete</span> Excluir
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
             </div>
           `}
         </div>
 
-        <!-- Lista de Moradores Com Acesso Liberado -->
-        <div class="card-widget">
-          <div class="card-header">
+        <!-- Seção 2: Lista de Moradores Com Acesso Liberado -->
+        <div class="card-widget" style="padding: 1.25rem;">
+          <div class="card-header" style="margin-bottom: 0.85rem;">
             <div class="card-title">
               <span class="material-symbols-outlined">groups</span> Moradores Com Acesso Autorizado (${aprovados.length})
             </div>
           </div>
 
-          <div class="table-responsive">
-            <table class="custom-table">
-              <thead>
-                <tr>
-                  <th>Nome Completo</th>
-                  <th>Unidade / Apto</th>
-                  <th>E-mail</th>
-                  <th>Perfil</th>
-                  <th>Status</th>
-                  <th style="text-align: center;">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${aprovados.map(m => {
-                  const isAdmin = m.role === 'Administrador' || m.id === 'usr_sindico' || m.email.toLowerCase() === 'condominio.modern.life@gmail.com';
-                  return `
-                    <tr>
-                      <td>
-                        <strong>${m.nome}</strong>
-                        ${isAdmin ? '<span class="badge badge-info" style="margin-left: 6px;">Síndico Master</span>' : ''}
-                      </td>
-                      <td>Apto ${m.apartamento}</td>
-                      <td>${m.email}</td>
-                      <td><span class="badge badge-info">${m.role}</span></td>
-                      <td><span class="badge badge-success">${m.status}</span></td>
-                      <td style="text-align: center;">
-                        ${isAdmin ? `
-                          <span style="font-size: 0.78rem; color: var(--text-muted); font-style: italic;">
-                            <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;">lock</span> Não Excluível
-                          </span>
-                        ` : `
-                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.4rem 0.75rem;" onclick="AdminComponent.excluirMorador('${m.id}', '${m.nome}', '${m.apartamento}')">
-                            <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir
-                          </button>
-                        `}
-                      </td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            ${aprovados.map(m => {
+              const isAdmin = m.role === 'Administrador' || m.id === 'usr_sindico' || m.email.toLowerCase() === 'condominio.modern.life@gmail.com';
+              return `
+                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                  <div>
+                    <div style="font-weight: 700; font-size: 0.95rem; color: var(--primary-dark);">
+                      ${m.nome} ${isAdmin ? '<span class="badge badge-info" style="font-size: 0.7rem; margin-left: 4px;">Síndico Master</span>' : ''}
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                      Apto ${m.apartamento} &bull; ${m.email}
+                    </div>
+                  </div>
+
+                  <div>
+                    ${isAdmin ? `
+                      <span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">
+                        🔒 Administrador
+                      </span>
+                    ` : `
+                      <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.5rem 0.75rem;" onclick="AdminComponent.excluirMorador('${m.id}', '${m.nome}', '${m.apartamento}')">
+                        <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir
+                      </button>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join('')}
           </div>
         </div>
 
@@ -167,43 +146,42 @@ window.AdminComponent = {
     `;
   },
 
-  openManualAddModal() {
-    const existing = document.getElementById('modalManualAdd');
+  openQuickApproveModal() {
+    const existing = document.getElementById('modalQuickApprove');
     if (existing) existing.remove();
 
     const modalHtml = `
-      <div class="modal-overlay active" id="modalManualAdd">
-        <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-overlay active" id="modalQuickApprove">
+        <div class="modal-card" style="max-width: 480px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
-            <div class="modal-title" style="color: white; font-weight: 700;">Autorizar Morador Manualmente</div>
-            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalManualAdd').remove()">✕</button>
+            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem;">
+              ➕ Aprovar Morador no Celular
+            </div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalQuickApprove').remove()">✕</button>
           </div>
           <div class="modal-body">
-            <form onsubmit="AdminComponent.submeterAddManual(event)">
+            <div style="background: var(--primary-light); padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 3px solid var(--primary);">
+              💡 <strong>Liberação Instantânea:</strong> Digite o e-mail ou nome do morador que solicitou o cadastro. O acesso aos balancetes e documentos será liberado na hora!
+            </div>
+
+            <form onsubmit="AdminComponent.submeterAprovacaoRapida(event)">
               <div class="form-group">
                 <label class="form-label">Nome Completo do Morador</label>
-                <input type="text" id="manualNome" class="form-control" placeholder="Ex: Carlos Eduardo" required>
+                <input type="text" id="quickNome" class="form-control" placeholder="Ex: João da Silva" required>
               </div>
 
               <div class="form-group">
                 <label class="form-label">E-mail do Morador</label>
-                <input type="email" id="manualEmail" class="form-control" placeholder="morador@exemplo.com" required>
+                <input type="email" id="quickEmail" class="form-control" placeholder="morador@exemplo.com" required>
               </div>
 
-              <div class="form-grid">
-                <div class="form-group">
-                  <label class="form-label">Unidade / Apto</label>
-                  <input type="text" id="manualApto" class="form-control" placeholder="Ex: Apt 502" required>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Telefone / WhatsApp</label>
-                  <input type="tel" id="manualTelefone" class="form-control" placeholder="(11) 99999-9999">
-                </div>
+              <div class="form-group">
+                <label class="form-label">Unidade / Apto</label>
+                <input type="text" id="quickApto" class="form-control" placeholder="Ex: Apt 402" required>
               </div>
 
-              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem;">
-                <span class="material-symbols-outlined">check_circle</span> Liberar e Autorizar Acesso
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; font-size: 0.95rem;">
+                <span class="material-symbols-outlined">check_circle</span> Conceder Acesso Autorizado
               </button>
             </form>
           </div>
@@ -214,25 +192,23 @@ window.AdminComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
-  submeterAddManual(e) {
+  submeterAprovacaoRapida(e) {
     e.preventDefault();
-    const nome = document.getElementById('manualNome').value.trim();
-    const email = document.getElementById('manualEmail').value.trim();
-    const apartamento = document.getElementById('manualApto').value.trim();
-    const telefone = document.getElementById('manualTelefone').value.trim();
+    const nome = document.getElementById('quickNome').value.trim();
+    const email = document.getElementById('quickEmail').value.trim();
+    const apartamento = document.getElementById('quickApto').value.trim();
 
     const newMorador = window.CondoStore.addMorador({
       nome,
       email,
-      telefone,
       apartamento,
-      cpf: 'Cadastrado Pelo Síndico'
+      cpf: 'Autorizado via Celular'
     });
 
     window.CondoStore.updateMoradorStatus(newMorador.id, 'Aprovado');
 
-    App.showToast(`Morador "${nome}" cadastrado e APROVADO com sucesso!`, 'success');
-    document.getElementById('modalManualAdd').remove();
+    App.showToast(`Morador "${nome}" (Apto ${apartamento}) APROVADO com sucesso!`, 'success');
+    document.getElementById('modalQuickApprove').remove();
     App.render();
   },
 
