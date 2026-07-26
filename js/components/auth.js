@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Cadastro & Autenticação de Moradores
-   Aprovação Direta no Painel do Administrador (Síndico)
+   (Removido campo Bloco - Apenas Unidade / Apartamento)
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -101,7 +101,7 @@ window.AuthComponent = {
     return `
       <div style="background: var(--primary-light); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 4px solid var(--primary);">
         📋 <strong>Cadastro do Morador:</strong><br>
-        Preencha os dados abaixo. Após o envio, a sua solicitação ficará disponível no <strong>Painel do Administrador (Síndico)</strong> para aprovação imediata.
+        Preencha seus dados abaixo. Após o envio, a sua solicitação vai para o <strong>Painel do Administrador (Síndico)</strong> para aprovação do acesso.
       </div>
 
       <form id="formRegister" onsubmit="AuthComponent.handleRegister(event)">
@@ -122,8 +122,8 @@ window.AuthComponent = {
           </div>
 
           <div class="form-group">
-            <label class="form-label">Unidade (Apto / Bloco)</label>
-            <input type="text" id="regUnidade" class="form-control" placeholder="Ex: Apt 42 - Bloco A" required>
+            <label class="form-label">Unidade / Apartamento</label>
+            <input type="text" id="regUnidade" class="form-control" placeholder="Ex: Apt 402" required>
           </div>
         </div>
 
@@ -158,8 +158,8 @@ window.AuthComponent = {
 
       <div style="background: var(--bg-app); padding: 1rem; border-radius: var(--radius-md); font-size: 0.88rem; margin-bottom: 1.25rem;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
-          <span style="color: var(--text-muted);">Unidade / Bloco:</span>
-          <strong>Apto ${user.apartamento} - Bloco ${user.bloco || 'A'}</strong>
+          <span style="color: var(--text-muted);">Unidade / Apartamento:</span>
+          <strong>Apto ${user.apartamento}</strong>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
           <span style="color: var(--text-muted);">E-mail:</span>
@@ -221,19 +221,17 @@ window.AuthComponent = {
     const telefone = document.getElementById('regTelefone').value.trim();
     const unidade = document.getElementById('regUnidade').value.trim();
 
-    // Cadastra o morador com status PENDENTE
     const newMorador = window.CondoStore.addMorador({
       nome,
       email,
       telefone,
       apartamento: unidade,
-      bloco: 'A',
       cpf: 'Cadastrado no Portal'
     });
 
     window.CondoStore.setCurrentUser(newMorador);
 
-    alert(`Cadastro realizado com sucesso!\n\nA sua solicitação foi registrada e enviada para o Painel do Administrador.\n\nO seu acesso às pastas e balancetes será liberado assim que o Síndico (Alessandro) aprovar a sua solicitação no painel.`);
+    alert(`Cadastro realizado com sucesso!\n\nA sua solicitação foi registrada no Painel do Administrador.\n\nO seu acesso às pastas e balancetes será liberado assim que o Síndico aprovar a sua solicitação no painel.`);
 
     document.getElementById('modalAuth').remove();
     App.render();

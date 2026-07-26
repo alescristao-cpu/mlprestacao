@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Gerenciamento, Aprovação e Exclusão de Cadastros
+   Aprovação e Exclusão de Moradores (Ex: Morador mudou-se do prédio)
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -16,7 +16,7 @@ window.AdminComponent = {
             Acesso Restrito à Administração
           </h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0;">
-            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, gestão e exclusão de cadastros de moradores.
+            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, gestão e exclusão de cadastros de moradores que mudarem do condomínio.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()">
             <span class="material-symbols-outlined">login</span> Entrar como Síndico / Administrador
@@ -49,7 +49,7 @@ window.AdminComponent = {
             </div>
             <div style="text-align: right;">
               <span class="badge badge-warning" style="font-size: 0.95rem; padding: 0.5rem 0.9rem;">
-                ${pendentes.length} Cadastros Pendentes
+                ${pendentes.length} Cadastros Aguardando Aprovação
               </span>
             </div>
           </div>
@@ -62,7 +62,7 @@ window.AdminComponent = {
               <span class="material-symbols-outlined" style="font-size: 1.6rem;">how_to_reg</span> Solicitações de Cadastro Aguardando Aprovação (${pendentes.length})
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
-              Clique em <strong>"Autorizar Acesso"</strong> para aprovar ou em <strong>"Excluir"</strong> para remover a solicitação.
+              Clique em <strong>"Autorizar Acesso"</strong> para liberar o morador ou em <strong>"Excluir"</strong> para cancelar o pedido.
             </p>
           </div>
 
@@ -77,7 +77,7 @@ window.AdminComponent = {
                 <thead>
                   <tr>
                     <th>Nome do Morador</th>
-                    <th>Unidade</th>
+                    <th>Unidade / Apto</th>
                     <th>E-mail</th>
                     <th>Telefone</th>
                     <th>Data Cadastro</th>
@@ -97,7 +97,7 @@ window.AdminComponent = {
                           <button class="btn-primary btn-sm" style="background: #2E6B42; font-weight: 700;" onclick="AdminComponent.aprovarMorador('${p.id}')">
                             <span class="material-symbols-outlined" style="font-size: 1rem;">check_circle</span> Autorizar
                           </button>
-                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.excluirMorador('${p.id}', '${p.nome}')">
+                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.excluirMorador('${p.id}', '${p.nome}', '${p.apartamento}')">
                             <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span> Excluir
                           </button>
                         </div>
@@ -110,12 +110,15 @@ window.AdminComponent = {
           `}
         </div>
 
-        <!-- Lista de Moradores Com Acesso Liberado -->
+        <!-- Lista de Moradores Com Acesso Liberado & Opção de Exclusão (Mudança do Prédio) -->
         <div class="card-widget">
           <div class="card-header">
             <div class="card-title">
               <span class="material-symbols-outlined">groups</span> Moradores Com Acesso Autorizado (${aprovados.length})
             </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+              Como Administrador Master, você pode excluir o cadastro de moradores que mudarem do prédio.
+            </p>
           </div>
 
           <div class="table-responsive">
@@ -123,11 +126,11 @@ window.AdminComponent = {
               <thead>
                 <tr>
                   <th>Nome Completo</th>
-                  <th>Unidade</th>
+                  <th>Unidade / Apto</th>
                   <th>E-mail</th>
                   <th>Perfil</th>
                   <th>Status</th>
-                  <th style="text-align: center;">Ações</th>
+                  <th style="text-align: center;">Gestão de Saída / Mudança</th>
                 </tr>
               </thead>
               <tbody>
@@ -139,7 +142,7 @@ window.AdminComponent = {
                         <strong>${m.nome}</strong>
                         ${isAdmin ? '<span class="badge badge-info" style="margin-left: 6px;">Síndico Master</span>' : ''}
                       </td>
-                      <td>Apto ${m.apartamento} - Bloco ${m.bloco || 'A'}</td>
+                      <td>Apto ${m.apartamento}</td>
                       <td>${m.email}</td>
                       <td><span class="badge badge-info">${m.role}</span></td>
                       <td><span class="badge badge-success">${m.status}</span></td>
@@ -149,8 +152,8 @@ window.AdminComponent = {
                             <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;">lock</span> Não Excluível
                           </span>
                         ` : `
-                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.4rem 0.75rem;" onclick="AdminComponent.excluirMorador('${m.id}', '${m.nome}')">
-                            <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir Cadastro
+                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.45rem 0.85rem; font-size: 0.82rem; font-weight: 600;" onclick="AdminComponent.excluirMorador('${m.id}', '${m.nome}', '${m.apartamento}')" title="Excluir cadastro por mudança do condomínio">
+                            <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">person_remove</span> Mudou-se do Prédio (Excluir)
                           </button>
                         `}
                       </td>
@@ -172,14 +175,14 @@ window.AdminComponent = {
     App.render();
   },
 
-  excluirMorador(id, nome) {
-    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o cadastro de "${nome}"?`)) {
+  excluirMorador(id, nome, apto) {
+    if (!confirm(`CONFIRMAÇÃO DE MUDANÇA / REMOÇÃO:\n\nTem certeza que deseja EXCLUIR o cadastro de "${nome}" (Apto ${apto}) por ter se mudado do condomínio?`)) {
       return;
     }
 
     const res = window.CondoStore.deleteMorador(id);
     if (res.success) {
-      App.showToast(`Cadastro de "${nome}" foi excluído com sucesso.`, 'success');
+      App.showToast(`Cadastro do morador "${nome}" (Apto ${apto}) foi excluído por mudança.`, 'success');
       App.render();
     } else {
       alert(res.message);
