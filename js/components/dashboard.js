@@ -1,180 +1,189 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Dashboard View Component
+   Modern Life Residence - Página Inicial (Dashboard)
+   Destaque dos Balancetes visível APENAS após cadastro e aprovação
    ---------------------------------------------------- */
 
 window.DashboardComponent = {
   render(container, data) {
-    const latestPC = data.prestacaoContas[0] || {};
-    const latestBal = data.balancetes[0] || {};
-    const nextEvent = data.agenda.find(a => a.tipo === 'Assembleia') || data.agenda[0] || {};
-    const recentDocs = data.documentos.slice(0, 3);
-    const recentRecados = data.recados.slice(0, 2);
+    const user = window.CondoStore.currentUser;
+    const isApproved = user && user.status === 'Aprovado';
+
+    const balancetes = data.balancetes || [];
+    const prestacoes = data.prestacaoContas || [];
+    const ultimoBalancete = balancetes[0] || {};
+    const ultimaPrestacao = prestacoes[0] || {};
+    const recados = data.recados || [];
+    const proximosEventos = data.agenda || [];
 
     container.innerHTML = `
-      <!-- Metric Cards Grid -->
-      <div class="grid-cards">
-        <div class="card-widget metric-card">
-          <div class="metric-icon green">
-            <span class="material-symbols-outlined">payments</span>
-          </div>
-          <div class="metric-data">
-            <div class="metric-label">Última Prestação (${latestPC.mesAno || 'Jul/2026'})</div>
-            <div class="metric-value">R$ ${(latestPC.receitas || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-            <div class="metric-sub" onclick="App.navigateTo('prestacao')" style="cursor: pointer;">
-              <span class="material-symbols-outlined" style="font-size: 1rem;">trending_up</span> Receita Bruta Arrecadada
-            </div>
-          </div>
-        </div>
+      <div style="display: flex; flex-direction: column; gap: 1.75rem;">
+        
+        <!-- Hero Banner Principal com Logo e Foto do Condomínio -->
+        <div class="card-widget" style="padding: 0; overflow: hidden; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; position: relative;">
+          <div style="display: flex; flex-wrap: wrap; align-items: center;">
+            <div style="flex: 1; min-width: 280px; padding: 2.25rem 2rem;">
+              <span class="badge" style="background: rgba(255,255,255,0.18); color: white; margin-bottom: 0.75rem; border: 1px solid rgba(255,255,255,0.3);">
+                <span class="material-symbols-outlined" style="font-size: 0.85rem;">domain</span> MODERN LIFE RESIDENCE
+              </span>
+              <h1 style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; line-height: 1.25; margin-bottom: 0.75rem;">
+                Portal Oficial de Transparência &amp; Gestão Condominial
+              </h1>
+              <p style="font-size: 0.95rem; opacity: 0.92; max-width: 580px; line-height: 1.6; margin-bottom: 1.5rem;">
+                Acompanhe comunicados, agenda de eventos, normas do regimento interno e a prestação de contas do condomínio com praticidade e segurança.
+              </p>
 
-        <div class="card-widget metric-card">
-          <div class="metric-icon blue">
-            <span class="material-symbols-outlined">account_balance_wallet</span>
-          </div>
-          <div class="metric-data">
-            <div class="metric-label">Saldo em Caixa</div>
-            <div class="metric-value">R$ ${(latestPC.saldo || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-            <div class="metric-sub" onclick="App.navigateTo('transparencia')" style="cursor: pointer;">
-              <span class="material-symbols-outlined" style="font-size: 1rem;">verified</span> Balanço Superavitário
-            </div>
-          </div>
-        </div>
-
-        <div class="card-widget metric-card">
-          <div class="metric-icon gold">
-            <span class="material-symbols-outlined">description</span>
-          </div>
-          <div class="metric-data">
-            <div class="metric-label">Último Balancete</div>
-            <div class="metric-value" style="font-size: 1.25rem;">${latestBal.mes || 'Julho'} / ${latestBal.ano || '2026'}</div>
-            <div class="metric-sub" style="cursor: pointer;" onclick="PDFExporter.exportPrestacaoContasPDF(CondoStore.data.prestacaoContas[0])">
-              <span class="material-symbols-outlined" style="font-size: 1rem;">download</span> Baixar Balancete PDF
-            </div>
-          </div>
-        </div>
-
-        <div class="card-widget metric-card">
-          <div class="metric-icon green">
-            <span class="material-symbols-outlined">groups</span>
-          </div>
-          <div class="metric-data">
-            <div class="metric-label">Próxima Assembleia</div>
-            <div class="metric-value" style="font-size: 1.15rem;">${nextEvent.data ? new Date(nextEvent.data + 'T00:00:00').toLocaleDateString('pt-BR') : '10/08/2026'}</div>
-            <div class="metric-sub" onclick="App.navigateTo('agenda')" style="cursor: pointer;">
-              <span class="material-symbols-outlined" style="font-size: 1rem;">schedule</span> ${nextEvent.hora || '19:30'} h
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Section: 2 Column Layout -->
-      <div class="grid-2col">
-        <!-- Left Column: Announcements & Mural de Recados -->
-        <div>
-          <!-- Avisos Importantes Banner Card -->
-          <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white; margin-bottom: 1.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
-              <div style="flex: 1;">
-                <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.5rem;">
-                  <span class="material-symbols-outlined" style="font-size: 0.9rem;">campaign</span> COMUNICADO OFICIAL DO SÍNDICO
-                </span>
-                <h3 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-bottom: 0.35rem;">
-                  Assembleia Geral Ordinária de Aprovação de Contas
-                </h3>
-                <p style="font-size: 0.9rem; opacity: 0.9;">
-                  A convocação oficial feita pelo Síndico <strong>Alessandro Cristiano da Silva</strong> já está disponível para consulta na Biblioteca de Documentos.
-                </p>
-              </div>
-              <button class="btn-primary" onclick="App.navigateTo('documentos')" style="background: white; color: var(--primary-dark); font-weight: 700; flex-shrink: 0;">
-                Ver Convocação
-              </button>
-            </div>
-          </div>
-
-          <!-- Feed do Mural de Recados -->
-          <div class="card-widget" style="margin-bottom: 1.5rem;">
-            <div class="card-header">
-              <div class="card-title">
-                <span class="material-symbols-outlined">campaign</span> Mural de Recados
-              </div>
-              <button class="btn-outline-primary btn-sm" onclick="App.navigateTo('recados')">Ver Todos</button>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-              ${recentRecados.map(item => `
-                <div style="display: flex; gap: 1.25rem; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border-light);">
-                  <img src="${item.imagem}" style="width: 110px; height: 80px; object-fit: cover; border-radius: var(--radius-sm);" alt="${item.titulo}">
-                  <div style="flex: 1;">
-                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 2px;">
-                      ${item.data} &bull; Por ${item.autor}
-                    </div>
-                    <h4 style="font-family: var(--font-heading); font-size: 1rem; color: var(--primary-dark); font-weight: 700; cursor: pointer;" onclick="App.navigateTo('recados')">
-                      ${item.titulo}
-                    </h4>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: 2px;">
-                      ${item.resumo}
-                    </p>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column: Recent Documents & Quick Links -->
-        <div>
-          <!-- Documentos Recentes -->
-          <div class="card-widget" style="margin-bottom: 1.5rem;">
-            <div class="card-header">
-              <div class="card-title">
-                <span class="material-symbols-outlined">folder_open</span> Documentos Recentes
-              </div>
-              <button class="btn-outline-primary btn-sm" onclick="App.navigateTo('documentos')">Biblioteca</button>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-              ${recentDocs.map(doc => `
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem; background: var(--bg-app); border-radius: var(--radius-sm);">
-                  <div style="display: flex; align-items: center; gap: 0.6rem;">
-                    <span class="material-symbols-outlined" style="color: var(--primary);">picture_as_pdf</span>
-                    <div>
-                      <div style="font-weight: 600; font-size: 0.85rem; color: var(--text-main); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">
-                        ${doc.nome}
-                      </div>
-                      <div style="font-size: 0.72rem; color: var(--text-muted);">${doc.categoria} &bull; ${doc.tamanho}</div>
-                    </div>
-                  </div>
-                  <button class="icon-btn" title="Baixar PDF" onclick="alert('Download iniciado para: ${doc.nome}')" style="width: 32px; height: 32px;">
-                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">download</span>
+              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                ${!isApproved ? `
+                  <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700;" onclick="AuthComponent.renderAuthModal()">
+                    <span class="material-symbols-outlined">login</span> Entrar / Cadastrar para Liberar Acesso
                   </button>
-                </div>
-              `).join('')}
+                ` : `
+                  <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700;" onclick="App.navigateTo('prestacao')">
+                    <span class="material-symbols-outlined">analytics</span> Ver Prestação de Contas
+                  </button>
+                `}
+                <button class="btn-primary" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.4);" onclick="App.navigateTo('recados')">
+                  <span class="material-symbols-outlined">campaign</span> Mural de Recados
+                </button>
+              </div>
+            </div>
+
+            <!-- Imagem Principal do Condomínio (IMG_2956.jpg) -->
+            <div style="flex: 1; min-width: 280px; max-height: 320px; overflow: hidden; position: relative;">
+              <img src="./assets/images/IMG_2956.jpg" alt="Fachada Modern Life Residence" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+              <div style="position: absolute; inset: 0; background: linear-gradient(90deg, var(--primary-dark) 0%, transparent 60%);"></div>
             </div>
           </div>
+        </div>
 
-          <!-- Utilidades Rápidas -->
+        <!-- Destaques dos Balancetes (VISÍVEL APENAS APÓS CADASTRO E APROVAÇÃO) -->
+        ${isApproved ? `
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+            
+            <div class="card-widget" style="border-left: 4px solid var(--primary);">
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">
+                Último Balancete Publicado
+              </div>
+              <div style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: var(--primary-dark);">
+                ${ultimoBalancete.mes || 'Maio'} / ${ultimoBalancete.ano || '2026'}
+              </div>
+              <div style="margin-top: 0.75rem; font-size: 0.88rem; color: var(--text-main); display: flex; justify-content: space-between; align-items: center;">
+                <span>Saldo Atual Consolidado:</span>
+                <strong style="color: #2E6B42; font-size: 1rem;">R$ ${(ultimoBalancete.saldoAtual || 498438.09).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+              </div>
+            </div>
+
+            <div class="card-widget" style="border-left: 4px solid #0288D1;">
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">
+                Receita Bruta (${ultimaPrestacao.mesAno || 'Maio 2026'})
+              </div>
+              <div style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #0288D1;">
+                R$ ${(ultimaPrestacao.receitas || 100992.34).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+              </div>
+              <div style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted);">
+                Taxas condominiais e receitas arrecadadas no mês.
+              </div>
+            </div>
+
+            <div class="card-widget" style="border-left: 4px solid #D32F2F;">
+              <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">
+                Despesas Operacionais (${ultimaPrestacao.mesAno || 'Maio 2026'})
+              </div>
+              <div style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #D32F2F;">
+                R$ ${(ultimaPrestacao.despesas || 74706.09).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+              </div>
+              <div style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted);">
+                Consumo, manutenção, folha e fornecedores.
+              </div>
+            </div>
+
+          </div>
+        ` : `
+          <!-- Banner de Bloqueio dos Balancetes na Pagina Inicial -->
+          <div class="card-widget" style="background: var(--bg-app); border: 1px solid var(--border-color); padding: 1.5rem; text-align: center;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background: var(--primary-light); color: var(--primary); margin-bottom: 0.75rem;">
+              <span class="material-symbols-outlined" style="font-size: 1.8rem;">lock</span>
+            </div>
+            <h3 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.15rem; font-weight: 700; margin-bottom: 0.4rem;">
+              Destaques Financeiros &amp; Balancetes Reservados aos Moradores
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 550px; margin: 0 auto 1.25rem auto;">
+              Por determinação do Regimento Interno, os valores consolidados dos balancetes e prestação de contas são restritos. Cadastre-se no portal para liberar o acesso.
+            </p>
+            <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="margin: 0 auto; padding: 0.75rem 1.4rem;">
+              <span class="material-symbols-outlined">person_add</span> Cadastrar / Entrar para Visualizar
+            </button>
+          </div>
+        `}
+
+        <!-- Seção Dupla: Mural de Recados + Próximos Eventos -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+          
+          <!-- Mural de Recados Recentes -->
           <div class="card-widget">
             <div class="card-header">
               <div class="card-title">
-                <span class="material-symbols-outlined">widgets</span> Atalhos de Utilidades
+                <span class="material-symbols-outlined">campaign</span> Últimos Informes do Síndico
               </div>
+              <button class="btn-outline-primary btn-sm" onclick="App.navigateTo('recados')">
+                Ver Todos
+              </button>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-              <button class="btn-secondary" onclick="App.navigateTo('utilidades')" style="justify-content: flex-start; padding: 0.75rem; font-size: 0.82rem;">
-                <span class="material-symbols-outlined" style="color: var(--primary);">receipt_long</span> 2ª Via Boleto
-              </button>
-              <button class="btn-secondary" onclick="App.navigateTo('utilidades')" style="justify-content: flex-start; padding: 0.75rem; font-size: 0.82rem;">
-                <span class="material-symbols-outlined" style="color: var(--primary);">event_seat</span> Reserva Salão
-              </button>
-              <button class="btn-secondary" onclick="App.navigateTo('ocorrencias')" style="justify-content: flex-start; padding: 0.75rem; font-size: 0.82rem;">
-                <span class="material-symbols-outlined" style="color: var(--primary);">report_problem</span> Ocorrência
-              </button>
-              <button class="btn-secondary" onclick="App.navigateTo('canal')" style="justify-content: flex-start; padding: 0.75rem; font-size: 0.82rem;">
-                <span class="material-symbols-outlined" style="color: var(--primary);">mail</span> Falar C/ Síndico
+            ${recados.length === 0 ? `
+              <p style="color: var(--text-muted); font-size: 0.88rem;">Nenhum recado publicado no momento.</p>
+            ` : `
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${recados.slice(0, 2).map(r => `
+                  <div style="border-bottom: 1px solid var(--border-light); padding-bottom: 0.85rem;">
+                    <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 2px;">${r.data} &bull; ${r.autor}</div>
+                    <h4 style="font-family: var(--font-heading); font-weight: 700; color: var(--primary-dark); font-size: 1rem; margin-bottom: 4px;">
+                      ${r.titulo}
+                    </h4>
+                    <p style="font-size: 0.85rem; color: var(--text-main); line-height: 1.5;">
+                      ${r.resumo}
+                    </p>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+
+          <!-- Próximos Eventos da Agenda -->
+          <div class="card-widget">
+            <div class="card-header">
+              <div class="card-title">
+                <span class="material-symbols-outlined">event</span> Próximos Eventos &amp; Assembleias
+              </div>
+              <button class="btn-outline-primary btn-sm" onclick="App.navigateTo('agenda')">
+                Ver Agenda
               </button>
             </div>
+
+            ${proximosEventos.length === 0 ? `
+              <p style="color: var(--text-muted); font-size: 0.88rem;">Nenhum evento agendado no momento.</p>
+            ` : `
+              <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+                ${proximosEventos.map(e => `
+                  <div style="display: flex; gap: 0.85rem; align-items: flex-start; background: var(--bg-app); padding: 0.85rem; border-radius: var(--radius-sm); border-left: 4px solid var(--primary);">
+                    <div style="background: var(--primary); color: white; padding: 0.4rem 0.6rem; border-radius: 4px; text-align: center; min-width: 55px;">
+                      <div style="font-size: 0.7rem; text-transform: uppercase;">${e.data.split('-')[1]}</div>
+                      <div style="font-size: 1.1rem; font-weight: 700;">${e.data.split('-')[2]}</div>
+                    </div>
+                    <div>
+                      <h4 style="font-size: 0.92rem; font-weight: 700; color: var(--primary-dark);">${e.titulo}</h4>
+                      <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                        ⏰ ${e.hora} &bull; 📍 ${e.local}
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
           </div>
+
         </div>
+
       </div>
     `;
   }
