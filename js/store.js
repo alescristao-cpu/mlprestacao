@@ -1,10 +1,11 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Global Data Store & Engine
-   Validação Anti-Duplicidade & Edição de Funções (Morador / Conselheiro / Administrador)
+   Modern Life Residence - Global Data Store & Cloud Sync Engine
+   Sincronização em Tempo Real Cross-Device (Celular/Desktop)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V14';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V14';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V15';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V15';
+const SYNC_CLOUD_URL = 'https://api.myjson.online/v1/records/modern-life-residence-condo';
 
 const INITIAL_DATA = {
   moradores: [
@@ -135,6 +136,7 @@ class StoreEngine {
     this.data = this.loadData();
     this.currentUser = this.loadUser();
     this.listeners = [];
+    this.startCloudSyncLoop();
   }
 
   loadData() {
@@ -152,6 +154,7 @@ class StoreEngine {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {}
     this.notify();
+    this.broadcastToCloud();
   }
 
   loadUser() {
@@ -185,6 +188,65 @@ class StoreEngine {
 
   notify() {
     this.listeners.forEach(l => l(this.data, this.currentUser));
+  }
+
+  // Loop de sincronização em tempo real entre Celular e Desktop
+  startCloudSyncLoop() {
+    this.pullFromCloud();
+    setInterval(() => {
+      this.pullFromCloud();
+    }, 8000); // Sincroniza a cada 8 segundos
+  }
+
+  async pullFromCloud() {
+    try {
+      const res = await fetch(SYNC_CLOUD_URL);
+      if (res.ok) {
+        const cloudData = await res.json();
+        if (cloudData && Array.isArray(cloudData.moradores)) {
+          let updated = false;
+
+          cloudData.moradores.forEach(mCloud => {
+            const index = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase() === mCloud.email.toLowerCase());
+            if (index === -1) {
+              this.data.moradores.push(mCloud);
+              updated = true;
+            } else if (JSON.stringify(this.data.moradores[index]) !== JSON.stringify(mCloud)) {
+              this.data.moradores[index] = mCloud;
+              updated = true;
+            }
+          });
+
+          if (cloudData.agendaReservas && Array.isArray(cloudData.agendaReservas)) {
+            if (JSON.stringify(this.data.agendaReservas) !== JSON.stringify(cloudData.agendaReservas)) {
+              this.data.agendaReservas = cloudData.agendaReservas;
+              updated = true;
+            }
+          }
+
+          if (updated) {
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+            } catch (e) {}
+            this.notify();
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  async broadcastToCloud() {
+    try {
+      await fetch(SYNC_CLOUD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          moradores: this.data.moradores,
+          agendaReservas: this.data.agendaReservas,
+          updatedAt: new Date().toISOString()
+        })
+      });
+    } catch (e) {}
   }
 
   addMorador(morador) {
