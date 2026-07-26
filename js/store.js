@@ -1,10 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Engine
-   Método addAgendamento implementado com sucesso
+   Removidos TODOS os moradores fictícios.
+   Mantido APENAS o Síndico (Alessandro Cristiano da Silva)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V10';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V10';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V11';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V11';
 
 const INITIAL_DATA = {
   moradores: [
@@ -12,35 +13,13 @@ const INITIAL_DATA = {
       id: 'usr_sindico',
       nome: 'Alessandro Cristiano da Silva',
       apartamento: 'Administração',
-      cpf: '123.456.789-00',
+      cpf: 'Cadastrado no Portal',
       telefone: '(11) 98765-4321',
       email: 'condominio.modern.life@gmail.com',
       status: 'Aprovado',
       role: 'Administrador',
       dataCadastro: '2025-01-10',
       photoURL: 'https://lh3.googleusercontent.com/a/default-user'
-    },
-    {
-      id: 'usr_02',
-      nome: 'Mariana Castro',
-      apartamento: '84',
-      cpf: '234.567.890-11',
-      telefone: '(11) 97654-3210',
-      email: 'mariana.castro@gmail.com',
-      status: 'Aprovado',
-      role: 'Conselheiro',
-      dataCadastro: '2025-02-15'
-    },
-    {
-      id: 'usr_03',
-      nome: 'Roberto Almeida',
-      apartamento: '121',
-      cpf: '345.678.901-22',
-      telefone: '(11) 96543-2109',
-      email: 'roberto.almeida@hotmail.com',
-      status: 'Aprovado',
-      role: 'Morador',
-      dataCadastro: '2025-03-01'
     }
   ],
 
@@ -274,7 +253,14 @@ class StoreEngine {
   loadData() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        // Garante a remoção de moradores fictícios antigos se existirem no cache
+        parsed.moradores = (parsed.moradores || []).filter(m => 
+          m.id === 'usr_sindico' || m.email.toLowerCase() === 'condominio.modern.life@gmail.com' || m.dataCadastro > '2026-07-01'
+        );
+        return parsed;
+      }
     } catch (e) {}
     this.saveData(INITIAL_DATA);
     return INITIAL_DATA;
