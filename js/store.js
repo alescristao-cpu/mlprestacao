@@ -1,11 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Suporte Completo iOS (iPhone/iPad Safari) & Android Chrome
-   Conexão Nativa Google Cloud Firestore 'paginapretacao'
+   Exclusão Permanente na Nuvem (Garante que Morador Excluído Não Reapareça)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V23';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V23';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V24';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V24';
 const FIRESTORE_PROJECT_ID = 'paginapretacao';
 const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
 
@@ -201,13 +200,11 @@ class StoreEngine {
     }, 3000);
   }
 
-  // Sincronização compatível 100% com iOS Safari & Android Chrome
   async pullFromCloudSilently() {
     if (this.isSyncing) return;
     this.isSyncing = true;
 
     try {
-      // 1. Tenta puxar via SDK nativo do Firebase (100% compatível com iOS WebSockets)
       if (window.firebase && window.firebase.firestore) {
         try {
           const db = window.firebase.firestore();
@@ -233,7 +230,6 @@ class StoreEngine {
         } catch (err) {}
       }
 
-      // 2. Tenta via REST API nativo (compatível com iOS GET)
       const response = await fetch(FIRESTORE_REST_URL, { method: 'GET' });
       if (response.ok) {
         const json = await response.json();
@@ -282,7 +278,6 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
-    // 1. Grava via SDK nativo do Firebase (Prioritário para iOS Safari)
     if (window.firebase && window.firebase.firestore) {
       try {
         const db = window.firebase.firestore();
@@ -292,7 +287,6 @@ class StoreEngine {
       } catch (e) {}
     }
 
-    // 2. Transmissão REST com POST (Método universal aceito sem bloqueio de CORS no iOS Safari)
     try {
       for (const m of this.data.moradores) {
         const docId = m.id || 'usr_' + Date.now();
@@ -309,7 +303,6 @@ class StoreEngine {
           }
         };
 
-        // Usa POST com documentId (Totalmente aceito no iOS Safari)
         fetch(`${FIRESTORE_REST_URL}?documentId=${docId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -318,7 +311,6 @@ class StoreEngine {
       }
     } catch (e) {}
 
-    // 3. Backup de Sincronização Adicional
     try {
       fetch('https://jsonblob.com/api/jsonBlob/1270000000000000001_modernlife', {
         method: 'POST',
@@ -406,6 +398,10 @@ class StoreEngine {
     }
   }
 
+  /**
+   * Exclusão Permanente no LocalStorage e no Google Cloud Firestore
+   * Impede que o morador excluído reapareça nas checagens automáticas da nuvem
+   */
   deleteMorador(id) {
     const target = this.data.moradores.find(m => m.id === id);
     
@@ -413,7 +409,20 @@ class StoreEngine {
       return { success: false, message: 'O cadastro do Administrador Master (Síndico) não pode ser excluído por razões de segurança do sistema.' };
     }
 
+    // 1. Remove da memória local
     this.data.moradores = this.data.moradores.filter(m => m.id !== id);
+
+    // 2. Apaga do Firebase SDK se disponível
+    if (window.firebase && window.firebase.firestore && id) {
+      try {
+        window.firebase.firestore().collection('moradores').doc(id).delete().catch(() => {});
+      } catch (e) {}
+    }
+
+    // 3. Envia requisição de exclusão explícita HTTP DELETE para o Google Cloud Firestore REST API
+    if (id) {
+      fetch(`${FIRESTORE_REST_URL}/${id}`, { method: 'DELETE' }).catch(() => {});
+    }
 
     if (this.currentUser && (this.currentUser.id === id || (target && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
       this.setCurrentUser(null);
