@@ -1,6 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Utilidades, Reservas & Integração Google Drive
    Alimenta piscina.xls e academia.xls no Drive de condominio.modern.life@gmail.com
+   Opção "Conexão Google Drive" visível APENAS para o Administrador (Síndico)
    ---------------------------------------------------- */
 
 const GOOGLE_SHEETS_URL_KEY = 'MODERN_LIFE_SHEETS_SCRIPT_URL';
@@ -44,6 +45,7 @@ window.UtilidadesComponent = {
       return;
     }
 
+    const isSindico = user && user.role === 'Administrador';
     const reservasExistentes = data.agendaReservas || [];
 
     const hourlySlots = [
@@ -97,7 +99,7 @@ window.UtilidadesComponent = {
           </div>
         </div>
 
-        <!-- Section 2: Agendamento de Piscina & Academia (piscina.xls / academia.xls) -->
+        <!-- Section 2: Agendamento de Piscina & Academia -->
         <div class="card-widget">
           <div class="card-header">
             <div>
@@ -105,13 +107,15 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined">pool</span> Agendamento de Piscina &amp; Academia
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                Ao confirmar, os dados alimentam automaticamente as planilhas <code>piscina.xls</code> e <code>academia.xls</code> no Google Drive de <code>condominio.modern.life@gmail.com</code>.
+                Selecione a área comum e o horário desejado (slots de hora em hora).
               </p>
             </div>
 
-            <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.openGoogleSheetsConfig()">
-              <span class="material-symbols-outlined">link</span> Conexão Google Drive
-            </button>
+            ${isSindico ? `
+              <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.openGoogleSheetsConfig()">
+                <span class="material-symbols-outlined">link</span> Conexão Google Drive
+              </button>
+            ` : ''}
           </div>
 
           <form onsubmit="UtilidadesComponent.submeterAgendamento(event)" style="margin-bottom: 1.5rem;">
@@ -119,8 +123,8 @@ window.UtilidadesComponent = {
               <div class="form-group">
                 <label class="form-label">Selecione a Área Comum</label>
                 <select id="resArea" class="form-control" required>
-                  <option value="Piscina">🏊 Piscina (Alimenta piscina.xls)</option>
-                  <option value="Academia">🏋️ Academia (Alimenta academia.xls)</option>
+                  <option value="Piscina">🏊 Piscina</option>
+                  <option value="Academia">🏋️ Academia</option>
                 </select>
               </div>
 
@@ -138,7 +142,7 @@ window.UtilidadesComponent = {
             </div>
 
             <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento (Alimenta Planilha no Drive)
+              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento
             </button>
           </form>
 
@@ -153,7 +157,7 @@ window.UtilidadesComponent = {
                   <th>Horário</th>
                   <th>Nome do Morador</th>
                   <th>Unidade / Apto</th>
-                  <th>Área / Planilha Destino</th>
+                  <th>Área Reservada</th>
                 </tr>
               </thead>
               <tbody>
@@ -165,11 +169,7 @@ window.UtilidadesComponent = {
                     <td><span class="badge badge-info">${r.horario}</span></td>
                     <td>${r.moradorNome}</td>
                     <td>Apto ${r.apartamento || 'Morador'}</td>
-                    <td>
-                      <span class="badge badge-success">
-                        ${r.area} &bull; ${r.area.toLowerCase().includes('piscina') ? 'piscina.xls' : 'academia.xls'}
-                      </span>
-                    </td>
+                    <td><span class="badge badge-success">${r.area}</span></td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -228,13 +228,13 @@ window.UtilidadesComponent = {
         <div class="modal-card" style="max-width: 580px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
             <div class="modal-title" style="color: white; font-weight: 700;">
-              🔗 Integração Google Drive (piscina.xls / academia.xls)
+              🔗 Configuração de Conexão Google Drive (Exclusivo Síndico)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalSheetsConfig').remove()">✕</button>
           </div>
           <div class="modal-body">
             <p style="font-size: 0.88rem; color: var(--text-main); margin-bottom: 1rem;">
-              Cole abaixo o link do Web App do Google Apps Script configurado na conta <code>condominio.modern.life@gmail.com</code>. O script enviará os dados para <strong>piscina.xls</strong> ou <strong>academia.xls</strong> no Google Drive dependendo da área selecionada.
+              Cole abaixo o link do Web App do Google Apps Script configurado na conta <code>condominio.modern.life@gmail.com</code>.
             </p>
 
             <div class="form-group">
@@ -257,7 +257,7 @@ window.UtilidadesComponent = {
   saveGoogleSheetsUrl() {
     const url = document.getElementById('inputSheetsUrl').value.trim();
     this.setSavedSheetsUrl(url);
-    App.showToast('Link de integração do Google Drive salvo!', 'success');
+    App.showToast('Link de integração do Google Drive salvo pelo Síndico!', 'success');
     document.getElementById('modalSheetsConfig').remove();
   },
 
@@ -285,7 +285,6 @@ window.UtilidadesComponent = {
       targetFile
     };
 
-    // 1. Salva no quadro local de conferência na tela
     window.CondoStore.addAgendamento({
       area,
       data,
@@ -295,7 +294,6 @@ window.UtilidadesComponent = {
       status: 'Confirmado'
     });
 
-    // 2. Dispara envio para o Google Apps Script que atualiza piscina.xls ou academia.xls no Google Drive
     const sheetsUrl = this.getSavedSheetsUrl();
     if (sheetsUrl) {
       try {
@@ -308,7 +306,7 @@ window.UtilidadesComponent = {
       } catch (err) {}
     }
 
-    App.showToast(`Agendamento de ${area} enviado para ${targetFile} no Google Drive!`, 'success');
+    App.showToast(`Agendamento de ${area} (${horario}) confirmado!`, 'success');
     App.render();
   }
 };
