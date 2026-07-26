@@ -1,10 +1,10 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Global Data Store & Mock Data
-   Controle Estrito de Sessão e Acesso (Padrão Deslogado/Pendente)
+   Modern Life Residence - Global Data Store & Engine
+   Método addAgendamento implementado com sucesso
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V9';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V9';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V10';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V10';
 
 const INITIAL_DATA = {
   moradores: [
@@ -293,12 +293,11 @@ class StoreEngine {
       const raw = localStorage.getItem(CURRENT_USER_KEY);
       if (raw) {
         const u = JSON.parse(raw);
-        // Sync user state with latest database record
         const fresh = this.data.moradores.find(m => m.id === u.id || m.email.toLowerCase() === u.email.toLowerCase());
         return fresh || u;
       }
     } catch (e) {}
-    return null; // Default to unauthenticated visitors
+    return null;
   }
 
   setCurrentUser(user) {
@@ -357,7 +356,6 @@ class StoreEngine {
 
     this.data.moradores = this.data.moradores.filter(m => m.id !== id);
 
-    // If current user is deleted, clear session
     if (this.currentUser && (this.currentUser.id === id || (target && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
       this.setCurrentUser(null);
     } else {
@@ -365,6 +363,18 @@ class StoreEngine {
     }
 
     return { success: true };
+  }
+
+  addAgendamento(reserva) {
+    if (!this.data.agendaReservas) this.data.agendaReservas = [];
+    const newReserva = {
+      id: 'res_' + Date.now(),
+      status: 'Confirmado',
+      ...reserva
+    };
+    this.data.agendaReservas.unshift(newReserva);
+    this.saveData();
+    return newReserva;
   }
 
   addOcorrencia(oco) {
