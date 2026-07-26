@@ -1,12 +1,10 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Garantia Total de Sincronização Cross-Device (Celular/Desktop)
+   Modern Life Residence - Global Data Store & Multi-Cloud Realtime Sync Engine
+   Sincronização em Tempo Real via Firebase Firestore (Projeto 1047186718730)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V16';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V16';
-const CLOUD_SYNC_ENDPOINT = 'https://jsonblob.com/api/jsonBlob/1270000000000000001_modernlife_condo';
-const BACKUP_SYNC_ENDPOINT = 'https://api.npoint.io/46d9a1f59239eb88d407';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V17';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V17';
 
 const INITIAL_DATA = {
   moradores: [
@@ -137,10 +135,7 @@ class StoreEngine {
     this.data = this.loadData();
     this.currentUser = this.loadUser();
     this.listeners = [];
-    this.isSyncing = false;
-    
-    // Inicia escuta da nuvem imediatamente
-    this.startCloudSyncLoop();
+    this.initFirebaseRealtimeSync();
   }
 
   loadData() {
@@ -158,7 +153,7 @@ class StoreEngine {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
     } catch (e) {}
     this.notify();
-    this.broadcastToCloud();
+    this.syncToFirebaseCloud();
   }
 
   loadUser() {
@@ -194,59 +189,98 @@ class StoreEngine {
     this.listeners.forEach(l => l(this.data, this.currentUser));
   }
 
-  startCloudSyncLoop() {
-    this.pullFromCloud();
-    // Checagem contínua a cada 4 segundos
+  // Sincronização em tempo real via Firebase Firestore (Notificação Push Instantânea)
+  initFirebaseRealtimeSync() {
+    const self = this;
+
+    const runSync = () => {
+      if (window.firebase && window.firebase.firestore) {
+        try {
+          const db = window.firebase.firestore();
+          
+          // Escuta alterações na coleção 'moradores' em tempo real
+          db.collection('moradores').onSnapshot((snapshot) => {
+            let changed = false;
+            snapshot.forEach((doc) => {
+              const mCloud = doc.data();
+              const index = self.data.moradores.findIndex(m => m.id === doc.id || m.email.toLowerCase().trim() === (mCloud.email || '').toLowerCase().trim());
+              
+              if (index === -1) {
+                self.data.moradores.push({ id: doc.id, ...mCloud });
+                changed = true;
+              } else {
+                if (self.data.moradores[index].status !== mCloud.status || self.data.moradores[index].role !== mCloud.role) {
+                  self.data.moradores[index] = { id: doc.id, ...mCloud };
+                  changed = true;
+                }
+              }
+            });
+
+            if (changed) {
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(self.data)); } catch(e){}
+              self.notify();
+            }
+          }, (err) => {
+            console.log('Realtime listener fallback active');
+          });
+
+        } catch (err) {}
+      }
+    };
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(runSync, 1000);
+    } else {
+      window.addEventListener('DOMContentLoaded', () => setTimeout(runSync, 1000));
+    }
+
+    // Polling de garantia secundário a cada 5 segundos
     setInterval(() => {
-      this.pullFromCloud();
-    }, 4000);
+      this.pullFromCloudRest();
+    }, 5000);
   }
 
-  async pullFromCloud() {
-    if (this.isSyncing) return;
-    this.isSyncing = true;
-
+  async pullFromCloudRest() {
     try {
-      // 1. Tenta sincronização primária via Firebase Firestore ou REST Endpoint
-      const response = await fetch('https://kvdb.io/4y93A8B1vD4e9/modernlife_moradores', {
-        headers: { 'Accept': 'application/json' }
-      });
-
-      if (response.ok) {
-        const cloudMoradores = await response.json();
+      const res = await fetch('https://api.npoint.io/85059e7a8db2366b2a0c');
+      if (res.ok) {
+        const cloudMoradores = await res.json();
         if (Array.isArray(cloudMoradores) && cloudMoradores.length > 0) {
-          let hasChanges = false;
-
+          let updated = false;
           cloudMoradores.forEach(mCloud => {
-            const index = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase().trim() === mCloud.email.toLowerCase().trim());
-            if (index === -1) {
+            const idx = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase().trim() === (mCloud.email || '').toLowerCase().trim());
+            if (idx === -1) {
               this.data.moradores.push(mCloud);
-              hasChanges = true;
-            } else {
-              if (this.data.moradores[index].status !== mCloud.status || this.data.moradores[index].role !== mCloud.role) {
-                this.data.moradores[index] = mCloud;
-                hasChanges = true;
-              }
+              updated = true;
+            } else if (this.data.moradores[idx].status !== mCloud.status || this.data.moradores[idx].role !== mCloud.role) {
+              this.data.moradores[idx] = mCloud;
+              updated = true;
             }
           });
 
-          if (hasChanges) {
-            try {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-            } catch (e) {}
+          if (updated) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
             this.notify();
           }
         }
       }
-    } catch (e) {
-    } finally {
-      this.isSyncing = false;
-    }
+    } catch (e) {}
   }
 
-  async broadcastToCloud() {
+  async syncToFirebaseCloud() {
+    // 1. Grava no Firebase Firestore se disponível
+    if (window.firebase && window.firebase.firestore) {
+      try {
+        const db = window.firebase.firestore();
+        this.data.moradores.forEach(async (m) => {
+          await db.collection('moradores').doc(m.id).set(m, { merge: true });
+        });
+      } catch (e) {}
+    }
+
+    // 2. Backup REST Cloud Endpoint
     try {
-      await fetch('https://kvdb.io/4y93A8B1vD4e9/modernlife_moradores', {
+      await fetch('https://api.npoint.io/85059e7a8db2366b2a0c', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(this.data.moradores)
