@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Cadastro de Moradores (Compatibilidade iPhone / iOS Safari)
-   Execução Síncrona Instantânea sem Bloqueio de Rede no iOS
+   Modern Life Residence - Cadastro de Moradores
+   Validação Anti-Duplicidade de E-mail e Dados Idênticos
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -238,8 +238,8 @@ window.AuthComponent = {
       return;
     }
 
-    // 1. Cadastra e grava síncronamente no banco de dados local
-    const newMorador = window.CondoStore.addMorador({
+    // 1. Executa validação anti-duplicidade no CondoStore
+    const result = window.CondoStore.addMorador({
       nome,
       email,
       telefone,
@@ -247,9 +247,14 @@ window.AuthComponent = {
       cpf: 'Cadastrado no Portal'
     });
 
-    window.CondoStore.setCurrentUser(newMorador);
+    if (!result.success) {
+      alert(`⚠️ CADASTRO DUPLICADO RECUSADO:\n\n${result.message}`);
+      return;
+    }
 
-    // 2. Disparo assíncrono em segundo plano (Não bloqueia o iPhone)
+    window.CondoStore.setCurrentUser(result.morador);
+
+    // 2. Disparo assíncrono em segundo plano
     try {
       fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
         method: 'POST',
@@ -265,7 +270,6 @@ window.AuthComponent = {
       }).catch(function() {});
     } catch (e) {}
 
-    // 3. Atualiza a interface e alerta o usuário imediatamente
     alert(`Cadastro de "${nome}" registrado com sucesso!\n\nA sua solicitação foi enviada. O acesso aos balancetes e documentos será liberado assim que o Síndico (Alessandro) aprovar no Painel.`);
 
     const modal = document.getElementById('modalAuth');

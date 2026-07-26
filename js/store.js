@@ -1,13 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Engine
-   Dados Oficiais do Demonstrativo Anual de Receitas e Despesas (PDF 05/2026)
-   - Sem nomes de empresas (Apenas categorias genéricas)
-   - Sem números de unidades
-   - Dados fiéis ao PDF oficial (12 meses consolidados)
+   Validação Anti-Duplicidade & Edição de Moradores pelo Síndico
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V12';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V12';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V13';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V13';
 
 const INITIAL_DATA = {
   moradores: [
@@ -25,7 +22,6 @@ const INITIAL_DATA = {
     }
   ],
 
-  // Demonstrativo Anual Completo (PDF 05/2026)
   prestacaoContas: [
     {
       id: 'pc_2026_05',
@@ -64,87 +60,9 @@ const INITIAL_DATA = {
         { nome: 'Energia Elétrica Áreas Comuns', valor: 413.63 },
         { nome: 'Telefone, Internet & CFTV', valor: 163.42 }
       ]
-    },
-    {
-      id: 'pc_2026_04',
-      mesAno: 'Abril 2026',
-      mes: 4,
-      ano: 2026,
-      saldoInicial: 472151.84,
-      receitas: 100992.34,
-      despesas: 74706.09,
-      saldoAtual: 498438.09,
-      status: 'Auditado & Aprovado',
-      receitasDetalhadas: [
-        { categoria: 'Taxa de Condomínio', valor: 58268.61 },
-        { categoria: 'Taxa Extra / Obras', valor: 21450.14 },
-        { categoria: 'Água (Consumo Individual)', valor: 8752.66 },
-        { categoria: 'Rendimentos de Aplicações', valor: 4013.82 },
-        { categoria: 'Fundo de Reserva', valor: 2978.86 },
-        { categoria: 'Gás (Consumo Individual)', valor: 2371.05 }
-      ],
-      categoriasDespesa: [
-        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49 },
-        { nome: 'Consumo de Água & Esgoto', valor: 8618.70 },
-        { nome: 'Engenharia & Perícias Técnicas', valor: 5203.09 },
-        { nome: 'Honorários de Gestão Contábil', valor: 2289.75 },
-        { nome: 'Reposição de Peças & Manutenções', valor: 3127.57 },
-        { nome: 'Consumo de Gás Encanado', valor: 2225.90 },
-        { nome: 'Impostos & Retenções', valor: 4017.75 }
-      ]
-    },
-    {
-      id: 'pc_2026_03',
-      mesAno: 'Março 2026',
-      mes: 3,
-      ano: 2026,
-      saldoInicial: 462777.42,
-      receitas: 91253.90,
-      despesas: 81879.48,
-      saldoAtual: 472151.84,
-      status: 'Auditado & Aprovado',
-      receitasDetalhadas: [
-        { categoria: 'Taxa de Condomínio', valor: 49085.01 },
-        { categoria: 'Taxa Extra / Obras', valor: 19461.08 },
-        { categoria: 'Água (Consumo Individual)', valor: 7819.96 },
-        { categoria: 'Rendimentos de Aplicações', valor: 4522.51 },
-        { categoria: 'Fundo de Reserva', valor: 2400.37 },
-        { categoria: 'Gás (Consumo Individual)', valor: 2136.46 }
-      ],
-      categoriasDespesa: [
-        { nome: 'Mão de Obra Terceirizada', valor: 26303.17 },
-        { nome: 'Obras, Materiais & Perícias', valor: 14088.87 },
-        { nome: 'Consumo de Água & Esgoto', valor: 8809.91 },
-        { nome: 'Honorários de Gestão Contábil', valor: 2289.75 },
-        { nome: 'Impostos & Retenções', valor: 3974.13 }
-      ]
-    },
-    {
-      id: 'pc_2026_02',
-      mesAno: 'Fevereiro 2026',
-      mes: 2,
-      ano: 2026,
-      saldoInicial: 426816.34,
-      receitas: 100772.74,
-      despesas: 64811.66,
-      saldoAtual: 462777.42,
-      status: 'Auditado & Aprovado',
-      receitasDetalhadas: [
-        { categoria: 'Taxa de Condomínio', valor: 54423.32 },
-        { categoria: 'Taxa Extra / Obras', valor: 21697.95 },
-        { categoria: 'Água (Consumo Individual)', valor: 9851.32 },
-        { categoria: 'Rendimentos de Aplicações', valor: 3688.10 }
-      ],
-      categoriasDespesa: [
-        { nome: 'Mão de Obra Terceirizada', valor: 26303.17 },
-        { nome: 'Consumo de Água & Esgoto', valor: 10102.70 },
-        { nome: 'Engenharia & Perícias', valor: 4862.70 },
-        { nome: 'Impostos & Retenções', valor: 4071.75 }
-      ]
     }
   ],
 
-  // Resumo de Balancetes
   balancetes: [
     {
       id: 'bal_2026_05',
@@ -157,97 +75,15 @@ const INITIAL_DATA = {
       saldoAnterior: 498438.09,
       saldoMes: 20484.24,
       saldoAtual: 518922.33
-    },
-    {
-      id: 'bal_2026_04',
-      titulo: 'Demonstrativo Consolidado - Abril 2026',
-      ano: 2026,
-      mes: 'Abril',
-      dataPublicacao: '2026-04-30',
-      receitaBruta: 100992.34,
-      despesaBruta: 74706.09,
-      saldoAnterior: 472151.84,
-      saldoMes: 26286.25,
-      saldoAtual: 498438.09
-    },
-    {
-      id: 'bal_2026_03',
-      titulo: 'Demonstrativo Consolidado - Março 2026',
-      ano: 2026,
-      mes: 'Março',
-      dataPublicacao: '2026-03-31',
-      receitaBruta: 91253.90,
-      despesaBruta: 81879.48,
-      saldoAnterior: 462777.42,
-      saldoMes: 9374.42,
-      saldoAtual: 472151.84
-    },
-    {
-      id: 'bal_2026_02',
-      titulo: 'Demonstrativo Consolidado - Fevereiro 2026',
-      ano: 2026,
-      mes: 'Fevereiro',
-      dataPublicacao: '2026-02-28',
-      receitaBruta: 100772.74,
-      despesaBruta: 64811.66,
-      saldoAnterior: 426816.34,
-      saldoMes: 35961.08,
-      saldoAtual: 462777.42
     }
   ],
 
-  // Relação de Contratos Corporativos usando NOMES GENÉRICOS (Sem nomes de empresas)
   contratos: [
     {
       id: 'ctr_01',
       empresa: 'Manutenção de Elevadores',
       objeto: 'Manutenção Preventiva e Corretiva dos Elevadores da Torre',
       valorMensal: 1050.00,
-      vigenciaInicio: '2025-01-01',
-      vigenciaFim: '2027-01-01',
-      status: 'Ativo'
-    },
-    {
-      id: 'ctr_02',
-      empresa: 'Mão de Obra Terceirizada (Portaria & Limpeza)',
-      objeto: 'Contrato de Portaria Remota, Segurança 24h e Limpeza Geral',
-      valorMensal: 28933.49,
-      vigenciaInicio: '2024-06-01',
-      vigenciaFim: '2026-06-01',
-      status: 'Ativo'
-    },
-    {
-      id: 'ctr_03',
-      empresa: 'Manutenção de Piscina',
-      objeto: 'Tratamento Químico, Limpeza e Filtros da Área Aquática',
-      valorMensal: 435.00,
-      vigenciaInicio: '2025-01-01',
-      vigenciaFim: '2027-01-01',
-      status: 'Ativo'
-    },
-    {
-      id: 'ctr_04',
-      empresa: 'Manutenção de Jardinagem & Paisagismo',
-      objeto: 'Conservação e Poda dos Jardins e Vasos de Áreas Comuns',
-      valorMensal: 365.00,
-      vigenciaInicio: '2025-01-01',
-      vigenciaFim: '2027-01-01',
-      status: 'Ativo'
-    },
-    {
-      id: 'ctr_05',
-      empresa: 'Manutenção de CFTV, Portão & Interfonia',
-      objeto: 'Monitoramento de Câmeras, Controle de Acesso e Interfones',
-      valorMensal: 485.00,
-      vigenciaInicio: '2025-01-01',
-      vigenciaFim: '2027-01-01',
-      status: 'Ativo'
-    },
-    {
-      id: 'ctr_06',
-      empresa: 'Gestão Administrativa & Contábil',
-      objeto: 'Honorários de Gestão Condominial e Assessoria Contábil',
-      valorMensal: 2450.03,
       vigenciaInicio: '2025-01-01',
       vigenciaFim: '2027-01-01',
       status: 'Ativo'
@@ -262,30 +98,6 @@ const INITIAL_DATA = {
       dataUpload: '2024-01-15',
       tamanho: '4.2 MB',
       arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
-    },
-    {
-      id: 'doc_02',
-      nome: 'Regimento Interno Atualizado 2025/2026',
-      categoria: 'Regimento Interno',
-      dataUpload: '2025-11-10',
-      tamanho: '2.8 MB',
-      arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
-    },
-    {
-      id: 'doc_03',
-      nome: 'Manual do Proprietário e Especificações Técnicas',
-      categoria: 'Manual do Proprietário',
-      dataUpload: '2024-02-01',
-      tamanho: '8.5 MB',
-      arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
-    },
-    {
-      id: 'doc_04',
-      nome: 'Edital Convocação AGE 11.08.2026 (Assinado pelo Síndico Alessandro)',
-      categoria: 'Assembleias',
-      dataUpload: '2026-07-23',
-      tamanho: '181 KB',
-      arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
     }
   ],
 
@@ -297,8 +109,8 @@ const INITIAL_DATA = {
       autor: 'Síndico Alessandro Cristiano da Silva',
       visibilidade: 'Publico',
       imagem: './assets/images/IMG_2909.JPG',
-      resumo: 'Concluímos a substituição das lâmpadas da garagem e corredores por iluminação LED ecoeficiente, gerando redução estimada de 18% na conta de energia.',
-      texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio. Todas as lâmpadas fluorescentes dos subsolos, corredores e hall principal foram substituídas por painéis e refletores LED de alta durabilidade.'
+      resumo: 'Concluímos a substituição das lâmpadas da garagem por iluminação LED ecoeficiente.',
+      texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio.'
     }
   ],
 
@@ -312,7 +124,7 @@ const INITIAL_DATA = {
       hora: '19:30',
       tipo: 'Assembleia',
       local: 'Salão de Festas Principal / Formato Híbrido',
-      descricao: 'Deliberação sobre a aprovação das contas do 1º semestre e orçamento da reforma do playground.'
+      descricao: 'Deliberação sobre a aprovação das contas do 1º semestre.'
     }
   ],
   galeria: [
@@ -377,7 +189,37 @@ class StoreEngine {
     this.listeners.forEach(l => l(this.data, this.currentUser));
   }
 
+  /**
+   * Validação Anti-Duplicidade:
+   * Bloqueia cadastros com o mesmo e-mail ou com todos os campos (nome, email, telefone, unidade) idênticos.
+   */
   addMorador(morador) {
+    const emailNormalizado = (morador.email || '').toLowerCase().trim();
+
+    // 1. Bloqueia e-mail duplicado
+    const emailExistente = this.data.moradores.find(m => m.email.toLowerCase().trim() === emailNormalizado);
+    if (emailExistente) {
+      return { 
+        success: false, 
+        message: `O e-mail "${morador.email}" já está cadastrado no sistema para o morador ${emailExistente.nome} (Apto ${emailExistente.apartamento}).` 
+      };
+    }
+
+    // 2. Bloqueia cadastro onde TODOS os 4 campos (Nome, E-mail, Telefone, Unidade) são exatamente iguais
+    const duplicadoExato = this.data.moradores.find(m => 
+      m.nome.toLowerCase().trim() === morador.nome.toLowerCase().trim() &&
+      m.email.toLowerCase().trim() === emailNormalizado &&
+      (m.telefone || '').trim() === (morador.telefone || '').trim() &&
+      m.apartamento.trim() === morador.apartamento.trim()
+    );
+
+    if (duplicadoExato) {
+      return { 
+        success: false, 
+        message: 'Já existe um cadastro idêntico com este mesmo Nome, E-mail, Telefone e Unidade.' 
+      };
+    }
+
     const newMorador = {
       id: 'usr_' + Date.now(),
       dataCadastro: new Date().toISOString().split('T')[0],
@@ -385,9 +227,37 @@ class StoreEngine {
       role: 'Morador',
       ...morador
     };
+
     this.data.moradores.push(newMorador);
     this.saveData();
-    return newMorador;
+    return { success: true, morador: newMorador };
+  }
+
+  updateMoradorDetails(id, details) {
+    const target = this.data.moradores.find(m => m.id === id);
+    if (!target) return { success: false, message: 'Morador não encontrado.' };
+
+    // Verifica se novo e-mail colide com outro morador
+    if (details.email) {
+      const emailNorm = details.email.toLowerCase().trim();
+      const outro = this.data.moradores.find(m => m.id !== id && m.email.toLowerCase().trim() === emailNorm);
+      if (outro) {
+        return { success: false, message: `O e-mail "${details.email}" já está em uso por outro morador.` };
+      }
+    }
+
+    target.nome = details.nome || target.nome;
+    target.email = details.email || target.email;
+    target.telefone = details.telefone || target.telefone;
+    target.apartamento = details.apartamento || target.apartamento;
+
+    this.saveData();
+
+    if (this.currentUser && this.currentUser.id === id) {
+      this.setCurrentUser(target);
+    }
+
+    return { success: true, morador: target };
   }
 
   updateMoradorStatus(id, newStatus) {
