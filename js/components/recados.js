@@ -1,10 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Mural de Recados (Blog do Síndico)
-   Suporte a Upload de Imagens Locais (Leitor Base64) + Visibilidade Pública/Privada
+   Suporte a Busca/Galeria de Imagens, Edição e Exclusão de Matérias
    ---------------------------------------------------- */
 
 window.RecadosComponent = {
   previewImageData: null,
+  editingPostId: null,
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
@@ -37,7 +38,7 @@ window.RecadosComponent = {
 
             ${isSindico ? `
               <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700;" onclick="RecadosComponent.openNewPostModal()">
-                <span class="material-symbols-outlined">add_circle</span> Publicar Novo Recado (Com Imagem)
+                <span class="material-symbols-outlined">add_circle</span> Publicar Novo Recado
               </button>
             ` : ''}
           </div>
@@ -48,10 +49,10 @@ window.RecadosComponent = {
           ${recadosExibidos.length === 0 ? `
             <div class="card-widget" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
               <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.5; display: block; margin-bottom: 0.5rem;">campaign</span>
-              Nenhum recado disponível para o seu nível de acesso no momento.
+              Nenhum recado disponível no momento.
             </div>
           ` : recadosExibidos.map(item => `
-            <div class="card-widget" style="padding: 0; overflow: hidden;">
+            <div class="card-widget" style="padding: 0; overflow: hidden; border: 1px solid var(--border-color);">
               ${item.imagem ? `
                 <div style="max-height: 420px; overflow: hidden; background: #000; text-align: center;">
                   <img src="${item.imagem}" alt="${item.titulo}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
@@ -67,7 +68,21 @@ window.RecadosComponent = {
                     </span>
                     <span style="font-size: 0.8rem; color: var(--text-muted);">${item.data}</span>
                   </div>
-                  <span style="font-size: 0.82rem; font-weight: 600; color: var(--primary-dark);">✍️ ${item.autor}</span>
+
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 0.82rem; font-weight: 600; color: var(--primary-dark);">✍️ ${item.autor}</span>
+                    
+                    ${isSindico ? `
+                      <div style="display: flex; gap: 0.3rem; margin-left: 0.5rem;">
+                        <button class="btn-outline-primary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;" onclick="RecadosComponent.openEditPostModal('${item.id}')" title="Editar Matéria">
+                          <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;">edit</span> Editar
+                        </button>
+                        <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.25rem 0.6rem; font-size: 0.78rem;" onclick="RecadosComponent.excluirPost('${item.id}')" title="Excluir Matéria">
+                          <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;">delete</span> Excluir
+                        </button>
+                      </div>
+                    ` : ''}
+                  </div>
                 </div>
 
                 <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.5rem;">
@@ -87,58 +102,98 @@ window.RecadosComponent = {
   },
 
   openNewPostModal() {
+    this.editingPostId = null;
     this.previewImageData = null;
-    const existing = document.getElementById('modalNewPost');
+    this.renderFormModal('Publicar Novo Informe no Mural', null);
+  },
+
+  openEditPostModal(postId) {
+    const post = window.CondoStore.data.recados.find(r => r.id === postId);
+    if (!post) return;
+
+    this.editingPostId = postId;
+    this.previewImageData = post.imagem || null;
+    this.renderFormModal('Editar Matéria / Recado', post);
+  },
+
+  renderFormModal(title, post) {
+    const existing = document.getElementById('modalRecadoForm');
     if (existing) existing.remove();
 
+    const isEdit = !!post;
+
     const modalHtml = `
-      <div class="modal-overlay active" id="modalNewPost">
-        <div class="modal-card" style="max-width: 620px;">
+      <div class="modal-overlay active" id="modalRecadoForm">
+        <div class="modal-card" style="max-width: 650px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
-            <div class="modal-title" style="color: white; font-weight: 700;">Publicar Informe no Mural de Recados</div>
-            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalNewPost').remove()">✕</button>
+            <div class="modal-title" style="color: white; font-weight: 700;">${title}</div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalRecadoForm').remove()">✕</button>
           </div>
           <div class="modal-body">
-            <form onsubmit="RecadosComponent.submeterPost(event)">
+            <form onsubmit="RecadosComponent.submeterForm(event)">
+              
               <div class="form-group">
-                <label class="form-label">Título do Recado</label>
-                <input type="text" id="postTitulo" class="form-control" placeholder="Ex: Reforma da Calçada / Aviso de Manutenção" required>
+                <label class="form-label">Título da Matéria / Recado</label>
+                <input type="text" id="postTitulo" class="form-control" value="${isEdit ? post.titulo : ''}" placeholder="Ex: Manutenção Preventiva da Fachada" required>
               </div>
 
               <div class="form-group">
                 <label class="form-label">Visibilidade do Recado</label>
                 <select id="postVisibilidade" class="form-control" required>
-                  <option value="Publico">🌐 Visível para Todos (Público e Visitantes)</option>
-                  <option value="Privado">🔒 Visível Apenas para Moradores Cadastrados (Privado)</option>
+                  <option value="Publico" ${isEdit && post.visibilidade === 'Publico' ? 'selected' : ''}>🌐 Visível para Todos (Público e Visitantes)</option>
+                  <option value="Privado" ${isEdit && post.visibilidade === 'Privado' ? 'selected' : ''}>🔒 Visível Apenas para Moradores Cadastrados (Privado)</option>
                 </select>
               </div>
 
-              <!-- Upload de Imagem Local -->
+              <!-- Seleção e Busca de Imagem -->
               <div class="form-group" style="background: var(--bg-app); padding: 1rem; border-radius: var(--radius-sm); border: 1px dashed var(--primary);">
                 <label class="form-label" style="font-weight: 700; color: var(--primary-dark); display: flex; align-items: center; gap: 0.4rem;">
-                  <span class="material-symbols-outlined">add_a_photo</span> Enviar Imagem do Seu Computador ou Celular
+                  <span class="material-symbols-outlined">image_search</span> Opções de Imagem da Matéria
                 </label>
-                <input type="file" id="postImagemArquivo" class="form-control" accept="image/*" onchange="RecadosComponent.handleFileSelect(event)">
                 
-                <div id="imagePreviewContainer" style="margin-top: 0.75rem; text-align: center; display: none;">
-                  <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Pré-visualização da imagem selecionada:</span>
-                  <img id="imagePreviewThumb" src="" alt="Preview" style="max-height: 160px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: contain;">
+                <!-- Galeria de Imagens Rápidas -->
+                <div style="margin-bottom: 0.75rem;">
+                  <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Clique para escolher uma imagem temática pré-definida:</span>
+                  <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                    <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('./assets/images/IMG_2909.JPG')">💡 Iluminação/LED</button>
+                    <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('./assets/images/IMG_2956.jpg')">🏢 Fachada Torre</button>
+                    <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800')">🏊 Piscina</button>
+                    <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800')">🏋️ Academia</button>
+                    <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800')">🧹 Limpeza/Obras</button>
+                  </div>
+                </div>
+
+                <!-- Input para Upload Local -->
+                <div style="margin-bottom: 0.75rem;">
+                  <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.2rem;">ou subir foto do seu computador/celular:</label>
+                  <input type="file" id="postImagemArquivo" class="form-control" accept="image/*" onchange="RecadosComponent.handleFileSelect(event)">
+                </div>
+
+                <!-- Input para URL Externa -->
+                <div>
+                  <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-main); display: block; margin-bottom: 0.2rem;">ou cole o link (URL) de uma nova imagem:</label>
+                  <input type="text" id="postImagemUrl" class="form-control" value="${isEdit ? post.imagem : ''}" placeholder="https://exemplo.com/imagem.jpg" oninput="RecadosComponent.handleUrlInput(event)">
+                </div>
+                
+                <!-- Pré-visualização -->
+                <div id="imagePreviewContainer" style="margin-top: 0.75rem; text-align: center; ${isEdit && post.imagem ? 'display: block;' : 'display: none;'}">
+                  <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Imagem Selecionada:</span>
+                  <img id="imagePreviewThumb" src="${isEdit ? post.imagem : ''}" alt="Preview" style="max-height: 160px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: contain;">
                 </div>
               </div>
 
               <div class="form-group">
-                <label class="form-label">ou URL de Imagem da Web (Opcional)</label>
-                <input type="text" id="postImagemUrl" class="form-control" placeholder="./assets/images/IMG_2909.JPG ou https://...">
+                <label class="form-label">Conteúdo Detalhado da Matéria</label>
+                <textarea id="postTexto" class="form-control" rows="7" placeholder="Escreva o conteúdo completo do comunicado..." required>${isEdit ? post.texto : ''}</textarea>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Conteúdo do Recado</label>
-                <textarea id="postTexto" class="form-control" rows="6" placeholder="Escreva o comunicado oficial aqui..." required></textarea>
+              <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('modalRecadoForm').remove()">Cancelar</button>
+                <button type="submit" class="btn-primary" style="padding: 0.85rem 1.4rem;">
+                  <span class="material-symbols-outlined">save</span> ${isEdit ? 'Salvar Alterações' : 'Publicar Matéria'}
+                </button>
               </div>
 
-              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-                <span class="material-symbols-outlined">publish</span> Publicar Informe no Mural
-              </button>
             </form>
           </div>
         </div>
@@ -148,52 +203,99 @@ window.RecadosComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
+  selectPresetImage(url) {
+    this.previewImageData = url;
+    const urlInput = document.getElementById('postImagemUrl');
+    if (urlInput) urlInput.value = url;
+    this.updatePreview(url);
+  },
+
+  handleUrlInput(e) {
+    const url = e.target.value.trim();
+    if (url) {
+      this.previewImageData = url;
+      this.updatePreview(url);
+    }
+  },
+
   handleFileSelect(e) {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         this.previewImageData = event.target.result;
-        const previewContainer = document.getElementById('imagePreviewContainer');
-        const previewThumb = document.getElementById('imagePreviewThumb');
-        if (previewContainer && previewThumb) {
-          previewThumb.src = this.previewImageData;
-          previewContainer.style.display = 'block';
-        }
+        this.updatePreview(this.previewImageData);
       };
       reader.readAsDataURL(file);
     }
   },
 
-  submeterPost(e) {
+  updatePreview(src) {
+    const container = document.getElementById('imagePreviewContainer');
+    const thumb = document.getElementById('imagePreviewThumb');
+    if (container && thumb) {
+      thumb.src = src;
+      container.style.display = 'block';
+    }
+  },
+
+  submeterForm(e) {
     e.preventDefault();
     const titulo = document.getElementById('postTitulo').value.trim();
     const visibilidade = document.getElementById('postVisibilidade').value;
     const imagemUrl = document.getElementById('postImagemUrl').value.trim();
     const texto = document.getElementById('postTexto').value.trim();
 
-    // Prioriza a imagem enviada do computador/celular se houver
     const finalImage = this.previewImageData || imagemUrl || './assets/images/IMG_2909.JPG';
 
     const data = window.CondoStore.data;
     if (!data.recados) data.recados = [];
 
-    const newPost = {
-      id: 'rec_' + Date.now(),
-      titulo,
-      data: new Date().toISOString().split('T')[0],
-      autor: 'Síndico Alessandro Cristiano da Silva',
-      visibilidade,
-      imagem: finalImage,
-      resumo: texto.substring(0, 120) + '...',
-      texto
-    };
+    if (this.editingPostId) {
+      // Edição de Matéria Existente
+      const post = data.recados.find(r => r.id === this.editingPostId);
+      if (post) {
+        post.titulo = titulo;
+        post.visibilidade = visibilidade;
+        post.imagem = finalImage;
+        post.texto = texto;
+        post.resumo = texto.substring(0, 120) + '...';
+        App.showToast('Matéria atualizada com sucesso!', 'success');
+      }
+    } else {
+      // Criação de Nova Matéria
+      const newPost = {
+        id: 'rec_' + Date.now(),
+        titulo,
+        data: new Date().toISOString().split('T')[0],
+        autor: 'Síndico Alessandro Cristiano da Silva',
+        visibilidade,
+        imagem: finalImage,
+        resumo: texto.substring(0, 120) + '...',
+        texto
+      };
+      data.recados.unshift(newPost);
+      App.showToast('Nova matéria publicada com sucesso!', 'success');
+    }
 
-    data.recados.unshift(newPost);
+    window.CondoStore.saveData(data);
+    document.getElementById('modalRecadoForm').remove();
+    App.render();
+  },
+
+  excluirPost(postId) {
+    const post = window.CondoStore.data.recados.find(r => r.id === postId);
+    const titulo = post ? post.titulo : 'esta matéria';
+
+    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente a matéria "${titulo}"?`)) {
+      return;
+    }
+
+    const data = window.CondoStore.data;
+    data.recados = data.recados.filter(r => r.id !== postId);
     window.CondoStore.saveData(data);
 
-    App.showToast('Novo recado com imagem publicado com sucesso!', 'success');
-    document.getElementById('modalNewPost').remove();
+    App.showToast('Matéria excluída do mural com sucesso.', 'info');
     App.render();
   }
 };
