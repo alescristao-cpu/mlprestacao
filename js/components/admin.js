@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Aprovação, Edição & Exclusão de Cadastros de Moradores
+   Aprovação, Edição de Perfil (Morador / Conselheiro / Administrador) & Exclusão
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -16,7 +16,7 @@ window.AdminComponent = {
             Acesso Restrito à Administração
           </h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0; line-height: 1.5;">
-            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, edição e exclusão de cadastros de moradores.
+            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, edição e alteração de funções (Conselheiros e Moradores).
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="width: 100%; justify-content: center; padding: 0.85rem;">
             <span class="material-symbols-outlined">login</span> Entrar como Síndico / Administrador
@@ -91,7 +91,7 @@ window.AdminComponent = {
                     </button>
 
                     <button class="btn-outline-primary btn-sm" style="padding: 0.65rem;" onclick="AdminComponent.openEditMoradorModal('${p.id}')">
-                      <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span> Editar
+                      <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span> Editar / Função
                     </button>
 
                     <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.65rem;" onclick="AdminComponent.excluirMorador('${p.id}', '${p.nome}', '${p.apartamento}')">
@@ -104,38 +104,45 @@ window.AdminComponent = {
           `}
         </div>
 
-        <!-- Seção 2: Lista de Moradores Com Acesso Autorizado & Opções de Edição / Exclusão -->
+        <!-- Seção 2: Lista de Moradores Autorizados & Atribuição de Conselheiros -->
         <div class="card-widget" style="padding: 1.25rem;">
           <div class="card-header" style="margin-bottom: 0.85rem;">
             <div class="card-title">
               <span class="material-symbols-outlined">groups</span> Moradores Com Acesso Autorizado (${aprovados.length})
             </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+              Clique em <strong>"Editar / Função"</strong> para definir qualquer morador como <strong>Conselheiro</strong>.
+            </p>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.85rem;">
             ${aprovados.map(m => {
               const isAdmin = m.role === 'Administrador' || m.id === 'usr_sindico' || m.email.toLowerCase() === 'condominio.modern.life@gmail.com';
+              const isConselheiro = m.role === 'Conselheiro';
+
               return `
                 <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                   <div>
-                    <div style="font-weight: 700; font-size: 1rem; color: var(--primary-dark);">
-                      ${m.nome} ${isAdmin ? '<span class="badge badge-info" style="font-size: 0.7rem; margin-left: 4px;">Síndico Master</span>' : ''}
+                    <div style="font-weight: 700; font-size: 1rem; color: var(--primary-dark); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                      ${m.nome}
+                      ${isAdmin ? '<span class="badge badge-info" style="font-size: 0.72rem;">Síndico Master</span>' : ''}
+                      ${isConselheiro ? '<span class="badge badge-success" style="font-size: 0.72rem; background: #D1E7DD; color: #0F5132;">👑 Conselheiro</span>' : ''}
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--text-main);">
+                    <div style="font-size: 0.85rem; color: var(--text-main); margin-top: 2px;">
                       <strong>Apto ${m.apartamento}</strong> &bull; 📧 ${m.email} &bull; 📱 ${m.telefone || 'Sem telefone'}
                     </div>
                   </div>
 
                   <div style="display: flex; gap: 0.4rem; align-items: center;">
+                    <button class="btn-outline-primary btn-sm" onclick="AdminComponent.openEditMoradorModal('${m.id}')" title="Editar dados e função (Conselheiro)">
+                      <span class="material-symbols-outlined" style="font-size: 0.95rem;">edit</span> Editar / Função
+                    </button>
+
                     ${isAdmin ? `
-                      <span style="font-size: 0.78rem; color: var(--text-muted); font-style: italic;">
+                      <span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-left: 4px;">
                         🔒 Administrador
                       </span>
                     ` : `
-                      <button class="btn-outline-primary btn-sm" onclick="AdminComponent.openEditMoradorModal('${m.id}')" title="Editar dados do morador">
-                        <span class="material-symbols-outlined" style="font-size: 0.95rem;">edit</span> Editar
-                      </button>
-                      
                       <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.excluirMorador('${m.id}', '${m.nome}', '${m.apartamento}')" title="Excluir cadastro">
                         <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir
                       </button>
@@ -160,18 +167,28 @@ window.AdminComponent = {
 
     const modalHtml = `
       <div class="modal-overlay active" id="modalEditMorador">
-        <div class="modal-card" style="max-width: 500px;">
+        <div class="modal-card" style="max-width: 520px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
             <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem;">
-              ✏️ Editar Dados do Morador
+              ✏️ Editar Morador &amp; Definir Função (Conselheiro)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalEditMorador').remove()">✕</button>
           </div>
           <div class="modal-body">
             <form onsubmit="AdminComponent.submeterEdicaoMorador(event, '${morador.id}')">
+              
               <div class="form-group">
                 <label class="form-label">Nome Completo</label>
                 <input type="text" id="editNome" class="form-control" value="${morador.nome}" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Função / Perfil no Condomínio</label>
+                <select id="editRole" class="form-control" style="font-weight: 700;" required>
+                  <option value="Morador" ${morador.role === 'Morador' ? 'selected' : ''}>🏡 Morador Padrão</option>
+                  <option value="Conselheiro" ${morador.role === 'Conselheiro' ? 'selected' : ''}>👑 Conselheiro (Conselho Consultivo / Fiscal)</option>
+                  <option value="Administrador" ${morador.role === 'Administrador' ? 'selected' : ''}>🛡️ Administrador (Síndico)</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -209,19 +226,21 @@ window.AdminComponent = {
   submeterEdicaoMorador(e, moradorId) {
     e.preventDefault();
     const nome = document.getElementById('editNome').value.trim();
+    const role = document.getElementById('editRole').value;
     const email = document.getElementById('editEmail').value.trim();
     const apartamento = document.getElementById('editApto').value.trim();
     const telefone = document.getElementById('editTelefone').value.trim();
 
     const res = window.CondoStore.updateMoradorDetails(moradorId, {
       nome,
+      role,
       email,
       apartamento,
       telefone
     });
 
     if (res.success) {
-      App.showToast('Dados do morador atualizados com sucesso!', 'success');
+      App.showToast(`Morador "${nome}" atualizado para ${role}!`, 'success');
       document.getElementById('modalEditMorador').remove();
       App.render();
     } else {
@@ -247,6 +266,14 @@ window.AdminComponent = {
               <div class="form-group">
                 <label class="form-label">Nome Completo do Morador</label>
                 <input type="text" id="quickNome" class="form-control" placeholder="Ex: João da Silva" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Função / Perfil no Condomínio</label>
+                <select id="quickRole" class="form-control" style="font-weight: 700;" required>
+                  <option value="Morador">🏡 Morador Padrão</option>
+                  <option value="Conselheiro">👑 Conselheiro (Conselho Consultivo / Fiscal)</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -281,12 +308,14 @@ window.AdminComponent = {
   submeterAprovacaoRapida(e) {
     e.preventDefault();
     const nome = document.getElementById('quickNome').value.trim();
+    const role = document.getElementById('quickRole').value;
     const email = document.getElementById('quickEmail').value.trim();
     const apartamento = document.getElementById('quickApto').value.trim();
     const telefone = document.getElementById('quickTelefone') ? document.getElementById('quickTelefone').value.trim() : '';
 
     const res = window.CondoStore.addMorador({
       nome,
+      role,
       email,
       telefone,
       apartamento,
@@ -300,7 +329,7 @@ window.AdminComponent = {
 
     window.CondoStore.updateMoradorStatus(res.morador.id, 'Aprovado');
 
-    App.showToast(`Morador "${nome}" (Apto ${apartamento}) APROVADO com sucesso!`, 'success');
+    App.showToast(`Morador "${nome}" (Apto ${apartamento}) APROVADO como ${role}!`, 'success');
     document.getElementById('modalQuickApprove').remove();
     App.render();
   },

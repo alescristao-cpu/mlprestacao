@@ -1,10 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Engine
-   Validação Anti-Duplicidade & Edição de Moradores pelo Síndico
+   Validação Anti-Duplicidade & Edição de Funções (Morador / Conselheiro / Administrador)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V13';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V13';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V14';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V14';
 
 const INITIAL_DATA = {
   moradores: [
@@ -56,9 +56,7 @@ const INITIAL_DATA = {
         { nome: 'Compras de Materiais de Limpeza', valor: 1125.30 },
         { nome: 'Honorários de Gestão Administrativa & Contábil', valor: 2450.03 },
         { nome: 'Seguro Predial e Placas Solares', valor: 1512.95 },
-        { nome: 'Impostos & Retenções (ISS, Imposto Unificado)', valor: 4305.34 },
-        { nome: 'Energia Elétrica Áreas Comuns', valor: 413.63 },
-        { nome: 'Telefone, Internet & CFTV', valor: 163.42 }
+        { nome: 'Impostos & Retenções (ISS, Imposto Unificado)', valor: 4305.34 }
       ]
     }
   ],
@@ -189,14 +187,9 @@ class StoreEngine {
     this.listeners.forEach(l => l(this.data, this.currentUser));
   }
 
-  /**
-   * Validação Anti-Duplicidade:
-   * Bloqueia cadastros com o mesmo e-mail ou com todos os campos (nome, email, telefone, unidade) idênticos.
-   */
   addMorador(morador) {
     const emailNormalizado = (morador.email || '').toLowerCase().trim();
 
-    // 1. Bloqueia e-mail duplicado
     const emailExistente = this.data.moradores.find(m => m.email.toLowerCase().trim() === emailNormalizado);
     if (emailExistente) {
       return { 
@@ -205,7 +198,6 @@ class StoreEngine {
       };
     }
 
-    // 2. Bloqueia cadastro onde TODOS os 4 campos (Nome, E-mail, Telefone, Unidade) são exatamente iguais
     const duplicadoExato = this.data.moradores.find(m => 
       m.nome.toLowerCase().trim() === morador.nome.toLowerCase().trim() &&
       m.email.toLowerCase().trim() === emailNormalizado &&
@@ -224,7 +216,7 @@ class StoreEngine {
       id: 'usr_' + Date.now(),
       dataCadastro: new Date().toISOString().split('T')[0],
       status: 'Pendente',
-      role: 'Morador',
+      role: morador.role || 'Morador',
       ...morador
     };
 
@@ -237,7 +229,6 @@ class StoreEngine {
     const target = this.data.moradores.find(m => m.id === id);
     if (!target) return { success: false, message: 'Morador não encontrado.' };
 
-    // Verifica se novo e-mail colide com outro morador
     if (details.email) {
       const emailNorm = details.email.toLowerCase().trim();
       const outro = this.data.moradores.find(m => m.id !== id && m.email.toLowerCase().trim() === emailNorm);
@@ -250,6 +241,7 @@ class StoreEngine {
     target.email = details.email || target.email;
     target.telefone = details.telefone || target.telefone;
     target.apartamento = details.apartamento || target.apartamento;
+    if (details.role) target.role = details.role;
 
     this.saveData();
 
