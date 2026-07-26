@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Cadastro & Autenticação de Moradores
-   (Removido campo Bloco - Apenas Unidade / Apartamento)
+   Controle de Botão e Estado de Aprovação
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -91,7 +91,7 @@ window.AuthComponent = {
         </div>
 
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.8rem;">
-          <span class="material-symbols-outlined">login</span> Entrar
+          <span class="material-symbols-outlined">login</span> Entrar por E-mail
         </button>
       </form>
     `;
@@ -101,7 +101,7 @@ window.AuthComponent = {
     return `
       <div style="background: var(--primary-light); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 4px solid var(--primary);">
         📋 <strong>Cadastro do Morador:</strong><br>
-        Preencha seus dados abaixo. Após o envio, a sua solicitação vai para o <strong>Painel do Administrador (Síndico)</strong> para aprovação do acesso.
+        Preencha seus dados abaixo. Sua solicitação ficará visível no <strong>Painel do Administrador (Síndico)</strong> para aprovação.
       </div>
 
       <form id="formRegister" onsubmit="AuthComponent.handleRegister(event)">
@@ -128,7 +128,7 @@ window.AuthComponent = {
         </div>
 
         <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-          <span class="material-symbols-outlined">send</span> Finalizar Cadastro &amp; Solicitar Autorização
+          <span class="material-symbols-outlined">send</span> Cadastrar &amp; Enviar Solicitação
         </button>
       </form>
     `;
@@ -152,7 +152,7 @@ window.AuthComponent = {
         <div style="background: #FFF3E0; border: 1px solid #FFE0B2; padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: #E65100; margin-bottom: 1.25rem; text-align: center;">
           <span class="material-symbols-outlined" style="font-size: 2rem; display: block; margin-bottom: 0.25rem;">hourglass_top</span>
           <strong>Aguardando Autorização da Administração!</strong><br>
-          Seu cadastro foi enviado com sucesso. O acesso às informações do portal será liberado assim que o Síndico aprovar sua solicitação no Painel do Administrador.
+          Seu cadastro foi enviado com sucesso. O acesso aos balancetes e documentos será liberado assim que o Síndico aprovar sua solicitação no Painel do Administrador.
         </div>
       ` : ''}
 
@@ -188,16 +188,22 @@ window.AuthComponent = {
     const res = await window.FirebaseService.loginWithGoogle();
     if (res.success) {
       App.showToast(`Autenticado via Google como ${res.user.nome}!`, 'success');
-      document.getElementById('modalAuth').remove();
+      const modal = document.getElementById('modalAuth');
+      if (modal) modal.remove();
       App.render();
     } else {
       App.showToast(res.error, 'error');
     }
   },
 
-  async handleLogin(e) {
+  handleLogin(e) {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value.trim();
+    const emailEl = document.getElementById('loginEmail');
+    if (!emailEl) return;
+
+    const email = emailEl.value.trim();
+    if (!email) return;
+
     const user = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === email.toLowerCase());
 
     if (user) {
@@ -207,7 +213,8 @@ window.AuthComponent = {
       } else {
         App.showToast('Seu cadastro está aguardando aprovação no Painel do Administrador (Síndico).', 'info');
       }
-      document.getElementById('modalAuth').remove();
+      const modal = document.getElementById('modalAuth');
+      if (modal) modal.remove();
       App.render();
     } else {
       App.showToast('E-mail não encontrado. Por favor, cadastre-se primeiro.', 'error');
@@ -216,11 +223,24 @@ window.AuthComponent = {
 
   handleRegister(e) {
     e.preventDefault();
-    const nome = document.getElementById('regNome').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const telefone = document.getElementById('regTelefone').value.trim();
-    const unidade = document.getElementById('regUnidade').value.trim();
+    const nomeEl = document.getElementById('regNome');
+    const emailEl = document.getElementById('regEmail');
+    const telefoneEl = document.getElementById('regTelefone');
+    const unidadeEl = document.getElementById('regUnidade');
 
+    if (!nomeEl || !emailEl || !unidadeEl) return;
+
+    const nome = nomeEl.value.trim();
+    const email = emailEl.value.trim();
+    const telefone = telefoneEl ? telefoneEl.value.trim() : '';
+    const unidade = unidadeEl.value.trim();
+
+    if (!nome || !email || !unidade) {
+      App.showToast('Preencha todos os campos obrigatórios.', 'error');
+      return;
+    }
+
+    // Adiciona o morador no banco de dados com status PENDENTE
     const newMorador = window.CondoStore.addMorador({
       nome,
       email,
@@ -229,18 +249,22 @@ window.AuthComponent = {
       cpf: 'Cadastrado no Portal'
     });
 
+    // Define o usuário atual como PENDENTE
     window.CondoStore.setCurrentUser(newMorador);
 
-    alert(`Cadastro realizado com sucesso!\n\nA sua solicitação foi registrada no Painel do Administrador.\n\nO seu acesso às pastas e balancetes será liberado assim que o Síndico aprovar a sua solicitação no painel.`);
+    App.showToast(`Cadastro de ${nome} realizado com sucesso! Aguardando aprovação do Síndico.`, 'info');
 
-    document.getElementById('modalAuth').remove();
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.remove();
+
     App.render();
   },
 
   logout() {
     window.CondoStore.setCurrentUser(null);
     App.showToast('Você saiu da sua conta.', 'info');
-    document.getElementById('modalAuth').remove();
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.remove();
     App.render();
   }
 };

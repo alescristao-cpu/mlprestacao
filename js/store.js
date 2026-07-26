@@ -1,11 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Mock Data
-   Síndico: Alessandro Cristiano da Silva
-   Aprovação e Exclusão de Cadastros de Moradores
+   Controle Estrito de Sessão e Acesso (Padrão Deslogado/Pendente)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V8';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V9';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V9';
 
 const INITIAL_DATA = {
   moradores: [
@@ -13,7 +12,6 @@ const INITIAL_DATA = {
       id: 'usr_sindico',
       nome: 'Alessandro Cristiano da Silva',
       apartamento: 'Administração',
-      bloco: 'Geral',
       cpf: '123.456.789-00',
       telefone: '(11) 98765-4321',
       email: 'condominio.modern.life@gmail.com',
@@ -26,7 +24,6 @@ const INITIAL_DATA = {
       id: 'usr_02',
       nome: 'Mariana Castro',
       apartamento: '84',
-      bloco: 'B',
       cpf: '234.567.890-11',
       telefone: '(11) 97654-3210',
       email: 'mariana.castro@gmail.com',
@@ -38,7 +35,6 @@ const INITIAL_DATA = {
       id: 'usr_03',
       nome: 'Roberto Almeida',
       apartamento: '121',
-      bloco: 'A',
       cpf: '345.678.901-22',
       telefone: '(11) 96543-2109',
       email: 'roberto.almeida@hotmail.com',
@@ -295,9 +291,14 @@ class StoreEngine {
   loadUser() {
     try {
       const raw = localStorage.getItem(CURRENT_USER_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const u = JSON.parse(raw);
+        // Sync user state with latest database record
+        const fresh = this.data.moradores.find(m => m.id === u.id || m.email.toLowerCase() === u.email.toLowerCase());
+        return fresh || u;
+      }
     } catch (e) {}
-    return null;
+    return null; // Default to unauthenticated visitors
   }
 
   setCurrentUser(user) {
@@ -340,7 +341,7 @@ class StoreEngine {
       item.status = newStatus;
       this.saveData();
 
-      if (this.currentUser && this.currentUser.id === id) {
+      if (this.currentUser && (this.currentUser.id === id || this.currentUser.email.toLowerCase() === item.email.toLowerCase())) {
         this.currentUser.status = newStatus;
         this.setCurrentUser(this.currentUser);
       }
@@ -350,13 +351,19 @@ class StoreEngine {
   deleteMorador(id) {
     const target = this.data.moradores.find(m => m.id === id);
     
-    // Regra de segurança: Impede exclusão da conta do Administrador (Síndico)
     if (target && (target.role === 'Administrador' || target.id === 'usr_sindico' || target.email.toLowerCase() === 'condominio.modern.life@gmail.com')) {
       return { success: false, message: 'O cadastro do Administrador Master (Síndico) não pode ser excluído por razões de segurança do sistema.' };
     }
 
     this.data.moradores = this.data.moradores.filter(m => m.id !== id);
-    this.saveData();
+
+    // If current user is deleted, clear session
+    if (this.currentUser && (this.currentUser.id === id || (target && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
+      this.setCurrentUser(null);
+    } else {
+      this.saveData();
+    }
+
     return { success: true };
   }
 
