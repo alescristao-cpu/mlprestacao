@@ -72,9 +72,6 @@ window.AuthComponent = {
           </svg>
           Entrar com a Conta Google (Gmail)
         </button>
-        <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.4rem;">
-          Qualquer morador pode entrar diretamente com seu e-mail do Gmail.
-        </div>
       </div>
 
       <div style="display: flex; align-items: center; margin: 1rem 0; color: var(--border-color);">
