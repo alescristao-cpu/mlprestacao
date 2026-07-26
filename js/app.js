@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Main Application Orchestrator
-   Processador de Links de Autorização de E-mail
+   Garantia de Navegação Instantânea no 1º Acesso
    ---------------------------------------------------- */
 
 window.App = {
@@ -11,11 +11,27 @@ window.App = {
     this.bindEvents();
     this.initTheme();
     this.registerServiceWorker();
+    
+    // Processa rota via URL Hash se existir (ex: #prestacao, #utilidades)
+    const hash = window.location.hash.replace('#', '');
+    if (hash && this.isValidRoute(hash)) {
+      this.currentRoute = hash;
+    }
+
     this.render();
 
     window.CondoStore.subscribe(() => {
       this.render();
     });
+  },
+
+  isValidRoute(route) {
+    const validRoutes = [
+      'dashboard', 'prestacao', 'balancetes', 'contratos',
+      'transparencia', 'documentos', 'recados', 'ocorrencias',
+      'canal', 'utilidades', 'agenda', 'galeria', 'admin'
+    ];
+    return validRoutes.includes(route);
   },
 
   checkEmailApprovalParams() {
@@ -49,18 +65,44 @@ window.App = {
   },
 
   bindEvents() {
+    // Atalho Ctrl + K para busca global
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         this.openGlobalSearchModal();
       }
     });
+
+    // Event listener para navegação por botões data-route
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-route]');
+      if (btn) {
+        const route = btn.getAttribute('data-route');
+        if (route) {
+          e.preventDefault();
+          this.navigateTo(route);
+        }
+      }
+    });
+
+    // Fecha menu lateral ao clicar fora (celulares)
+    document.addEventListener('click', (e) => {
+      const sidebar = document.getElementById('sidebar');
+      const toggle = e.target.closest('.mobile-toggle');
+      if (sidebar && sidebar.classList.contains('mobile-open') && !sidebar.contains(e.target) && !toggle) {
+        sidebar.classList.remove('mobile-open');
+      }
+    });
   },
 
   navigateTo(route) {
+    if (!this.isValidRoute(route)) route = 'dashboard';
     this.currentRoute = route;
+    window.location.hash = route;
+
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.classList.remove('mobile-open');
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.render();
   },
@@ -80,46 +122,46 @@ window.App = {
 
     switch (this.currentRoute) {
       case 'dashboard':
-        window.DashboardComponent.render(pageContainer, data);
+        if (window.DashboardComponent) window.DashboardComponent.render(pageContainer, data);
         break;
       case 'prestacao':
-        window.PrestacaoComponent.render(pageContainer, data);
+        if (window.PrestacaoComponent) window.PrestacaoComponent.render(pageContainer, data);
         break;
       case 'balancetes':
-        window.BalancetesComponent.render(pageContainer, data);
+        if (window.BalancetesComponent) window.BalancetesComponent.render(pageContainer, data);
         break;
       case 'contratos':
-        window.ContratosComponent.render(pageContainer, data);
+        if (window.ContratosComponent) window.ContratosComponent.render(pageContainer, data);
         break;
       case 'transparencia':
-        window.TransparenciaComponent.render(pageContainer, data);
+        if (window.TransparenciaComponent) window.TransparenciaComponent.render(pageContainer, data);
         break;
       case 'documentos':
-        window.DocumentosComponent.render(pageContainer, data);
+        if (window.DocumentosComponent) window.DocumentosComponent.render(pageContainer, data);
         break;
       case 'recados':
-        window.RecadosComponent.render(pageContainer, data);
+        if (window.RecadosComponent) window.RecadosComponent.render(pageContainer, data);
         break;
       case 'canal':
-        window.CanalComponent.render(pageContainer, data);
+        if (window.CanalComponent) window.CanalComponent.render(pageContainer, data);
         break;
       case 'ocorrencias':
-        window.OcorrenciasComponent.render(pageContainer, data);
+        if (window.OcorrenciasComponent) window.OcorrenciasComponent.render(pageContainer, data);
         break;
       case 'utilidades':
-        window.UtilidadesComponent.render(pageContainer, data);
+        if (window.UtilidadesComponent) window.UtilidadesComponent.render(pageContainer, data);
         break;
       case 'agenda':
-        window.AgendaComponent.render(pageContainer, data);
+        if (window.AgendaComponent) window.AgendaComponent.render(pageContainer, data);
         break;
       case 'galeria':
-        window.GaleriaComponent.render(pageContainer, data);
+        if (window.GaleriaComponent) window.GaleriaComponent.render(pageContainer, data);
         break;
       case 'admin':
-        window.AdminComponent.render(pageContainer, data);
+        if (window.AdminComponent) window.AdminComponent.render(pageContainer, data);
         break;
       default:
-        window.DashboardComponent.render(pageContainer, data);
+        if (window.DashboardComponent) window.DashboardComponent.render(pageContainer, data);
     }
   },
 
@@ -132,6 +174,27 @@ window.App = {
         item.classList.remove('active');
       }
     });
+
+    const titleMap = {
+      dashboard: 'Página Inicial',
+      prestacao: 'Prestação de Contas',
+      balancetes: 'Balancetes Consolidados',
+      contratos: 'Contratos Vigentes',
+      transparencia: 'Portal de Transparência',
+      documentos: 'Documentos & Manuais',
+      recados: 'Mural de Recados',
+      ocorrencias: 'Reclamações & Elogios',
+      canal: 'Canal Direto com o Síndico',
+      utilidades: 'Utilidades & Reservas',
+      agenda: 'Agenda & Calendário',
+      galeria: 'Galeria do Condomínio',
+      admin: 'Painel Administrativo do Síndico'
+    };
+
+    const headerTitleEl = document.getElementById('pageHeaderTitle');
+    if (headerTitleEl) {
+      headerTitleEl.innerText = titleMap[this.currentRoute] || 'Modern Life Residence';
+    }
 
     const user = window.CondoStore.currentUser;
     const userNameEl = document.getElementById('sidebarUserName');
@@ -188,19 +251,19 @@ window.App = {
     const data = window.CondoStore.data;
     const matches = [];
 
-    data.documentos.forEach(d => {
+    (data.documentos || []).forEach(d => {
       if (d.nome.toLowerCase().includes(q) || d.categoria.toLowerCase().includes(q)) {
         matches.push({ title: d.nome, category: 'Documento', route: 'documentos' });
       }
     });
 
-    data.contratos.forEach(c => {
+    (data.contratos || []).forEach(c => {
       if (c.empresa.toLowerCase().includes(q) || c.objeto.toLowerCase().includes(q)) {
         matches.push({ title: `${c.empresa} - ${c.objeto}`, category: 'Contrato', route: 'contratos' });
       }
     });
 
-    data.recados.forEach(r => {
+    (data.recados || []).forEach(r => {
       if (r.titulo.toLowerCase().includes(q) || r.resumo.toLowerCase().includes(q)) {
         matches.push({ title: r.titulo, category: 'Mural de Recados', route: 'recados' });
       }
@@ -253,6 +316,9 @@ window.App = {
   }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+// Executa a inicialização de forma imediata e resiliente
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => App.init());
+} else {
   App.init();
-});
+}

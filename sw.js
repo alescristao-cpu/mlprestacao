@@ -1,16 +1,19 @@
-const CACHE_NAME = 'modern-life-v1';
+/* ----------------------------------------------------
+   Modern Life Residence - Service Worker (pwa)
+   Cache inteligente sem travamento no primeiro acesso
+   ---------------------------------------------------- */
+
+const CACHE_NAME = 'modern-life-v2-cache';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './manifest.json',
-  './assets/logo.svg',
+  './assets/lnovo.jpeg',
+  './assets/logo.png',
+  './assets/images/IMG_2956.jpg',
+  './assets/images/IMG_2909.JPG',
   './css/main.css',
-  './css/components.css',
-  './js/app.js',
   './js/store.js',
   './js/firebase-config.js',
-  './js/charts.js',
-  './js/pdf-export.js',
   './js/components/auth.js',
   './js/components/dashboard.js',
   './js/components/prestacao.js',
@@ -18,21 +21,22 @@ const ASSETS_TO_CACHE = [
   './js/components/contratos.js',
   './js/components/transparencia.js',
   './js/components/documentos.js',
-  './js/components/blog.js',
+  './js/components/recados.js',
   './js/components/canal.js',
   './js/components/ocorrencias.js',
   './js/components/utilidades.js',
   './js/components/agenda.js',
   './js/components/galeria.js',
-  './js/components/admin.js'
+  './js/components/admin.js',
+  './js/app.js'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch((err) => {
-        console.warn('Some assets could not be cached on install:', err);
-      });
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map(url => cache.add(url).catch(err => console.log('Asset skippable:', url)))
+      );
     })
   );
   self.skipWaiting();
@@ -54,13 +58,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network first strategy with Cache fallback
   if (event.request.method !== 'GET') return;
   
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache valid responses
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
