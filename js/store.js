@@ -1,14 +1,12 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Garantia Total de Sincronização Cross-Device (Celular/Desktop)
+   Conexão Nativa com o Google Cloud Firestore 'paginapretacao'
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V21';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V21';
-
-// JSONBin Public Cloud Bin com permissão aberta de Leitura/Escrita para o Condomínio
-const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/66a3eb7be41b4d34e41718ef';
-const JSONBIN_MASTER_KEY = '$2a$10$wT.4Zf/K5yZ6lZgSgK4pU.3F5N6I4yM8Q1z9E0W1V2Y3Z4A5B6C7D';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V22';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V22';
+const FIRESTORE_PROJECT_ID = 'paginapretacao';
+const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
 
 const INITIAL_DATA = {
   moradores: [
@@ -202,54 +200,45 @@ class StoreEngine {
     }, 3000);
   }
 
+  // Sincronização em tempo real via Google Cloud Firestore (Projeto: paginapretacao)
   async pullFromCloudSilently() {
     if (this.isSyncing) return;
     this.isSyncing = true;
 
     try {
-      // 1. Puxa via Firebase Firestore SDK se disponível
-      if (window.firebase && window.firebase.firestore) {
-        try {
-          const db = window.firebase.firestore();
-          const snapshot = await db.collection('moradores').get();
-          if (!snapshot.empty) {
-            let changed = false;
-            snapshot.forEach(doc => {
-              const mCloud = doc.data();
-              const idx = this.data.moradores.findIndex(m => m.id === doc.id || m.email.toLowerCase().trim() === (mCloud.email || '').toLowerCase().trim());
-              if (idx === -1) {
-                this.data.moradores.push({ id: doc.id, ...mCloud });
-                changed = true;
-              } else if (this.data.moradores[idx].status !== mCloud.status || this.data.moradores[idx].role !== mCloud.role) {
-                this.data.moradores[idx] = { id: doc.id, ...mCloud };
-                changed = true;
-              }
-            });
-            if (changed) {
-              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
-              this.notify();
-            }
-          }
-        } catch (err) {}
-      }
-
-      // 2. Backup REST Cloud Sync
-      const res = await fetch(JSONBIN_URL + '/latest', {
-        headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-      });
-      if (res.ok) {
-        const json = await res.json();
-        const cloudMoradores = json.record || [];
-        if (Array.isArray(cloudMoradores) && cloudMoradores.length > 0) {
+      // 1. Tenta via Firestore REST API nativo da Google
+      const response = await fetch(FIRESTORE_REST_URL);
+      if (response.ok) {
+        const json = await response.json();
+        const documents = json.documents || [];
+        
+        if (documents.length > 0) {
           let updated = false;
-          cloudMoradores.forEach(mCloud => {
-            const idx = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase().trim() === (mCloud.email || '').toLowerCase().trim());
-            if (idx === -1) {
-              this.data.moradores.push(mCloud);
-              updated = true;
-            } else if (this.data.moradores[idx].status !== mCloud.status || this.data.moradores[idx].role !== mCloud.role) {
-              this.data.moradores[idx] = mCloud;
-              updated = true;
+
+          documents.forEach(doc => {
+            const fields = doc.fields || {};
+            const m = {
+              id: fields.id ? fields.id.stringValue : doc.name.split('/').pop(),
+              nome: fields.nome ? fields.nome.stringValue : '',
+              email: fields.email ? fields.email.stringValue : '',
+              telefone: fields.telefone ? fields.telefone.stringValue : '',
+              apartamento: fields.apartamento ? fields.apartamento.stringValue : '',
+              role: fields.role ? fields.role.stringValue : 'Morador',
+              status: fields.status ? fields.status.stringValue : 'Pendente',
+              dataCadastro: fields.dataCadastro ? fields.dataCadastro.stringValue : new Date().toISOString().split('T')[0]
+            };
+
+            if (m.email) {
+              const emailNorm = m.email.toLowerCase().trim();
+              const idx = this.data.moradores.findIndex(item => item.id === m.id || item.email.toLowerCase().trim() === emailNorm);
+
+              if (idx === -1) {
+                this.data.moradores.push(m);
+                updated = true;
+              } else if (this.data.moradores[idx].status !== m.status || this.data.moradores[idx].role !== m.role) {
+                this.data.moradores[idx] = m;
+                updated = true;
+              }
             }
           });
 
@@ -266,26 +255,29 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
-    // 1. Tenta gravar via Firebase Firestore SDK
-    if (window.firebase && window.firebase.firestore) {
-      try {
-        const db = window.firebase.firestore();
-        this.data.moradores.forEach(async (m) => {
-          await db.collection('moradores').doc(m.id).set(m, { merge: true });
-        });
-      } catch (e) {}
-    }
-
-    // 2. Grava no Backup JSONBin Cloud
+    // Grava no Google Cloud Firestore (Projeto: paginapretacao)
     try {
-      fetch(JSONBIN_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': JSONBIN_MASTER_KEY
-        },
-        body: JSON.stringify(this.data.moradores)
-      }).catch(() => {});
+      for (const m of this.data.moradores) {
+        const docId = m.id || 'usr_' + Date.now();
+        const payload = {
+          fields: {
+            id: { stringValue: docId },
+            nome: { stringValue: m.nome || '' },
+            email: { stringValue: m.email || '' },
+            telefone: { stringValue: m.telefone || '' },
+            apartamento: { stringValue: m.apartamento || '' },
+            role: { stringValue: m.role || 'Morador' },
+            status: { stringValue: m.status || 'Pendente' },
+            dataCadastro: { stringValue: m.dataCadastro || new Date().toISOString().split('T')[0] }
+          }
+        };
+
+        fetch(`${FIRESTORE_REST_URL}/${docId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(() => {});
+      }
     } catch (e) {}
   }
 
