@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Aprovação, Edição, Exclusão e Botão de Sincronização em Tempo Real
+   Aprovação, Recusa (Não Autorizar), Edição & Exclusão
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -16,7 +16,7 @@ window.AdminComponent = {
             Acesso Restrito à Administração
           </h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0; line-height: 1.5;">
-            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, edição e alteração de funções.
+            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para autorização, recusa, edição e exclusão de moradores.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="width: 100%; justify-content: center; padding: 0.85rem;">
             <span class="material-symbols-outlined">login</span> Entrar como Síndico / Administrador
@@ -29,6 +29,7 @@ window.AdminComponent = {
     const moradores = data.moradores || [];
     const pendentes = moradores.filter(m => m.status === 'Pendente');
     const aprovados = moradores.filter(m => m.status === 'Aprovado');
+    const recusados = moradores.filter(m => m.status === 'Recusado' || m.status === 'Não Autorizado');
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
@@ -54,7 +55,7 @@ window.AdminComponent = {
               </button>
 
               <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.85rem;" onclick="AdminComponent.forcarSincronizacaoNuvem()">
-                <span class="material-symbols-outlined">sync</span> 🔄 Buscar Novos Cadastros na Nuvem
+                <span class="material-symbols-outlined">sync</span> 🔄 Checar Cadastros na Nuvem
               </button>
             </div>
           </div>
@@ -72,10 +73,7 @@ window.AdminComponent = {
           ${pendentes.length === 0 ? `
             <div style="padding: 1.5rem 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
               <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.4; display: block; margin-bottom: 0.3rem;">check_circle</span>
-              Nenhuma solicitação pendente no momento nesta tela.<br>
-              <button class="btn-outline-primary btn-sm" style="margin-top: 0.75rem;" onclick="AdminComponent.forcarSincronizacaoNuvem()">
-                <span class="material-symbols-outlined">sync</span> Checar Se Há Novos Cadastros Feitos no Celular
-              </button>
+              Nenhuma solicitação pendente no momento nesta tela.
             </div>
           ` : `
             <div style="display: flex; flex-direction: column; gap: 1rem;">
@@ -94,13 +92,18 @@ window.AdminComponent = {
                     <div>📱 Telefone: <strong>${p.telefone || 'Não informado'}</strong></div>
                   </div>
 
+                  <!-- Botões de Ação Completa: Autorizar / Não Autorizar / Editar / Excluir -->
                   <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem;">
-                    <button class="btn-primary btn-sm" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.65rem; font-weight: 700;" onclick="AdminComponent.aprovarMorador('${p.id}')">
+                    <button class="btn-primary btn-sm" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.65rem; font-weight: 700; min-width: 120px;" onclick="AdminComponent.aprovarMorador('${p.id}')">
                       <span class="material-symbols-outlined" style="font-size: 1rem;">check_circle</span> Autorizar
                     </button>
 
+                    <button class="btn-secondary btn-sm btn-danger" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; padding: 0.65rem; font-weight: 700;" onclick="AdminComponent.recusarMorador('${p.id}', '${p.nome}')">
+                      <span class="material-symbols-outlined" style="font-size: 1rem;">block</span> 🚫 Não Autorizar
+                    </button>
+
                     <button class="btn-outline-primary btn-sm" style="padding: 0.65rem;" onclick="AdminComponent.openEditMoradorModal('${p.id}')">
-                      <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span> Editar / Função
+                      <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span> Editar
                     </button>
 
                     <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.65rem;" onclick="AdminComponent.excluirMorador('${p.id}', '${p.nome}', '${p.apartamento}')">
@@ -113,15 +116,12 @@ window.AdminComponent = {
           `}
         </div>
 
-        <!-- Seção 2: Lista de Moradores Autorizados -->
+        <!-- Seção 2: Lista de Moradores Com Acesso Autorizado -->
         <div class="card-widget" style="padding: 1.25rem;">
           <div class="card-header" style="margin-bottom: 0.85rem;">
             <div class="card-title">
               <span class="material-symbols-outlined">groups</span> Moradores Com Acesso Autorizado (${aprovados.length})
             </div>
-            <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
-              Clique em <strong>"Editar / Função"</strong> para definir qualquer morador como <strong>Conselheiro</strong>.
-            </p>
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 0.85rem;">
@@ -142,7 +142,7 @@ window.AdminComponent = {
                     </div>
                   </div>
 
-                  <div style="display: flex; gap: 0.4rem; align-items: center;">
+                  <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
                     <button class="btn-outline-primary btn-sm" onclick="AdminComponent.openEditMoradorModal('${m.id}')" title="Editar dados e função (Conselheiro)">
                       <span class="material-symbols-outlined" style="font-size: 0.95rem;">edit</span> Editar / Função
                     </button>
@@ -152,6 +152,10 @@ window.AdminComponent = {
                         🔒 Administrador
                       </span>
                     ` : `
+                      <button class="btn-secondary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2;" onclick="AdminComponent.recusarMorador('${m.id}', '${m.nome}')" title="Bloquear / Revogar acesso">
+                        <span class="material-symbols-outlined" style="font-size: 0.95rem;">block</span> Bloquear
+                      </button>
+
                       <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.excluirMorador('${m.id}', '${m.nome}', '${m.apartamento}')" title="Excluir cadastro">
                         <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir
                       </button>
@@ -163,6 +167,36 @@ window.AdminComponent = {
           </div>
         </div>
 
+        <!-- Seção 3: Cadastros Não Autorizados / Recusados (Se houver) -->
+        ${recusados.length > 0 ? `
+          <div class="card-widget" style="border: 1px solid #FFCDD2; padding: 1.25rem;">
+            <div class="card-header" style="margin-bottom: 0.85rem;">
+              <div class="card-title" style="color: #C62828;">
+                <span class="material-symbols-outlined">block</span> Cadastros Não Autorizados / Recusados (${recusados.length})
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              ${recusados.map(r => `
+                <div style="background: #FFEBEE; border: 1px solid #FFCDD2; border-radius: var(--radius-sm); padding: 0.85rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                  <div>
+                    <strong style="color: #C62828;">${r.nome}</strong> (Apto ${r.apartamento}) &bull; ${r.email}
+                    <div style="font-size: 0.78rem; color: #B71C1C; margin-top: 2px;">Status: Acesso Não Autorizado pelo Síndico</div>
+                  </div>
+                  <div style="display: flex; gap: 0.4rem;">
+                    <button class="btn-primary btn-sm" style="background: #2E6B42;" onclick="AdminComponent.aprovarMorador('${r.id}')">
+                      <span class="material-symbols-outlined" style="font-size: 0.9rem;">check_circle</span> Re-Autorizar
+                    </button>
+                    <button class="btn-secondary btn-sm btn-danger" style="background: white; color: #C62828;" onclick="AdminComponent.excluirMorador('${r.id}', '${r.nome}', '${r.apartamento}')">
+                      <span class="material-symbols-outlined" style="font-size: 0.9rem;">delete</span> Excluir
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
       </div>
     `;
   },
@@ -170,7 +204,7 @@ window.AdminComponent = {
   async forcarSincronizacaoNuvem() {
     await window.CondoStore.pullFromCloudSilently();
     await window.CondoStore.broadcastToCloud();
-    App.showToast('Verificação concluída!', 'success');
+    App.showToast('Sincronização concluída!', 'success');
     App.render();
   },
 
@@ -352,7 +386,16 @@ window.AdminComponent = {
 
   aprovarMorador(id) {
     window.CondoStore.updateMoradorStatus(id, 'Aprovado');
-    App.showToast('Acesso do morador autorizado com sucesso!', 'success');
+    App.showToast('Acesso do morador AUTORIZADO com sucesso!', 'success');
+    App.render();
+  },
+
+  recusarMorador(id, nome) {
+    if (!confirm(`Deseja NÃO AUTORIZAR o acesso do morador "${nome}"?`)) {
+      return;
+    }
+    window.CondoStore.updateMoradorStatus(id, 'Recusado');
+    App.showToast(`Solicitação de "${nome}" foi RECUSADA (Não Autorizada).`, 'info');
     App.render();
   },
 
