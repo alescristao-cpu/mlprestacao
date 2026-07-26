@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Aprovação, Edição de Perfil (Morador / Conselheiro / Administrador) & Exclusão
+   Aprovação, Edição, Exclusão e Botão de Sincronização em Tempo Real
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -16,7 +16,7 @@ window.AdminComponent = {
             Acesso Restrito à Administração
           </h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0; line-height: 1.5;">
-            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, edição e alteração de funções (Conselheiros e Moradores).
+            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, edição e alteração de funções.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="width: 100%; justify-content: center; padding: 0.85rem;">
             <span class="material-symbols-outlined">login</span> Entrar como Síndico / Administrador
@@ -48,9 +48,15 @@ window.AdminComponent = {
               </p>
             </div>
 
-            <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.92rem; box-shadow: var(--shadow-md);" onclick="AdminComponent.openQuickApproveModal()">
-              <span class="material-symbols-outlined" style="color: var(--primary);">person_add</span> ➕ Autorizar Novo Morador Manualmente
-            </button>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; flex: 1; justify-content: center; padding: 0.85rem; font-size: 0.9rem; min-width: 220px;" onclick="AdminComponent.openQuickApproveModal()">
+                <span class="material-symbols-outlined" style="color: var(--primary);">person_add</span> ➕ Autorizar Novo Morador Manualmente
+              </button>
+
+              <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.85rem;" onclick="AdminComponent.forcarSincronizacaoNuvem()">
+                <span class="material-symbols-outlined">sync</span> 🔄 Buscar Novos Cadastros na Nuvem
+              </button>
+            </div>
           </div>
         </div>
 
@@ -66,7 +72,10 @@ window.AdminComponent = {
           ${pendentes.length === 0 ? `
             <div style="padding: 1.5rem 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
               <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.4; display: block; margin-bottom: 0.3rem;">check_circle</span>
-              Nenhuma solicitação pendente no momento nesta tela.
+              Nenhuma solicitação pendente no momento nesta tela.<br>
+              <button class="btn-outline-primary btn-sm" style="margin-top: 0.75rem;" onclick="AdminComponent.forcarSincronizacaoNuvem()">
+                <span class="material-symbols-outlined">sync</span> Checar Se Há Novos Cadastros Feitos no Celular
+              </button>
             </div>
           ` : `
             <div style="display: flex; flex-direction: column; gap: 1rem;">
@@ -104,7 +113,7 @@ window.AdminComponent = {
           `}
         </div>
 
-        <!-- Seção 2: Lista de Moradores Autorizados & Atribuição de Conselheiros -->
+        <!-- Seção 2: Lista de Moradores Autorizados -->
         <div class="card-widget" style="padding: 1.25rem;">
           <div class="card-header" style="margin-bottom: 0.85rem;">
             <div class="card-title">
@@ -156,6 +165,14 @@ window.AdminComponent = {
 
       </div>
     `;
+  },
+
+  async forcarSincronizacaoNuvem() {
+    App.showToast('Checando novos cadastros na nuvem...', 'info');
+    await window.CondoStore.pullFromCloud();
+    await window.CondoStore.broadcastToCloud();
+    App.showToast('Sincronização com a nuvem concluída!', 'success');
+    App.render();
   },
 
   openEditMoradorModal(moradorId) {

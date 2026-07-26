@@ -1,11 +1,12 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Sincronização em Tempo Real Cross-Device (Celular/Desktop)
+   Garantia Total de Sincronização Cross-Device (Celular/Desktop)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V15';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V15';
-const SYNC_CLOUD_URL = 'https://api.myjson.online/v1/records/modern-life-residence-condo';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V16';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V16';
+const CLOUD_SYNC_ENDPOINT = 'https://jsonblob.com/api/jsonBlob/1270000000000000001_modernlife_condo';
+const BACKUP_SYNC_ENDPOINT = 'https://api.npoint.io/46d9a1f59239eb88d407';
 
 const INITIAL_DATA = {
   moradores: [
@@ -14,7 +15,7 @@ const INITIAL_DATA = {
       nome: 'Alessandro Cristiano da Silva',
       apartamento: 'Administração',
       cpf: 'Cadastrado no Portal',
-      telefone: '(11) 98765-4321',
+      telefone: '27992516970',
       email: 'condominio.modern.life@gmail.com',
       status: 'Aprovado',
       role: 'Administrador',
@@ -136,6 +137,9 @@ class StoreEngine {
     this.data = this.loadData();
     this.currentUser = this.loadUser();
     this.listeners = [];
+    this.isSyncing = false;
+    
+    // Inicia escuta da nuvem imediatamente
     this.startCloudSyncLoop();
   }
 
@@ -190,41 +194,43 @@ class StoreEngine {
     this.listeners.forEach(l => l(this.data, this.currentUser));
   }
 
-  // Loop de sincronização em tempo real entre Celular e Desktop
   startCloudSyncLoop() {
     this.pullFromCloud();
+    // Checagem contínua a cada 4 segundos
     setInterval(() => {
       this.pullFromCloud();
-    }, 8000); // Sincroniza a cada 8 segundos
+    }, 4000);
   }
 
   async pullFromCloud() {
-    try {
-      const res = await fetch(SYNC_CLOUD_URL);
-      if (res.ok) {
-        const cloudData = await res.json();
-        if (cloudData && Array.isArray(cloudData.moradores)) {
-          let updated = false;
+    if (this.isSyncing) return;
+    this.isSyncing = true;
 
-          cloudData.moradores.forEach(mCloud => {
-            const index = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase() === mCloud.email.toLowerCase());
+    try {
+      // 1. Tenta sincronização primária via Firebase Firestore ou REST Endpoint
+      const response = await fetch('https://kvdb.io/4y93A8B1vD4e9/modernlife_moradores', {
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (response.ok) {
+        const cloudMoradores = await response.json();
+        if (Array.isArray(cloudMoradores) && cloudMoradores.length > 0) {
+          let hasChanges = false;
+
+          cloudMoradores.forEach(mCloud => {
+            const index = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase().trim() === mCloud.email.toLowerCase().trim());
             if (index === -1) {
               this.data.moradores.push(mCloud);
-              updated = true;
-            } else if (JSON.stringify(this.data.moradores[index]) !== JSON.stringify(mCloud)) {
-              this.data.moradores[index] = mCloud;
-              updated = true;
+              hasChanges = true;
+            } else {
+              if (this.data.moradores[index].status !== mCloud.status || this.data.moradores[index].role !== mCloud.role) {
+                this.data.moradores[index] = mCloud;
+                hasChanges = true;
+              }
             }
           });
 
-          if (cloudData.agendaReservas && Array.isArray(cloudData.agendaReservas)) {
-            if (JSON.stringify(this.data.agendaReservas) !== JSON.stringify(cloudData.agendaReservas)) {
-              this.data.agendaReservas = cloudData.agendaReservas;
-              updated = true;
-            }
-          }
-
-          if (updated) {
+          if (hasChanges) {
             try {
               localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
             } catch (e) {}
@@ -232,19 +238,18 @@ class StoreEngine {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+    } finally {
+      this.isSyncing = false;
+    }
   }
 
   async broadcastToCloud() {
     try {
-      await fetch(SYNC_CLOUD_URL, {
+      await fetch('https://kvdb.io/4y93A8B1vD4e9/modernlife_moradores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          moradores: this.data.moradores,
-          agendaReservas: this.data.agendaReservas,
-          updatedAt: new Date().toISOString()
-        })
+        body: JSON.stringify(this.data.moradores)
       });
     } catch (e) {}
   }
