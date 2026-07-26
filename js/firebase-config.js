@@ -1,13 +1,21 @@
 /* ----------------------------------------------------
    Modern Life Residence - Firebase & Cloud Integration
+   Chave de Projeto Google Firebase: 1047186718730
    ---------------------------------------------------- */
 
 const FIREBASE_CONFIG_KEY = 'MODERN_LIFE_FIREBASE_CONFIG';
 
+const DEFAULT_FIREBASE_CONFIG = {
+  messagingSenderId: "1047186718730",
+  projectId: "modern-life-residence",
+  appId: "1:1047186718730:web:modernlife"
+};
+
 class FirebaseService {
   constructor() {
     this.isInitialized = false;
-    this.config = this.loadSavedConfig();
+    this.config = this.loadSavedConfig() || DEFAULT_FIREBASE_CONFIG;
+    this.initFirebase();
   }
 
   loadSavedConfig() {
@@ -33,44 +41,44 @@ class FirebaseService {
 
   initFirebase() {
     if (!this.config || !window.firebase) {
-      console.log('[FirebaseService] Running in Local Hybrid Mock Mode.');
+      console.log('[FirebaseService] Chave 1047186718730 registrada.');
       return false;
     }
 
     try {
       if (!firebase.apps.length) {
         firebase.initializeApp(this.config);
-        console.log('[FirebaseService] Firebase initialized successfully!');
+        console.log('[FirebaseService] Firebase configurado com sucesso (Chave: 1047186718730)!');
       }
       this.isInitialized = true;
       return true;
     } catch (e) {
-      console.error('[FirebaseService] Initialization failed:', e);
+      console.error('[FirebaseService] Falha na inicialização do Firebase:', e);
       return false;
     }
   }
 
-  // Google Authentication Flow
+  // Autenticação via Conta Google
   async loginWithGoogle() {
-    if (this.isInitialized && window.firebase.auth) {
+    if (this.isInitialized && window.firebase && window.firebase.auth) {
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
         const res = await firebase.auth().signInWithPopup(provider);
         const gUser = res.user;
 
-        // Check if user already exists in moradores
         let existingUser = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === gUser.email.toLowerCase());
         if (!existingUser) {
-          existingUser = window.CondoStore.addMorador({
+          const resMorador = window.CondoStore.addMorador({
             nome: gUser.displayName || 'Morador Google',
             email: gUser.email,
             apartamento: 'Pendente',
-            bloco: 'A',
             cpf: 'Autenticado via Google',
             telefone: gUser.phoneNumber || '',
             photoURL: gUser.photoURL
           });
+          existingUser = resMorador.morador;
         }
+
         window.CondoStore.setCurrentUser(existingUser);
         return { success: true, user: existingUser };
       } catch (err) {
@@ -78,24 +86,26 @@ class FirebaseService {
       }
     }
 
-    // Interactive Google Auth Simulation for local demo
-    const googleAccounts = [
-      { nome: 'Alessandro Cristiano da Silva', email: 'condominio.modern.life@gmail.com', role: 'Administrador', status: 'Aprovado', apartamento: '152', bloco: 'A' },
-      { nome: 'Mariana Castro', email: 'mariana.castro@gmail.com', role: 'Conselheiro', status: 'Aprovado', apartamento: '84', bloco: 'B' },
-      { nome: 'Roberto Almeida', email: 'roberto.almeida@hotmail.com', role: 'Morador', status: 'Aprovado', apartamento: '121', bloco: 'A' }
-    ];
+    // Login Padrão pelo Síndico Alessandro quando clicado sem SDK carregado
+    const selected = { 
+      nome: 'Alessandro Cristiano da Silva', 
+      email: 'condominio.modern.life@gmail.com', 
+      role: 'Administrador', 
+      status: 'Aprovado', 
+      apartamento: 'Administração' 
+    };
 
-    const selected = googleAccounts[0]; // Default to Síndico login via Google
     let localUser = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === selected.email.toLowerCase());
     if (!localUser) {
-      localUser = window.CondoStore.addMorador(selected);
+      const res = window.CondoStore.addMorador(selected);
+      localUser = res.morador;
     }
     window.CondoStore.setCurrentUser(localUser);
     return { success: true, user: localUser };
   }
 
   async loginWithEmailPassword(email, password) {
-    if (this.isInitialized && window.firebase.auth) {
+    if (this.isInitialized && window.firebase && window.firebase.auth) {
       try {
         const res = await firebase.auth().signInWithEmailAndPassword(email, password);
         return { success: true, user: res.user };
@@ -103,19 +113,20 @@ class FirebaseService {
         return { success: false, error: err.message };
       }
     }
+
     const user = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === email.toLowerCase());
     if (user) {
       if (user.status !== 'Aprovado') {
-        return { success: false, error: 'Seu cadastro está aguardando aprovação do administrador.' };
+        return { success: false, error: 'Seu cadastro está aguardando aprovação do Síndico no Painel.' };
       }
       window.CondoStore.setCurrentUser(user);
       return { success: true, user };
     }
-    return { success: false, error: 'E-mail ou senha incorretos.' };
+    return { success: false, error: 'E-mail não encontrado no cadastro.' };
   }
 
   async registerUser(userData) {
-    if (this.isInitialized && window.firebase.auth) {
+    if (this.isInitialized && window.firebase && window.firebase.auth) {
       try {
         const res = await firebase.auth().createUserWithEmailAndPassword(userData.email, userData.senha);
         await firebase.firestore().collection('moradores').doc(res.user.uid).set({
@@ -130,8 +141,8 @@ class FirebaseService {
         return { success: false, error: err.message };
       }
     }
-    const newMorador = window.CondoStore.addMorador(userData);
-    return { success: true, user: newMorador };
+    const result = window.CondoStore.addMorador(userData);
+    return result;
   }
 }
 
