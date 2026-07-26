@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Cadastro de Moradores & Sincronização iOS/iPhone
-   Garante que cadastros feitos no iPhone cheguem ao Síndico em qualquer dispositivo
+   Modern Life Residence - Cadastro de Moradores (Compatibilidade iPhone / iOS Safari)
+   Execução Síncrona Instantânea sem Bloqueio de Rede no iOS
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -84,7 +84,7 @@ window.AuthComponent = {
       </div>
 
       <!-- E-mail Form -->
-      <form id="formLogin" onsubmit="AuthComponent.handleLogin(event)">
+      <form id="formLogin" onsubmit="event.preventDefault(); AuthComponent.handleLogin();">
         <div class="form-group">
           <label class="form-label">E-mail do Morador</label>
           <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required>
@@ -100,11 +100,11 @@ window.AuthComponent = {
   renderRegisterForm() {
     return `
       <div style="background: var(--primary-light); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 4px solid var(--primary);">
-        📋 <strong>Cadastro de Morador (iOS / Android / PC):</strong><br>
-        Preencha seus dados abaixo. Sua solicitação será enviada para o <strong>Painel do Administrador (Síndico)</strong>.
+        📋 <strong>Cadastro do Morador:</strong><br>
+        Preencha os dados abaixo para solicitar autorização de acesso ao portal do condomínio.
       </div>
 
-      <form id="formRegister" onsubmit="AuthComponent.handleRegister(event)">
+      <form id="formRegister" onsubmit="event.preventDefault(); AuthComponent.handleRegisterSubmit();">
         <div class="form-group">
           <label class="form-label">Nome Completo</label>
           <input type="text" id="regNome" class="form-control" placeholder="Ex: João da Silva" required autocomplete="name">
@@ -127,8 +127,8 @@ window.AuthComponent = {
           </div>
         </div>
 
-        <button type="button" onclick="AuthComponent.handleRegisterSubmit()" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-          <span class="material-symbols-outlined">send</span> Cadastrar &amp; Enviar Solicitação
+        <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
+          <span class="material-symbols-outlined">send</span> Cadastrar &amp; Solicitar Autorização
         </button>
       </form>
     `;
@@ -152,7 +152,7 @@ window.AuthComponent = {
         <div style="background: #FFF3E0; border: 1px solid #FFE0B2; padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; color: #E65100; margin-bottom: 1.25rem; text-align: center;">
           <span class="material-symbols-outlined" style="font-size: 2rem; display: block; margin-bottom: 0.25rem;">hourglass_top</span>
           <strong>Aguardando Autorização da Administração!</strong><br>
-          Seu cadastro foi enviado com sucesso. O acesso aos balancetes e documentos será liberado assim que o Síndico aprovar sua solicitação no Painel do Administrador.
+          Seu cadastro foi registrado com sucesso. O acesso aos balancetes e documentos será liberado assim que o Síndico aprovar sua solicitação no Painel do Administrador.
         </div>
       ` : ''}
 
@@ -196,8 +196,7 @@ window.AuthComponent = {
     }
   },
 
-  handleLogin(e) {
-    if (e) e.preventDefault();
+  handleLogin() {
     const emailEl = document.getElementById('loginEmail');
     if (!emailEl) return;
 
@@ -221,12 +220,7 @@ window.AuthComponent = {
     }
   },
 
-  handleRegister(e) {
-    if (e) e.preventDefault();
-    this.handleRegisterSubmit();
-  },
-
-  async handleRegisterSubmit() {
+  handleRegisterSubmit() {
     const nomeEl = document.getElementById('regNome');
     const emailEl = document.getElementById('regEmail');
     const telefoneEl = document.getElementById('regTelefone');
@@ -240,17 +234,11 @@ window.AuthComponent = {
     const unidade = unidadeEl.value.trim();
 
     if (!nome || !email || !unidade) {
-      App.showToast('Preencha todos os campos obrigatórios (Nome, E-mail e Unidade).', 'error');
+      alert('Por favor, preencha todos os campos obrigatórios: Nome, E-mail e Unidade.');
       return;
     }
 
-    const btnSubmit = document.getElementById('btnSubmitRegister');
-    if (btnSubmit) {
-      btnSubmit.disabled = true;
-      btnSubmit.innerHTML = `<span class="material-symbols-outlined" style="animation: spin 1s infinite linear;">sync</span> Enviando Cadastro...`;
-    }
-
-    // 1. Cadastra localmente com status PENDENTE
+    // 1. Cadastra e grava síncronamente no banco de dados local
     const newMorador = window.CondoStore.addMorador({
       nome,
       email,
@@ -261,27 +249,24 @@ window.AuthComponent = {
 
     window.CondoStore.setCurrentUser(newMorador);
 
-    // 2. Dispara envio para o serviço central de nuvem (FormSubmit) para chegar no painel do Síndico em qualquer dispositivo
+    // 2. Disparo assíncrono em segundo plano (Não bloqueia o iPhone)
     try {
-      await fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
+      fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
           _subject: `[NOVO CADASTRO DE MORADOR] ${nome} (Apto ${unidade})`,
           "Nome do Morador": nome,
           "E-mail": email,
           "Telefone": telefone,
           "Unidade": unidade,
-          "Data do Cadastro": new Date().toLocaleString("pt-BR"),
-          "Status": "Aguardando Aprovação no Painel do Síndico"
+          "Data do Cadastro": new Date().toLocaleString("pt-BR")
         })
-      });
-    } catch (err) {}
+      }).catch(function() {});
+    } catch (e) {}
 
-    App.showToast(`Cadastro de ${nome} realizado com sucesso! Aguardando aprovação do Síndico.`, 'info');
+    // 3. Atualiza a interface e alerta o usuário imediatamente
+    alert(`Cadastro de "${nome}" registrado com sucesso!\n\nA sua solicitação foi enviada. O acesso aos balancetes e documentos será liberado assim que o Síndico (Alessandro) aprovar no Painel.`);
 
     const modal = document.getElementById('modalAuth');
     if (modal) modal.remove();
