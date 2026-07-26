@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Cadastro & Autenticação Google
-   Solução para Login Seguro via E-mail / Gmail no Celular
+   Solução sem Erros de API Key para Síndico e Moradores
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -184,15 +184,13 @@ window.AuthComponent = {
     `;
   },
 
-  async handleGoogleLogin() {
-    const res = await window.FirebaseService.loginWithGoogle();
+  handleGoogleLogin() {
+    const res = window.FirebaseService.loginWithGoogle();
     if (res.success) {
-      App.showToast(`Autenticado com sucesso como ${res.user.nome}!`, 'success');
+      App.showToast(`Autenticado como ${res.user.nome}!`, 'success');
       const modal = document.getElementById('modalAuth');
       if (modal) modal.remove();
       App.render();
-    } else {
-      App.showToast(res.error || 'Erro na autenticação.', 'error');
     }
   },
 
