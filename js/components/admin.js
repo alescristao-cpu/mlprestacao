@@ -168,10 +168,9 @@ window.AdminComponent = {
   },
 
   async forcarSincronizacaoNuvem() {
-    App.showToast('Checando novos cadastros na nuvem...', 'info');
-    await window.CondoStore.pullFromCloud();
+    await window.CondoStore.pullFromCloudSilently();
     await window.CondoStore.broadcastToCloud();
-    App.showToast('Sincronização com a nuvem concluída!', 'success');
+    App.showToast('Verificação concluída!', 'success');
     App.render();
   },
 
