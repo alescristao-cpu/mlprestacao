@@ -1,28 +1,31 @@
 /* ----------------------------------------------------
    Modern Life Residence - Main Application Orchestrator
-   Garantia de Navegação Instantânea no 1º Acesso
+   Garantia de Navegação Instantânea & Tema Claro por Padrão
    ---------------------------------------------------- */
 
 window.App = {
   currentRoute: 'dashboard',
 
   init() {
-    this.checkEmailApprovalParams();
-    this.bindEvents();
-    this.initTheme();
-    this.registerServiceWorker();
-    
-    // Processa rota via URL Hash se existir (ex: #prestacao, #utilidades)
-    const hash = window.location.hash.replace('#', '');
-    if (hash && this.isValidRoute(hash)) {
-      this.currentRoute = hash;
-    }
+    try {
+      this.initTheme();
+      this.checkEmailApprovalParams();
+      this.bindEvents();
+      this.registerServiceWorker();
+      
+      const hash = window.location.hash.replace('#', '');
+      if (hash && this.isValidRoute(hash)) {
+        this.currentRoute = hash;
+      }
 
-    this.render();
-
-    window.CondoStore.subscribe(() => {
       this.render();
-    });
+
+      window.CondoStore.subscribe(() => {
+        this.render();
+      });
+    } catch (err) {
+      console.error('App init error:', err);
+    }
   },
 
   isValidRoute(route) {
@@ -57,7 +60,7 @@ window.App = {
   },
 
   toggleTheme() {
-    const current = document.documentElement.getAttribute('data-theme');
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
     const next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('MODERN_LIFE_THEME', next);
@@ -65,7 +68,6 @@ window.App = {
   },
 
   bindEvents() {
-    // Atalho Ctrl + K para busca global
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -73,7 +75,6 @@ window.App = {
       }
     });
 
-    // Event listener para navegação por botões data-route
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-route]');
       if (btn) {
@@ -85,7 +86,6 @@ window.App = {
       }
     });
 
-    // Fecha menu lateral ao clicar fora (celulares)
     document.addEventListener('click', (e) => {
       const sidebar = document.getElementById('sidebar');
       const toggle = e.target.closest('.mobile-toggle');
@@ -316,9 +316,8 @@ window.App = {
   }
 };
 
-// Executa a inicialização de forma imediata e resiliente
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => App.init());
+  document.addEventListener('DOMContentLoaded', () => window.App.init());
 } else {
-  App.init();
+  window.App.init();
 }
