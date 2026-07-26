@@ -1,14 +1,41 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Google Gmail Integration
-   Autenticação Direta por Qualquer E-mail Google (Gmail)
+   Modern Life Residence - Google Firebase Integration
+   Projeto Google Cloud Oficial: paginapretacao
    ---------------------------------------------------- */
+
+const FIREBASE_CONFIG = {
+  projectId: "paginapretacao",
+  authDomain: "paginapretacao.firebaseapp.com",
+  storageBucket: "paginapretacao.appspot.com"
+};
 
 class FirebaseService {
   constructor() {
-    this.isInitialized = true;
+    this.isInitialized = false;
+    this.db = null;
+    this.initFirebase();
   }
 
-  // Permite a qualquer morador entrar com seu próprio Gmail
+  initFirebase() {
+    if (typeof firebase !== 'undefined') {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(FIREBASE_CONFIG);
+        }
+        if (firebase.firestore) {
+          this.db = firebase.firestore();
+        }
+        this.isInitialized = true;
+        console.log('✅ Google Firebase (paginapretacao) conectado!');
+        return true;
+      } catch (e) {
+        console.warn('Firebase SDK init:', e);
+      }
+    }
+    return false;
+  }
+
+  // Permite autenticação por Gmail para qualquer morador
   loginWithGoogle(emailInformado = '') {
     let emailGoogle = emailInformado ? emailInformado.toLowerCase().trim() : '';
 
@@ -22,11 +49,9 @@ class FirebaseService {
       return { success: false, error: 'Por favor, insira um e-mail válido.' };
     }
 
-    // Busca se o morador com este Gmail já está cadastrado
     let user = window.CondoStore.data.moradores.find(m => m.email.toLowerCase().trim() === emailGoogle);
 
     if (!user) {
-      // Se for o e-mail oficial do Síndico
       if (emailGoogle === 'condominio.modern.life@gmail.com') {
         const res = window.CondoStore.addMorador({
           nome: 'Alessandro Cristiano da Silva',
@@ -38,12 +63,11 @@ class FirebaseService {
         });
         user = res.morador;
       } else {
-        // Se for um novo morador usando Gmail pela 1ª vez, solicita Nome e Apto rápidos
         const nome = prompt(`Cadastrando nova conta Google (${emailGoogle}).\nDigite o seu Nome Completo:`);
-        if (!nome) return { success: false, error: 'Cadastro de Nome cancelado.' };
+        if (!nome) return { success: false, error: 'Cadastro cancelado.' };
 
         const apartamento = prompt('Digite o número da sua Unidade / Apartamento (ex: Apt 304):');
-        if (!apartamento) return { success: false, error: 'Unidade necessária para o cadastro.' };
+        if (!apartamento) return { success: false, error: 'Unidade necessária.' };
 
         const res = window.CondoStore.addMorador({
           nome: nome.trim(),

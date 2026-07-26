@@ -1,15 +1,12 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Garantia Absoluta de Sincronização Cross-Device (Celular/Desktop)
+   Conexão Oficial Google Cloud Firestore: paginapretacao
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V19';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V18';
-
-// Endpoint de sincronização global com JSONBlob público ativo
-const CLOUD_BLOB_ID = '1266000000000000001_mlresidence';
-const PRIMARY_CLOUD_URL = 'https://api.jsonbin.io/v3/b/66a3d902e41b4d34e41712a4';
-const SECONDARY_CLOUD_URL = 'https://jsonblob.com/api/jsonBlob/1270000000000000001_modernlife';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V20';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V20';
+const FIRESTORE_PROJECT_ID = 'paginapretacao';
+const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
 
 const INITIAL_DATA = {
   moradores: [
@@ -142,7 +139,6 @@ class StoreEngine {
     this.listeners = [];
     this.isSyncing = false;
     
-    // Inicia checagem automática contínua
     this.startCloudSyncLoop();
   }
 
@@ -199,51 +195,79 @@ class StoreEngine {
 
   startCloudSyncLoop() {
     this.pullFromCloudSilently();
-    // Checagem automática a cada 3 segundos
     setInterval(() => {
       this.pullFromCloudSilently();
     }, 3000);
   }
 
+  // Sincronização via Firestore REST API (Projeto: paginapretacao)
   async pullFromCloudSilently() {
     if (this.isSyncing) return;
     this.isSyncing = true;
 
     try {
-      // 1. Tenta buscar da nuvem primária
-      const response = await fetch(SECONDARY_CLOUD_URL, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-      });
-
+      // 1. Tenta via Firestore REST API do projeto 'paginapretacao'
+      const response = await fetch(FIRESTORE_REST_URL);
       if (response.ok) {
-        const cloudData = await response.json();
-        const moradoresNuvem = Array.isArray(cloudData) ? cloudData : (cloudData.moradores || []);
+        const json = await response.json();
+        const documents = json.documents || [];
+        
+        if (documents.length > 0) {
+          let updated = false;
 
-        if (Array.isArray(moradoresNuvem) && moradoresNuvem.length > 0) {
-          let hasChanges = false;
+          documents.forEach(doc => {
+            const fields = doc.fields || {};
+            const m = {
+              id: fields.id ? fields.id.stringValue : doc.name.split('/').pop(),
+              nome: fields.nome ? fields.nome.stringValue : '',
+              email: fields.email ? fields.email.stringValue : '',
+              telefone: fields.telefone ? fields.telefone.stringValue : '',
+              apartamento: fields.apartamento ? fields.apartamento.stringValue : '',
+              role: fields.role ? fields.role.stringValue : 'Morador',
+              status: fields.status ? fields.status.stringValue : 'Pendente',
+              dataCadastro: fields.dataCadastro ? fields.dataCadastro.stringValue : new Date().toISOString().split('T')[0]
+            };
 
-          moradoresNuvem.forEach(mCloud => {
-            if (!mCloud || !mCloud.email) return;
-            const emailNorm = mCloud.email.toLowerCase().trim();
-            const index = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase().trim() === emailNorm);
+            if (m.email) {
+              const emailNorm = m.email.toLowerCase().trim();
+              const idx = this.data.moradores.findIndex(item => item.id === m.id || item.email.toLowerCase().trim() === emailNorm);
 
-            if (index === -1) {
-              this.data.moradores.push(mCloud);
-              hasChanges = true;
-            } else {
-              if (this.data.moradores[index].status !== mCloud.status || this.data.moradores[index].role !== mCloud.role) {
-                this.data.moradores[index] = mCloud;
-                hasChanges = true;
+              if (idx === -1) {
+                this.data.moradores.push(m);
+                updated = true;
+              } else if (this.data.moradores[idx].status !== m.status || this.data.moradores[idx].role !== m.role) {
+                this.data.moradores[idx] = m;
+                updated = true;
               }
             }
           });
 
-          if (hasChanges) {
-            try {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-            } catch (e) {}
+          if (updated) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
             this.notify();
+          }
+        }
+      } else {
+        // Fallback REST secundário
+        const altRes = await fetch('https://jsonblob.com/api/jsonBlob/1270000000000000001_modernlife');
+        if (altRes.ok) {
+          const cloudMoradores = await altRes.json();
+          if (Array.isArray(cloudMoradores) && cloudMoradores.length > 0) {
+            let updated = false;
+            cloudMoradores.forEach(mCloud => {
+              const idx = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase().trim() === (mCloud.email || '').toLowerCase().trim());
+              if (idx === -1) {
+                this.data.moradores.push(mCloud);
+                updated = true;
+              } else if (this.data.moradores[idx].status !== mCloud.status || this.data.moradores[idx].role !== mCloud.role) {
+                this.data.moradores[idx] = mCloud;
+                updated = true;
+              }
+            });
+            if (updated) {
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
+              this.notify();
+            }
           }
         }
       }
@@ -254,26 +278,39 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
+    // 1. Grava no Google Cloud Firestore (Projeto: paginapretacao)
     try {
-      // Envia os moradores em formato JSON nativo para a nuvem
-      await fetch(SECONDARY_CLOUD_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(this.data.moradores)
-      });
-    } catch (e) {
-      // Fallback em POST
-      try {
-        await fetch(SECONDARY_CLOUD_URL, {
-          method: 'POST',
+      for (const m of this.data.moradores) {
+        const docId = m.id || 'usr_' + Date.now();
+        const payload = {
+          fields: {
+            id: { stringValue: docId },
+            nome: { stringValue: m.nome || '' },
+            email: { stringValue: m.email || '' },
+            telefone: { stringValue: m.telefone || '' },
+            apartamento: { stringValue: m.apartamento || '' },
+            role: { stringValue: m.role || 'Morador' },
+            status: { stringValue: m.status || 'Pendente' },
+            dataCadastro: { stringValue: m.dataCadastro || new Date().toISOString().split('T')[0] }
+          }
+        };
+
+        fetch(`${FIRESTORE_REST_URL}/${docId}`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.data.moradores)
-        });
-      } catch (err) {}
-    }
+          body: JSON.stringify(payload)
+        }).catch(() => {});
+      }
+    } catch (e) {}
+
+    // 2. Backup secundário JSONBlob
+    try {
+      fetch('https://jsonblob.com/api/jsonBlob/1270000000000000001_modernlife', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(this.data.moradores)
+      }).catch(() => {});
+    } catch (e) {}
   }
 
   addMorador(morador) {
