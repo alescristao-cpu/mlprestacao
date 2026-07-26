@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Cadastro & Autenticação Google
-   Solução sem Erros de API Key para Síndico e Moradores
+   Modern Life Residence - Autenticação por Gmail & E-mail
+   Suporte Completo para Qualquer Morador Entrar com seu próprio Gmail
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -61,7 +61,7 @@ window.AuthComponent = {
 
   renderLoginForm() {
     return `
-      <!-- Opção de Acesso Direto Síndico / Google -->
+      <!-- Login Rápido via Conta Google / Gmail -->
       <div style="margin-bottom: 1.25rem; text-align: center;">
         <button type="button" onclick="AuthComponent.handleGoogleLogin()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; background: #FFFFFF; color: #757575; border: 1px solid #DADCE0; padding: 0.85rem 1rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--shadow-sm); transition: var(--transition);">
           <svg width="20" height="20" viewBox="0 0 48 48">
@@ -70,24 +70,24 @@ window.AuthComponent = {
             <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/>
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.6 42.62 14.66 48 24 48z"/>
           </svg>
-          Entrar como Síndico (Google / Gmail)
+          Entrar com a Conta Google (Gmail)
         </button>
         <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.4rem;">
-          Conexão direta para <code>condominio.modern.life@gmail.com</code>
+          Qualquer morador pode entrar diretamente com seu e-mail do Gmail.
         </div>
       </div>
 
       <div style="display: flex; align-items: center; margin: 1rem 0; color: var(--border-color);">
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
-        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou digite o e-mail cadastrado</span>
+        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou entrar por e-mail</span>
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
       </div>
 
-      <!-- Formulário por E-mail -->
+      <!-- Formulário Direto por E-mail -->
       <form id="formLogin" onsubmit="event.preventDefault(); AuthComponent.handleLogin();">
         <div class="form-group">
           <label class="form-label">E-mail do Morador</label>
-          <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@gmail.com" required>
+          <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required autocomplete="email">
         </div>
 
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem;">
@@ -100,8 +100,8 @@ window.AuthComponent = {
   renderRegisterForm() {
     return `
       <div style="background: var(--primary-light); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 4px solid var(--primary);">
-        📋 <strong>Cadastro do Morador:</strong><br>
-        Preencha os dados abaixo para solicitar autorização de acesso ao portal do condomínio.
+        📋 <strong>Cadastro de Novo Morador:</strong><br>
+        Preencha seus dados abaixo para solicitar autorização de acesso ao portal.
       </div>
 
       <form id="formRegister" onsubmit="event.preventDefault(); AuthComponent.handleRegisterSubmit();">
@@ -111,8 +111,8 @@ window.AuthComponent = {
         </div>
 
         <div class="form-group">
-          <label class="form-label">E-mail Principal</label>
-          <input type="email" id="regEmail" class="form-control" placeholder="seu.email@exemplo.com" required autocomplete="email">
+          <label class="form-label">E-mail Principal (Gmail ou outro)</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="seu.email@gmail.com" required autocomplete="email">
         </div>
 
         <div class="form-grid">
@@ -187,10 +187,12 @@ window.AuthComponent = {
   handleGoogleLogin() {
     const res = window.FirebaseService.loginWithGoogle();
     if (res.success) {
-      App.showToast(`Autenticado como ${res.user.nome}!`, 'success');
+      App.showToast(`Autenticado via Google (${res.user.email})!`, 'success');
       const modal = document.getElementById('modalAuth');
       if (modal) modal.remove();
       App.render();
+    } else if (res.error && res.error !== 'Login cancelado.') {
+      App.showToast(res.error, 'error');
     }
   },
 
@@ -214,7 +216,7 @@ window.AuthComponent = {
       if (modal) modal.remove();
       App.render();
     } else {
-      App.showToast('E-mail não encontrado no cadastro do condomínio.', 'error');
+      App.showToast('E-mail não encontrado. Por favor, cadastre-se primeiro.', 'error');
     }
   },
 
