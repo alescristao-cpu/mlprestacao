@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Autenticação por Gmail & E-mail
-   Suporte Completo para Qualquer Morador Entrar com seu próprio Gmail
+   Modern Life Residence - Cadastro & Autenticação
+   "Entrar com E-mail Cadastrado ou Cadastrar-se"
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -37,13 +37,13 @@ window.AuthComponent = {
 
   renderAuthTabs() {
     return `
-      <!-- Tab Switcher -->
+      <!-- Tab Switcher conforme a solicitação exata -->
       <div style="display: flex; border-bottom: 2px solid var(--border-light); margin-bottom: 1.25rem;">
-        <button type="button" onclick="AuthComponent.switchTab('login')" id="tabBtnLogin" style="flex: 1; padding: 0.75rem; border: none; background: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; color: ${this.activeTab === 'login' ? 'var(--primary)' : 'var(--text-muted)'}; border-bottom: 3px solid ${this.activeTab === 'login' ? 'var(--primary)' : 'transparent'}; margin-bottom: -2px;">
-          Entrar
+        <button type="button" onclick="AuthComponent.switchTab('login')" id="tabBtnLogin" style="flex: 1; padding: 0.75rem; border: none; background: none; font-weight: 700; font-size: 0.92rem; cursor: pointer; color: ${this.activeTab === 'login' ? 'var(--primary)' : 'var(--text-muted)'}; border-bottom: 3px solid ${this.activeTab === 'login' ? 'var(--primary)' : 'transparent'}; margin-bottom: -2px;">
+          Entrar com E-mail Cadastrado
         </button>
-        <button type="button" onclick="AuthComponent.switchTab('register')" id="tabBtnRegister" style="flex: 1; padding: 0.75rem; border: none; background: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; color: ${this.activeTab === 'register' ? 'var(--primary)' : 'var(--text-muted)'}; border-bottom: 3px solid ${this.activeTab === 'register' ? 'var(--primary)' : 'transparent'}; margin-bottom: -2px;">
-          Cadastrar Novo Morador
+        <button type="button" onclick="AuthComponent.switchTab('register')" id="tabBtnRegister" style="flex: 1; padding: 0.75rem; border: none; background: none; font-weight: 700; font-size: 0.92rem; cursor: pointer; color: ${this.activeTab === 'register' ? 'var(--primary)' : 'var(--text-muted)'}; border-bottom: 3px solid ${this.activeTab === 'register' ? 'var(--primary)' : 'transparent'}; margin-bottom: -2px;">
+          Cadastrar-se
         </button>
       </div>
 
@@ -61,7 +61,7 @@ window.AuthComponent = {
 
   renderLoginForm() {
     return `
-      <!-- Login Rápido via Conta Google / Gmail -->
+      <!-- Botão de Login via Conta Google / Gmail -->
       <div style="margin-bottom: 1.25rem; text-align: center;">
         <button type="button" onclick="AuthComponent.handleGoogleLogin()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; background: #FFFFFF; color: #757575; border: 1px solid #DADCE0; padding: 0.85rem 1rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--shadow-sm); transition: var(--transition);">
           <svg width="20" height="20" viewBox="0 0 48 48">
@@ -83,15 +83,15 @@ window.AuthComponent = {
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
       </div>
 
-      <!-- Formulário Direto por E-mail -->
+      <!-- Formulário: Entrar com E-mail Cadastrado -->
       <form id="formLogin" onsubmit="event.preventDefault(); AuthComponent.handleLogin();">
         <div class="form-group">
-          <label class="form-label">E-mail do Morador</label>
+          <label class="form-label">E-mail Cadastrado do Morador</label>
           <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required autocomplete="email">
         </div>
 
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem;">
-          <span class="material-symbols-outlined">login</span> Entrar por E-mail
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
+          <span class="material-symbols-outlined">login</span> Entrar com E-mail Cadastrado
         </button>
       </form>
     `;
@@ -100,7 +100,7 @@ window.AuthComponent = {
   renderRegisterForm() {
     return `
       <div style="background: var(--primary-light); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 4px solid var(--primary);">
-        📋 <strong>Cadastro de Novo Morador:</strong><br>
+        📋 <strong>Cadastrar-se no Condomínio:</strong><br>
         Preencha seus dados abaixo para solicitar autorização de acesso ao portal.
       </div>
 
@@ -111,7 +111,7 @@ window.AuthComponent = {
         </div>
 
         <div class="form-group">
-          <label class="form-label">E-mail Principal (Gmail ou outro)</label>
+          <label class="form-label">E-mail Principal</label>
           <input type="email" id="regEmail" class="form-control" placeholder="seu.email@gmail.com" required autocomplete="email">
         </div>
 
@@ -127,8 +127,8 @@ window.AuthComponent = {
           </div>
         </div>
 
-        <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-          <span class="material-symbols-outlined">send</span> Cadastrar &amp; Solicitar Autorização
+        <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem; font-weight: 700;">
+          <span class="material-symbols-outlined">how_to_reg</span> Cadastrar-se
         </button>
       </form>
     `;
