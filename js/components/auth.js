@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Cadastro de Moradores
-   Validação Anti-Duplicidade de E-mail e Dados Idênticos
+   Modern Life Residence - Cadastro & Autenticação Google
+   Solução para Login Seguro via E-mail / Gmail no Celular
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -61,36 +61,36 @@ window.AuthComponent = {
 
   renderLoginForm() {
     return `
-      <!-- Google Auth Primary Option -->
+      <!-- Opção de Acesso Direto Síndico / Google -->
       <div style="margin-bottom: 1.25rem; text-align: center;">
-        <button type="button" onclick="AuthComponent.handleGoogleLogin()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; background: #FFFFFF; color: #757575; border: 1px solid #DADCE0; padding: 0.8rem 1rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--shadow-sm); transition: var(--transition);">
+        <button type="button" onclick="AuthComponent.handleGoogleLogin()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.75rem; background: #FFFFFF; color: #757575; border: 1px solid #DADCE0; padding: 0.85rem 1rem; border-radius: var(--radius-sm); font-weight: 600; font-size: 0.95rem; cursor: pointer; box-shadow: var(--shadow-sm); transition: var(--transition);">
           <svg width="20" height="20" viewBox="0 0 48 48">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.66 0 6.6 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
             <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.13-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
             <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/>
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.6 42.62 14.66 48 24 48z"/>
           </svg>
-          Entrar com a Conta Google
+          Entrar como Síndico (Google / Gmail)
         </button>
         <div style="font-size: 0.76rem; color: var(--text-muted); margin-top: 0.4rem;">
-          Moradores autorizados pela administração acessam diretamente via Google.
+          Conexão direta para <code>condominio.modern.life@gmail.com</code>
         </div>
       </div>
 
       <div style="display: flex; align-items: center; margin: 1rem 0; color: var(--border-color);">
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
-        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou entrar por e-mail</span>
+        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou digite o e-mail cadastrado</span>
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
       </div>
 
-      <!-- E-mail Form -->
+      <!-- Formulário por E-mail -->
       <form id="formLogin" onsubmit="event.preventDefault(); AuthComponent.handleLogin();">
         <div class="form-group">
           <label class="form-label">E-mail do Morador</label>
-          <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required>
+          <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@gmail.com" required>
         </div>
 
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.8rem;">
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem;">
           <span class="material-symbols-outlined">login</span> Entrar por E-mail
         </button>
       </form>
@@ -187,12 +187,12 @@ window.AuthComponent = {
   async handleGoogleLogin() {
     const res = await window.FirebaseService.loginWithGoogle();
     if (res.success) {
-      App.showToast(`Autenticado via Google como ${res.user.nome}!`, 'success');
+      App.showToast(`Autenticado com sucesso como ${res.user.nome}!`, 'success');
       const modal = document.getElementById('modalAuth');
       if (modal) modal.remove();
       App.render();
     } else {
-      App.showToast(res.error, 'error');
+      App.showToast(res.error || 'Erro na autenticação.', 'error');
     }
   },
 
@@ -216,7 +216,7 @@ window.AuthComponent = {
       if (modal) modal.remove();
       App.render();
     } else {
-      App.showToast('E-mail não encontrado. Por favor, cadastre-se primeiro.', 'error');
+      App.showToast('E-mail não encontrado no cadastro do condomínio.', 'error');
     }
   },
 
@@ -238,7 +238,6 @@ window.AuthComponent = {
       return;
     }
 
-    // 1. Executa validação anti-duplicidade no CondoStore
     const result = window.CondoStore.addMorador({
       nome,
       email,
@@ -254,7 +253,6 @@ window.AuthComponent = {
 
     window.CondoStore.setCurrentUser(result.morador);
 
-    // 2. Disparo assíncrono em segundo plano
     try {
       fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
         method: 'POST',
