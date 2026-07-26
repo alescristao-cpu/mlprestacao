@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Aprovação e Exclusão de Cadastros de Moradores
+   Aprovação, Exclusão & Cadastro Manual de Moradores (Cross-Device Sync)
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -47,10 +47,11 @@ window.AdminComponent = {
                 E-mail do Condomínio: <code>condominio.modern.life@gmail.com</code>
               </p>
             </div>
-            <div style="text-align: right;">
-              <span class="badge badge-warning" style="font-size: 0.95rem; padding: 0.5rem 0.9rem;">
-                ${pendentes.length} Cadastros Aguardando Aprovação
-              </span>
+
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700;" onclick="AdminComponent.openManualAddModal()">
+                <span class="material-symbols-outlined">person_add</span> Autorizar Novo Morador Manualmente
+              </button>
             </div>
           </div>
         </div>
@@ -62,7 +63,7 @@ window.AdminComponent = {
               <span class="material-symbols-outlined" style="font-size: 1.6rem;">how_to_reg</span> Solicitações de Cadastro Aguardando Aprovação (${pendentes.length})
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
-              Clique em <strong>"Autorizar Acesso"</strong> para aprovar ou em <strong>"Excluir"</strong> para cancelar a solicitação.
+              Clique em <strong>"Autorizar Acesso"</strong> para liberar o morador ou em <strong>"Excluir"</strong> para cancelar a solicitação.
             </p>
           </div>
 
@@ -110,7 +111,7 @@ window.AdminComponent = {
           `}
         </div>
 
-        <!-- Lista de Moradores Com Acesso Liberado & Opção de Exclusão -->
+        <!-- Lista de Moradores Com Acesso Liberado -->
         <div class="card-widget">
           <div class="card-header">
             <div class="card-title">
@@ -164,6 +165,75 @@ window.AdminComponent = {
 
       </div>
     `;
+  },
+
+  openManualAddModal() {
+    const existing = document.getElementById('modalManualAdd');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalManualAdd">
+        <div class="modal-card" style="max-width: 500px;">
+          <div class="modal-header" style="background: var(--primary-dark); color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700;">Autorizar Morador Manualmente</div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalManualAdd').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <form onsubmit="AdminComponent.submeterAddManual(event)">
+              <div class="form-group">
+                <label class="form-label">Nome Completo do Morador</label>
+                <input type="text" id="manualNome" class="form-control" placeholder="Ex: Carlos Eduardo" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">E-mail do Morador</label>
+                <input type="email" id="manualEmail" class="form-control" placeholder="morador@exemplo.com" required>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Unidade / Apto</label>
+                  <input type="text" id="manualApto" class="form-control" placeholder="Ex: Apt 502" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Telefone / WhatsApp</label>
+                  <input type="tel" id="manualTelefone" class="form-control" placeholder="(11) 99999-9999">
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem;">
+                <span class="material-symbols-outlined">check_circle</span> Liberar e Autorizar Acesso
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  submeterAddManual(e) {
+    e.preventDefault();
+    const nome = document.getElementById('manualNome').value.trim();
+    const email = document.getElementById('manualEmail').value.trim();
+    const apartamento = document.getElementById('manualApto').value.trim();
+    const telefone = document.getElementById('manualTelefone').value.trim();
+
+    const newMorador = window.CondoStore.addMorador({
+      nome,
+      email,
+      telefone,
+      apartamento,
+      cpf: 'Cadastrado Pelo Síndico'
+    });
+
+    window.CondoStore.updateMoradorStatus(newMorador.id, 'Aprovado');
+
+    App.showToast(`Morador "${nome}" cadastrado e APROVADO com sucesso!`, 'success');
+    document.getElementById('modalManualAdd').remove();
+    App.render();
   },
 
   aprovarMorador(id) {

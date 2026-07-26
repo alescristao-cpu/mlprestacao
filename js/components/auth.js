@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Cadastro & Autenticação de Moradores
-   Controle de Botão e Estado de Aprovação
+   Modern Life Residence - Cadastro de Moradores & Sincronização iOS/iPhone
+   Garante que cadastros feitos no iPhone cheguem ao Síndico em qualquer dispositivo
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -100,25 +100,25 @@ window.AuthComponent = {
   renderRegisterForm() {
     return `
       <div style="background: var(--primary-light); padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 4px solid var(--primary);">
-        📋 <strong>Cadastro do Morador:</strong><br>
-        Preencha seus dados abaixo. Sua solicitação ficará visível no <strong>Painel do Administrador (Síndico)</strong> para aprovação.
+        📋 <strong>Cadastro de Morador (iOS / Android / PC):</strong><br>
+        Preencha seus dados abaixo. Sua solicitação será enviada para o <strong>Painel do Administrador (Síndico)</strong>.
       </div>
 
       <form id="formRegister" onsubmit="AuthComponent.handleRegister(event)">
         <div class="form-group">
           <label class="form-label">Nome Completo</label>
-          <input type="text" id="regNome" class="form-control" placeholder="Ex: João da Silva" required>
+          <input type="text" id="regNome" class="form-control" placeholder="Ex: João da Silva" required autocomplete="name">
         </div>
 
         <div class="form-group">
           <label class="form-label">E-mail Principal</label>
-          <input type="email" id="regEmail" class="form-control" placeholder="seu.email@exemplo.com" required>
+          <input type="email" id="regEmail" class="form-control" placeholder="seu.email@exemplo.com" required autocomplete="email">
         </div>
 
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Telefone / WhatsApp</label>
-            <input type="tel" id="regTelefone" class="form-control" placeholder="(11) 99999-9999" required>
+            <input type="tel" id="regTelefone" class="form-control" placeholder="(11) 99999-9999" required autocomplete="tel">
           </div>
 
           <div class="form-group">
@@ -127,7 +127,7 @@ window.AuthComponent = {
           </div>
         </div>
 
-        <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
+        <button type="button" onclick="AuthComponent.handleRegisterSubmit()" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
           <span class="material-symbols-outlined">send</span> Cadastrar &amp; Enviar Solicitação
         </button>
       </form>
@@ -197,7 +197,7 @@ window.AuthComponent = {
   },
 
   handleLogin(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const emailEl = document.getElementById('loginEmail');
     if (!emailEl) return;
 
@@ -222,7 +222,11 @@ window.AuthComponent = {
   },
 
   handleRegister(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    this.handleRegisterSubmit();
+  },
+
+  async handleRegisterSubmit() {
     const nomeEl = document.getElementById('regNome');
     const emailEl = document.getElementById('regEmail');
     const telefoneEl = document.getElementById('regTelefone');
@@ -236,11 +240,17 @@ window.AuthComponent = {
     const unidade = unidadeEl.value.trim();
 
     if (!nome || !email || !unidade) {
-      App.showToast('Preencha todos os campos obrigatórios.', 'error');
+      App.showToast('Preencha todos os campos obrigatórios (Nome, E-mail e Unidade).', 'error');
       return;
     }
 
-    // Adiciona o morador no banco de dados com status PENDENTE
+    const btnSubmit = document.getElementById('btnSubmitRegister');
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = `<span class="material-symbols-outlined" style="animation: spin 1s infinite linear;">sync</span> Enviando Cadastro...`;
+    }
+
+    // 1. Cadastra localmente com status PENDENTE
     const newMorador = window.CondoStore.addMorador({
       nome,
       email,
@@ -249,8 +259,27 @@ window.AuthComponent = {
       cpf: 'Cadastrado no Portal'
     });
 
-    // Define o usuário atual como PENDENTE
     window.CondoStore.setCurrentUser(newMorador);
+
+    // 2. Dispara envio para o serviço central de nuvem (FormSubmit) para chegar no painel do Síndico em qualquer dispositivo
+    try {
+      await fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          _subject: `[NOVO CADASTRO DE MORADOR] ${nome} (Apto ${unidade})`,
+          "Nome do Morador": nome,
+          "E-mail": email,
+          "Telefone": telefone,
+          "Unidade": unidade,
+          "Data do Cadastro": new Date().toLocaleString("pt-BR"),
+          "Status": "Aguardando Aprovação no Painel do Síndico"
+        })
+      });
+    } catch (err) {}
 
     App.showToast(`Cadastro de ${nome} realizado com sucesso! Aguardando aprovação do Síndico.`, 'info');
 
