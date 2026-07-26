@@ -1,16 +1,13 @@
 /* ----------------------------------------------------
    Modern Life Residence - Service Worker (pwa)
-   Cache inteligente sem travamento no primeiro acesso
+   Cache inteligente v3 com atualização automática no Desktop
    ---------------------------------------------------- */
 
-const CACHE_NAME = 'modern-life-v2-cache';
+const CACHE_NAME = 'modern-life-v3-cache';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './assets/lnovo.jpeg',
-  './assets/logo.png',
-  './assets/images/IMG_2956.jpg',
-  './assets/images/IMG_2909.JPG',
   './css/main.css',
   './js/store.js',
   './js/firebase-config.js',
