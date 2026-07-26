@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Autenticação & Cadastro com Gmail
-   Permite ao morador usar e selecionar sua própria conta Gmail
+   Modern Life Residence - Autenticação & Cadastro com Senha
+   Exige senha de acesso individual no login e no cadastro
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -76,19 +76,24 @@ window.AuthComponent = {
 
       <div style="display: flex; align-items: center; margin: 1rem 0; color: var(--border-color);">
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
-        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou entrar por e-mail</span>
+        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou entrar por e-mail e senha</span>
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
       </div>
 
-      <!-- Formulário por E-mail -->
+      <!-- Formulário: Entrar com E-mail Cadastrado e Senha -->
       <form id="formLogin" onsubmit="event.preventDefault(); AuthComponent.handleLogin();">
         <div class="form-group">
           <label class="form-label">E-mail Cadastrado do Morador</label>
           <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required autocomplete="email">
         </div>
 
+        <div class="form-group">
+          <label class="form-label">Sua Senha de Acesso</label>
+          <input type="password" id="loginSenha" class="form-control" placeholder="Digite sua senha" required autocomplete="current-password">
+        </div>
+
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
-          <span class="material-symbols-outlined">login</span> Entrar com E-mail Cadastrado
+          <span class="material-symbols-outlined">login</span> Entrar com E-mail e Senha
         </button>
       </form>
     `;
@@ -111,7 +116,7 @@ window.AuthComponent = {
 
       <div style="display: flex; align-items: center; margin: 1rem 0; color: var(--border-color);">
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
-        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou preencha o formulário abaixo</span>
+        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou preencha os dados e crie sua senha</span>
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
       </div>
 
@@ -124,6 +129,11 @@ window.AuthComponent = {
         <div class="form-group">
           <label class="form-label">Seu E-mail (Gmail ou outro)</label>
           <input type="email" id="regEmail" class="form-control" placeholder="seu.email@gmail.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Crie Uma Senha de Acesso</label>
+          <input type="password" id="regSenha" class="form-control" placeholder="Crie sua senha de acesso" required autocomplete="new-password">
         </div>
 
         <div class="form-grid">
@@ -139,7 +149,7 @@ window.AuthComponent = {
         </div>
 
         <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem; font-weight: 700;">
-          <span class="material-symbols-outlined">how_to_reg</span> Cadastrar-se
+          <span class="material-symbols-outlined">how_to_reg</span> Cadastrar-se com Senha
         </button>
       </form>
     `;
@@ -208,8 +218,9 @@ window.AuthComponent = {
     const regEmailInput = document.getElementById('regEmail');
     if (regEmailInput) {
       regEmailInput.value = emailNorm;
-      regEmailInput.focus();
-      App.showToast(`E-mail ${emailNorm} inserido! Complete seu nome e apartamento abaixo.`, 'info');
+      const regSenha = document.getElementById('regSenha');
+      if (regSenha) regSenha.focus();
+      App.showToast(`E-mail ${emailNorm} inserido! Crie sua senha abaixo para concluir.`, 'info');
     } else {
       const res = window.FirebaseService.loginWithGoogle(emailNorm);
       if (res.success) {
@@ -235,56 +246,77 @@ window.AuthComponent = {
 
   handleLogin() {
     const emailEl = document.getElementById('loginEmail');
-    if (!emailEl) return;
+    const senhaEl = document.getElementById('loginSenha');
+
+    if (!emailEl || !senhaEl) return;
 
     const email = emailEl.value.trim();
-    if (!email) return;
+    const senha = senhaEl.value.trim();
+
+    if (!email || !senha) {
+      alert('Por favor, preencha o E-mail e a Senha para entrar.');
+      return;
+    }
 
     const user = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === email.toLowerCase());
 
-    if (user) {
-      window.CondoStore.setCurrentUser(user);
-      if (user.status === 'Aprovado') {
-        App.showToast(`Bem-vindo(a), ${user.nome}!`, 'success');
-      } else {
-        App.showToast('Seu cadastro está aguardando aprovação no Painel do Administrador (Síndico).', 'info');
-      }
-      const modal = document.getElementById('modalAuth');
-      if (modal) modal.remove();
-      App.render();
-    } else {
+    if (!user) {
       App.showToast('E-mail não encontrado. Por favor, cadastre-se primeiro.', 'error');
+      return;
     }
+
+    if (user.senha && user.senha !== senha) {
+      App.showToast('Senha incorreta! Verifique os dados digitados.', 'error');
+      return;
+    }
+
+    if (!user.senha) {
+      user.senha = senha;
+      window.CondoStore.saveData();
+    }
+
+    window.CondoStore.setCurrentUser(user);
+    if (user.status === 'Aprovado') {
+      App.showToast(`Bem-vindo(a), ${user.nome}!`, 'success');
+    } else {
+      App.showToast('Seu cadastro está aguardando aprovação no Painel do Administrador (Síndico).', 'info');
+    }
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.remove();
+    App.render();
   },
 
   handleRegisterSubmit() {
     const nomeEl = document.getElementById('regNome');
     const emailEl = document.getElementById('regEmail');
+    const senhaEl = document.getElementById('regSenha');
     const telefoneEl = document.getElementById('regTelefone');
     const unidadeEl = document.getElementById('regUnidade');
 
-    if (!nomeEl || !emailEl || !unidadeEl) return;
+    if (!nomeEl || !emailEl || !senhaEl || !unidadeEl) return;
 
     const nome = nomeEl.value.trim();
     const email = emailEl.value.trim();
+    const senha = senhaEl.value.trim();
     const telefone = telefoneEl ? telefoneEl.value.trim() : '';
     const unidade = unidadeEl.value.trim();
 
-    if (!nome || !email || !unidade) {
-      alert('Por favor, preencha todos os campos obrigatórios: Nome, E-mail e Unidade.');
+    if (!nome || !email || !senha || !unidade) {
+      alert('Por favor, preencha todos os campos obrigatórios: Nome, E-mail, Senha e Unidade.');
       return;
     }
 
     const result = window.CondoStore.addMorador({
       nome,
       email,
+      senha,
       telefone,
       apartamento: unidade,
-      cpf: 'Cadastrado no Portal'
+      cpf: 'Cadastrado com Senha no Portal'
     });
 
     if (!result.success) {
-      alert(`⚠️ CADASTRO DUPLICADO RECUSADO:\n\n${result.message}`);
+      alert(`⚠️ RECUSADO:\n\n${result.message}`);
       return;
     }
 
@@ -305,7 +337,7 @@ window.AuthComponent = {
       }).catch(function() {});
     } catch (e) {}
 
-    alert(`Cadastro de "${nome}" registrado com sucesso!\n\nA sua solicitação foi enviada. O acesso aos balancetes e documentos será liberado assim que o Síndico (Alessandro) aprovar no Painel.`);
+    alert(`Cadastro de "${nome}" registrado com sucesso com sua Senha!\n\nA sua solicitação foi enviada. O acesso aos balancetes e documentos será liberado assim que o Síndico (Alessandro) aprovar no Painel.`);
 
     const modal = document.getElementById('modalAuth');
     if (modal) modal.remove();

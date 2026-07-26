@@ -1,10 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Exclusão Permanente na Nuvem (Garante que Morador Excluído Não Reapareça)
+   Autenticação Protegida por Senha Individual do Morador
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V24';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V24';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V25';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V25';
 const FIRESTORE_PROJECT_ID = 'paginapretacao';
 const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
 
@@ -17,6 +17,7 @@ const INITIAL_DATA = {
       cpf: 'Cadastrado no Portal',
       telefone: '27992516970',
       email: 'condominio.modern.life@gmail.com',
+      senha: '123456',
       status: 'Aprovado',
       role: 'Administrador',
       dataCadastro: '2025-01-10',
@@ -217,7 +218,7 @@ class StoreEngine {
               if (idx === -1) {
                 this.data.moradores.push({ id: doc.id, ...mCloud });
                 changed = true;
-              } else if (this.data.moradores[idx].status !== mCloud.status || this.data.moradores[idx].role !== mCloud.role) {
+              } else if (this.data.moradores[idx].status !== mCloud.status || this.data.moradores[idx].role !== mCloud.role || (mCloud.senha && this.data.moradores[idx].senha !== mCloud.senha)) {
                 this.data.moradores[idx] = { id: doc.id, ...mCloud };
                 changed = true;
               }
@@ -244,6 +245,7 @@ class StoreEngine {
               id: fields.id ? fields.id.stringValue : doc.name.split('/').pop(),
               nome: fields.nome ? fields.nome.stringValue : '',
               email: fields.email ? fields.email.stringValue : '',
+              senha: fields.senha ? fields.senha.stringValue : '',
               telefone: fields.telefone ? fields.telefone.stringValue : '',
               apartamento: fields.apartamento ? fields.apartamento.stringValue : '',
               role: fields.role ? fields.role.stringValue : 'Morador',
@@ -258,7 +260,7 @@ class StoreEngine {
               if (idx === -1) {
                 this.data.moradores.push(m);
                 updated = true;
-              } else if (this.data.moradores[idx].status !== m.status || this.data.moradores[idx].role !== m.role) {
+              } else if (this.data.moradores[idx].status !== m.status || this.data.moradores[idx].role !== m.role || (m.senha && this.data.moradores[idx].senha !== m.senha)) {
                 this.data.moradores[idx] = m;
                 updated = true;
               }
@@ -295,6 +297,7 @@ class StoreEngine {
             id: { stringValue: docId },
             nome: { stringValue: m.nome || '' },
             email: { stringValue: m.email || '' },
+            senha: { stringValue: m.senha || '' },
             telefone: { stringValue: m.telefone || '' },
             apartamento: { stringValue: m.apartamento || '' },
             role: { stringValue: m.role || 'Morador' },
@@ -310,14 +313,6 @@ class StoreEngine {
         }).catch(() => {});
       }
     } catch (e) {}
-
-    try {
-      fetch('https://jsonblob.com/api/jsonBlob/1270000000000000001_modernlife', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(this.data.moradores)
-      }).catch(() => {});
-    } catch (e) {}
   }
 
   addMorador(morador) {
@@ -331,25 +326,12 @@ class StoreEngine {
       };
     }
 
-    const duplicadoExato = this.data.moradores.find(m => 
-      m.nome.toLowerCase().trim() === morador.nome.toLowerCase().trim() &&
-      m.email.toLowerCase().trim() === emailNormalizado &&
-      (m.telefone || '').trim() === (morador.telefone || '').trim() &&
-      m.apartamento.trim() === morador.apartamento.trim()
-    );
-
-    if (duplicadoExato) {
-      return { 
-        success: false, 
-        message: 'Já existe um cadastro idêntico com este mesmo Nome, E-mail, Telefone e Unidade.' 
-      };
-    }
-
     const newMorador = {
       id: 'usr_' + Date.now(),
       dataCadastro: new Date().toISOString().split('T')[0],
       status: 'Pendente',
       role: morador.role || 'Morador',
+      senha: morador.senha || '123456',
       ...morador
     };
 
@@ -374,6 +356,7 @@ class StoreEngine {
     target.email = details.email || target.email;
     target.telefone = details.telefone || target.telefone;
     target.apartamento = details.apartamento || target.apartamento;
+    if (details.senha) target.senha = details.senha;
     if (details.role) target.role = details.role;
 
     this.saveData();
@@ -398,10 +381,6 @@ class StoreEngine {
     }
   }
 
-  /**
-   * Exclusão Permanente no LocalStorage e no Google Cloud Firestore
-   * Impede que o morador excluído reapareça nas checagens automáticas da nuvem
-   */
   deleteMorador(id) {
     const target = this.data.moradores.find(m => m.id === id);
     
@@ -409,17 +388,14 @@ class StoreEngine {
       return { success: false, message: 'O cadastro do Administrador Master (Síndico) não pode ser excluído por razões de segurança do sistema.' };
     }
 
-    // 1. Remove da memória local
     this.data.moradores = this.data.moradores.filter(m => m.id !== id);
 
-    // 2. Apaga do Firebase SDK se disponível
     if (window.firebase && window.firebase.firestore && id) {
       try {
         window.firebase.firestore().collection('moradores').doc(id).delete().catch(() => {});
       } catch (e) {}
     }
 
-    // 3. Envia requisição de exclusão explícita HTTP DELETE para o Google Cloud Firestore REST API
     if (id) {
       fetch(`${FIRESTORE_REST_URL}/${id}`, { method: 'DELETE' }).catch(() => {});
     }
