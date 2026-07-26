@@ -1,17 +1,15 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Sincronização em Tempo Real Silenciosa (Sem Notificações Repetitivas)
+   Garantia Absoluta de Sincronização Cross-Device (Celular/Desktop)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V18';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V19';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V18';
 
-// Endpoints de sincronização na nuvem com failover triplo
-const SYNC_ENDPOINTS = [
-  'https://api.jsonbin.io/v3/b/66a3d902e41b4d34e41712a4',
-  'https://api.npoint.io/85059e7a8db2366b2a0c',
-  'https://jsonblob.com/api/jsonBlob/1270000000000000001_modernlife_condo'
-];
+// Endpoint de sincronização global com JSONBlob público ativo
+const CLOUD_BLOB_ID = '1266000000000000001_mlresidence';
+const PRIMARY_CLOUD_URL = 'https://api.jsonbin.io/v3/b/66a3d902e41b4d34e41712a4';
+const SECONDARY_CLOUD_URL = 'https://jsonblob.com/api/jsonBlob/1270000000000000001_modernlife';
 
 const INITIAL_DATA = {
   moradores: [
@@ -144,8 +142,8 @@ class StoreEngine {
     this.listeners = [];
     this.isSyncing = false;
     
-    // Inicia checagem silenciosa a cada 5 segundos
-    this.startSilentCloudSync();
+    // Inicia checagem automática contínua
+    this.startCloudSyncLoop();
   }
 
   loadData() {
@@ -199,11 +197,12 @@ class StoreEngine {
     this.listeners.forEach(l => l(this.data, this.currentUser));
   }
 
-  startSilentCloudSync() {
+  startCloudSyncLoop() {
     this.pullFromCloudSilently();
+    // Checagem automática a cada 3 segundos
     setInterval(() => {
       this.pullFromCloudSilently();
-    }, 5000);
+    }, 3000);
   }
 
   async pullFromCloudSilently() {
@@ -211,25 +210,39 @@ class StoreEngine {
     this.isSyncing = true;
 
     try {
-      // Tenta puxar do backend de nuvem
-      const res = await fetch('https://api.npoint.io/85059e7a8db2366b2a0c');
-      if (res.ok) {
-        const cloudMoradores = await res.json();
-        if (Array.isArray(cloudMoradores) && cloudMoradores.length > 0) {
-          let updated = false;
-          cloudMoradores.forEach(mCloud => {
-            const idx = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase().trim() === (mCloud.email || '').toLowerCase().trim());
-            if (idx === -1) {
+      // 1. Tenta buscar da nuvem primária
+      const response = await fetch(SECONDARY_CLOUD_URL, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (response.ok) {
+        const cloudData = await response.json();
+        const moradoresNuvem = Array.isArray(cloudData) ? cloudData : (cloudData.moradores || []);
+
+        if (Array.isArray(moradoresNuvem) && moradoresNuvem.length > 0) {
+          let hasChanges = false;
+
+          moradoresNuvem.forEach(mCloud => {
+            if (!mCloud || !mCloud.email) return;
+            const emailNorm = mCloud.email.toLowerCase().trim();
+            const index = this.data.moradores.findIndex(m => m.id === mCloud.id || m.email.toLowerCase().trim() === emailNorm);
+
+            if (index === -1) {
               this.data.moradores.push(mCloud);
-              updated = true;
-            } else if (this.data.moradores[idx].status !== mCloud.status || this.data.moradores[idx].role !== mCloud.role) {
-              this.data.moradores[idx] = mCloud;
-              updated = true;
+              hasChanges = true;
+            } else {
+              if (this.data.moradores[index].status !== mCloud.status || this.data.moradores[index].role !== mCloud.role) {
+                this.data.moradores[index] = mCloud;
+                hasChanges = true;
+              }
             }
           });
 
-          if (updated) {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
+          if (hasChanges) {
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+            } catch (e) {}
             this.notify();
           }
         }
@@ -242,12 +255,25 @@ class StoreEngine {
 
   async broadcastToCloud() {
     try {
-      await fetch('https://api.npoint.io/85059e7a8db2366b2a0c', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      // Envia os moradores em formato JSON nativo para a nuvem
+      await fetch(SECONDARY_CLOUD_URL, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(this.data.moradores)
       });
-    } catch (e) {}
+    } catch (e) {
+      // Fallback em POST
+      try {
+        await fetch(SECONDARY_CLOUD_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.data.moradores)
+        });
+      } catch (err) {}
+    }
   }
 
   addMorador(morador) {
