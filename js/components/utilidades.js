@@ -1,5 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Utilidades, Reservas & Sincronização Google Sheets
+   Modern Life Residence - Utilidades, Reservas & Boleto
+   Sigilo & Privacidade: Acesso exclusivo para moradores autorizados
    ---------------------------------------------------- */
 
 const GOOGLE_SHEETS_URL_KEY = 'MODERN_LIFE_SHEETS_SCRIPT_URL';
@@ -21,6 +22,28 @@ window.UtilidadesComponent = {
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
+
+    // Access Gate for non-approved visitors
+    if (!user || user.status !== 'Aprovado') {
+      container.innerHTML = `
+        <div class="card-widget" style="text-align: center; padding: 3.5rem 1.5rem; max-width: 600px; margin: 2rem auto;">
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
+            <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
+          </div>
+          <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Acesso Restrito: Utilidades, Reservas &amp; 2ª Via de Boleto
+          </h2>
+          <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem; line-height: 1.6;">
+            O agendamento de áreas comuns (piscina e academia), emissão de 2ª via de boleto condominial e reservas de salão de festas são exclusivos para moradores cadastrados e autorizados.
+          </p>
+          <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
+            <span class="material-symbols-outlined">login</span> Entrar / Cadastrar para Liberar Acesso
+          </button>
+        </div>
+      `;
+      return;
+    }
+
     const reservasExistentes = data.agendaReservas || [];
     const savedSheetsUrl = this.getSavedSheetsUrl();
 
@@ -75,7 +98,7 @@ window.UtilidadesComponent = {
           </div>
         </div>
 
-        <!-- Section 2: Agendamento de Piscina & Academia (Sincronização em Tempo Real) -->
+        <!-- Section 2: Agendamento de Piscina & Academia -->
         <div class="card-widget">
           <div class="card-header">
             <div>
@@ -83,7 +106,7 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined">pool</span> Agendamento de Piscina &amp; Academia
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                O morador escolhe o horário. Os dados são enviados em tempo real para a planilha do Google Sheets na portaria/administração com: <strong>Data | Horário | Nome | Unidade | Área</strong>.
+                Selecione a área comum e o horário desejado (slots de hora em hora).
               </p>
             </div>
 
@@ -91,12 +114,6 @@ window.UtilidadesComponent = {
               <span class="material-symbols-outlined">link</span> Link do Google Sheets
             </button>
           </div>
-
-          ${!user || user.status !== 'Aprovado' ? `
-            <div style="background: #FFF3E0; padding: 1rem; border-radius: var(--radius-sm); color: #E65100; font-size: 0.88rem; margin-bottom: 1rem;">
-              🔒 <strong>Atenção:</strong> Faça login para realizar o agendamento da piscina ou academia.
-            </div>
-          ` : ''}
 
           <form onsubmit="UtilidadesComponent.submeterAgendamento(event)" style="margin-bottom: 1.5rem;">
             <div class="form-grid">
@@ -121,8 +138,8 @@ window.UtilidadesComponent = {
               </div>
             </div>
 
-            <button type="submit" class="btn-primary" ${(!user || user.status !== 'Aprovado') ? 'disabled' : ''} style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento (Alimenta a Planilha Automaticamente)
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
+              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento
             </button>
           </form>
 
@@ -136,7 +153,7 @@ window.UtilidadesComponent = {
                   <th>Data</th>
                   <th>Horário</th>
                   <th>Nome do Morador</th>
-                  <th>Unidade</th>
+                  <th>Unidade / Apto</th>
                   <th>Área</th>
                 </tr>
               </thead>
@@ -157,7 +174,7 @@ window.UtilidadesComponent = {
           </div>
         </div>
 
-        <!-- Section 3: Reserva de Salão de Festas & Churrasqueira (Aplicativo Real Administradora) -->
+        <!-- Section 3: Reserva de Salão de Festas & Churrasqueira -->
         <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white;">
           <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
             <div style="flex: 1; min-width: 280px;">
@@ -214,7 +231,7 @@ window.UtilidadesComponent = {
           </div>
           <div class="modal-body">
             <p style="font-size: 0.88rem; color: var(--text-main); margin-bottom: 1rem;">
-              Cole o link da sua Web App do Google Apps Script abaixo. Sempre que um morador agendar o horário no portal, a planilha aberta no seu computador receberá uma nova linha com: <strong>Data | Horário | Nome | Unidade | Área</strong>.
+              Cole o link da sua Web App do Google Apps Script abaixo para alimentar sua planilha em tempo real.
             </p>
 
             <div class="form-group">
@@ -261,7 +278,6 @@ window.UtilidadesComponent = {
       area
     };
 
-    // 1. Atualiza quadro de agendamentos no portal (para conferência imediata na tela)
     window.CondoStore.addAgendamento({
       area,
       data,
@@ -271,7 +287,6 @@ window.UtilidadesComponent = {
       status: 'Confirmado'
     });
 
-    // 2. Envia em tempo real para o Google Sheets se houver link configurado
     const sheetsUrl = this.getSavedSheetsUrl();
     if (sheetsUrl) {
       try {
