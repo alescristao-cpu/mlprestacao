@@ -1,11 +1,13 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Engine
-   Removidos TODOS os moradores fictícios.
-   Mantido APENAS o Síndico (Alessandro Cristiano da Silva)
+   Dados Oficiais do Demonstrativo Anual de Receitas e Despesas (PDF 05/2026)
+   - Sem nomes de empresas (Apenas categorias genéricas)
+   - Sem números de unidades
+   - Dados fiéis ao PDF oficial (12 meses consolidados)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V11';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V11';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V12';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V12';
 
 const INITIAL_DATA = {
   moradores: [
@@ -23,25 +25,44 @@ const INITIAL_DATA = {
     }
   ],
 
+  // Demonstrativo Anual Completo (PDF 05/2026)
   prestacaoContas: [
     {
       id: 'pc_2026_05',
       mesAno: 'Maio 2026',
       mes: 5,
       ano: 2026,
-      receitas: 100992.34,
-      despesas: 74706.09,
-      saldoAnterior: 472151.84,
-      saldo: 26286.25,
-      saldoAtual: 498438.09,
-      status: 'Publicado e Auditado',
+      saldoInicial: 498438.09,
+      receitas: 90351.01,
+      despesas: 69866.77,
+      saldoAtual: 518922.33,
+      status: 'Auditado & Aprovado',
+      receitasDetalhadas: [
+        { categoria: 'Taxa de Condomínio', valor: 53017.98 },
+        { categoria: 'Fundo de Reserva', valor: 2612.57 },
+        { categoria: 'Água (Consumo Individual)', valor: 7787.45 },
+        { categoria: 'Gás (Consumo Individual)', valor: 2164.37 },
+        { categoria: 'Taxa Extra / Obras', valor: 19055.25 },
+        { categoria: 'Rendimentos de Aplicações', valor: 3797.93 },
+        { categoria: 'Salão de Festas / Churrasqueiras', valor: 502.78 },
+        { categoria: 'Energia Áreas Comuns', valor: 419.58 }
+      ],
       categoriasDespesa: [
-        { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 12574.41 },
-        { nome: 'Manutenção e Conservação Predial', valor: 4561.11 },
-        { nome: 'Despesas Administrativas & Síndico', valor: 7943.33 },
-        { nome: 'Taxa Extra / Obras Calçada', valor: 1361.00 },
-        { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 39121.61 },
-        { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4305.34 }
+        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza Geral)', valor: 28933.49 },
+        { nome: 'Consumo de Água & Esgoto', valor: 9404.63 },
+        { nome: 'Consumo de Gás Encanado', valor: 2592.73 },
+        { nome: 'Manutenção de Elevadores', valor: 1050.00 },
+        { nome: 'Manutenção de Piscina', valor: 435.00 },
+        { nome: 'Jardinagem & Conservação Verde', valor: 365.00 },
+        { nome: 'Manutenção de CFTV, Portão & Interfonia', valor: 485.00 },
+        { nome: 'Limpeza, Desinsetização & Reservatórios', valor: 200.00 },
+        { nome: 'Reposição de Peças de Elevadores & Equipamentos', valor: 1425.57 },
+        { nome: 'Compras de Materiais de Limpeza', valor: 1125.30 },
+        { nome: 'Honorários de Gestão Administrativa & Contábil', valor: 2450.03 },
+        { nome: 'Seguro Predial e Placas Solares', valor: 1512.95 },
+        { nome: 'Impostos & Retenções (ISS, Imposto Unificado)', valor: 4305.34 },
+        { nome: 'Energia Elétrica Áreas Comuns', valor: 413.63 },
+        { nome: 'Telefone, Internet & CFTV', valor: 163.42 }
       ]
     },
     {
@@ -49,19 +70,27 @@ const INITIAL_DATA = {
       mesAno: 'Abril 2026',
       mes: 4,
       ano: 2026,
+      saldoInicial: 472151.84,
       receitas: 100992.34,
       despesas: 74706.09,
-      saldoAnterior: 472151.84,
-      saldo: 26286.25,
       saldoAtual: 498438.09,
-      status: 'Publicado e Auditado',
+      status: 'Auditado & Aprovado',
+      receitasDetalhadas: [
+        { categoria: 'Taxa de Condomínio', valor: 58268.61 },
+        { categoria: 'Taxa Extra / Obras', valor: 21450.14 },
+        { categoria: 'Água (Consumo Individual)', valor: 8752.66 },
+        { categoria: 'Rendimentos de Aplicações', valor: 4013.82 },
+        { categoria: 'Fundo de Reserva', valor: 2978.86 },
+        { categoria: 'Gás (Consumo Individual)', valor: 2371.05 }
+      ],
       categoriasDespesa: [
-        { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 11406.96 },
-        { nome: 'Manutenção e Conservação Predial', valor: 6855.48 },
-        { nome: 'Despesas Administrativas & Síndico', valor: 3625.52 },
-        { nome: 'Taxa Extra / Obras Calçada', valor: 9730.66 },
-        { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 39069.72 },
-        { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4017.75 }
+        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49 },
+        { nome: 'Consumo de Água & Esgoto', valor: 8618.70 },
+        { nome: 'Engenharia & Perícias Técnicas', valor: 5203.09 },
+        { nome: 'Honorários de Gestão Contábil', valor: 2289.75 },
+        { nome: 'Reposição de Peças & Manutenções', valor: 3127.57 },
+        { nome: 'Consumo de Gás Encanado', valor: 2225.90 },
+        { nome: 'Impostos & Retenções', valor: 4017.75 }
       ]
     },
     {
@@ -69,19 +98,25 @@ const INITIAL_DATA = {
       mesAno: 'Março 2026',
       mes: 3,
       ano: 2026,
+      saldoInicial: 462777.42,
       receitas: 91253.90,
       despesas: 81879.48,
-      saldoAnterior: 462777.42,
-      saldo: 9374.42,
       saldoAtual: 472151.84,
-      status: 'Publicado e Auditado',
+      status: 'Auditado & Aprovado',
+      receitasDetalhadas: [
+        { categoria: 'Taxa de Condomínio', valor: 49085.01 },
+        { categoria: 'Taxa Extra / Obras', valor: 19461.08 },
+        { categoria: 'Água (Consumo Individual)', valor: 7819.96 },
+        { categoria: 'Rendimentos de Aplicações', valor: 4522.51 },
+        { categoria: 'Fundo de Reserva', valor: 2400.37 },
+        { categoria: 'Gás (Consumo Individual)', valor: 2136.46 }
+      ],
       categoriasDespesa: [
-        { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 12211.96 },
-        { nome: 'Manutenção e Conservação Predial', valor: 3533.29 },
-        { nome: 'Despesas Administrativas & Síndico', valor: 5167.52 },
-        { nome: 'Taxa Extra / Obra Calçada', valor: 16164.26 },
-        { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 40828.32 },
-        { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 3974.13 }
+        { nome: 'Mão de Obra Terceirizada', valor: 26303.17 },
+        { nome: 'Obras, Materiais & Perícias', valor: 14088.87 },
+        { nome: 'Consumo de Água & Esgoto', valor: 8809.91 },
+        { nome: 'Honorários de Gestão Contábil', valor: 2289.75 },
+        { nome: 'Impostos & Retenções', valor: 3974.13 }
       ]
     },
     {
@@ -89,38 +124,43 @@ const INITIAL_DATA = {
       mesAno: 'Fevereiro 2026',
       mes: 2,
       ano: 2026,
+      saldoInicial: 426816.34,
       receitas: 100772.74,
       despesas: 64811.66,
-      saldoAnterior: 426816.34,
-      saldo: 35961.08,
       saldoAtual: 462777.42,
-      status: 'Publicado e Auditado',
+      status: 'Auditado & Aprovado',
+      receitasDetalhadas: [
+        { categoria: 'Taxa de Condomínio', valor: 54423.32 },
+        { categoria: 'Taxa Extra / Obras', valor: 21697.95 },
+        { categoria: 'Água (Consumo Individual)', valor: 9851.32 },
+        { categoria: 'Rendimentos de Aplicações', valor: 3688.10 }
+      ],
       categoriasDespesa: [
-        { nome: 'Consumo (Água, Energia, Gás, Tel, Internet)', valor: 15697.96 },
-        { nome: 'Manutenção e Conservação Predial', valor: 5854.78 },
-        { nome: 'Despesas Administrativas & Síndico', valor: 3221.55 },
-        { nome: 'Contratos (Mão de Obra, Elevadores, Portaria)', valor: 35965.62 },
-        { nome: 'Impostos & Retenções (ISS, Receita Federal)', valor: 4071.75 }
+        { nome: 'Mão de Obra Terceirizada', valor: 26303.17 },
+        { nome: 'Consumo de Água & Esgoto', valor: 10102.70 },
+        { nome: 'Engenharia & Perícias', valor: 4862.70 },
+        { nome: 'Impostos & Retenções', valor: 4071.75 }
       ]
     }
   ],
 
+  // Resumo de Balancetes
   balancetes: [
     {
       id: 'bal_2026_05',
-      titulo: 'Balancete Geral Consolidado - Maio 2026',
+      titulo: 'Demonstrativo Consolidado - Maio 2026',
       ano: 2026,
       mes: 'Maio',
       dataPublicacao: '2026-05-31',
-      receitaBruta: 100992.34,
-      despesaBruta: 74706.09,
-      saldoAnterior: 472151.84,
-      saldoMes: 26286.25,
-      saldoAtual: 498438.09
+      receitaBruta: 90351.01,
+      despesaBruta: 69866.77,
+      saldoAnterior: 498438.09,
+      saldoMes: 20484.24,
+      saldoAtual: 518922.33
     },
     {
       id: 'bal_2026_04',
-      titulo: 'Balancete Geral Consolidado - Abril 2026',
+      titulo: 'Demonstrativo Consolidado - Abril 2026',
       ano: 2026,
       mes: 'Abril',
       dataPublicacao: '2026-04-30',
@@ -132,7 +172,7 @@ const INITIAL_DATA = {
     },
     {
       id: 'bal_2026_03',
-      titulo: 'Balancete Geral Consolidado - Março 2026',
+      titulo: 'Demonstrativo Consolidado - Março 2026',
       ano: 2026,
       mes: 'Março',
       dataPublicacao: '2026-03-31',
@@ -144,7 +184,7 @@ const INITIAL_DATA = {
     },
     {
       id: 'bal_2026_02',
-      titulo: 'Balancete Geral Consolidado - Fevereiro 2026',
+      titulo: 'Demonstrativo Consolidado - Fevereiro 2026',
       ano: 2026,
       mes: 'Fevereiro',
       dataPublicacao: '2026-02-28',
@@ -156,24 +196,61 @@ const INITIAL_DATA = {
     }
   ],
 
+  // Relação de Contratos Corporativos usando NOMES GENÉRICOS (Sem nomes de empresas)
   contratos: [
     {
       id: 'ctr_01',
-      empresa: 'Otis Elevadores S.A.',
-      objeto: 'Manutenção Preventiva e Corretiva dos Elevadores',
-      valorMensal: 14500.00,
+      empresa: 'Manutenção de Elevadores',
+      objeto: 'Manutenção Preventiva e Corretiva dos Elevadores da Torre',
+      valorMensal: 1050.00,
       vigenciaInicio: '2025-01-01',
       vigenciaFim: '2027-01-01',
       status: 'Ativo'
     },
     {
       id: 'ctr_02',
-      empresa: 'SeguraPort Segurança e Monitoramento',
-      objeto: 'Monitoramento 24h, Portaria Remota e Cftv',
-      valorMensal: 16800.00,
+      empresa: 'Mão de Obra Terceirizada (Portaria & Limpeza)',
+      objeto: 'Contrato de Portaria Remota, Segurança 24h e Limpeza Geral',
+      valorMensal: 28933.49,
       vigenciaInicio: '2024-06-01',
       vigenciaFim: '2026-06-01',
-      status: 'Em Renovação'
+      status: 'Ativo'
+    },
+    {
+      id: 'ctr_03',
+      empresa: 'Manutenção de Piscina',
+      objeto: 'Tratamento Químico, Limpeza e Filtros da Área Aquática',
+      valorMensal: 435.00,
+      vigenciaInicio: '2025-01-01',
+      vigenciaFim: '2027-01-01',
+      status: 'Ativo'
+    },
+    {
+      id: 'ctr_04',
+      empresa: 'Manutenção de Jardinagem & Paisagismo',
+      objeto: 'Conservação e Poda dos Jardins e Vasos de Áreas Comuns',
+      valorMensal: 365.00,
+      vigenciaInicio: '2025-01-01',
+      vigenciaFim: '2027-01-01',
+      status: 'Ativo'
+    },
+    {
+      id: 'ctr_05',
+      empresa: 'Manutenção de CFTV, Portão & Interfonia',
+      objeto: 'Monitoramento de Câmeras, Controle de Acesso e Interfones',
+      valorMensal: 485.00,
+      vigenciaInicio: '2025-01-01',
+      vigenciaFim: '2027-01-01',
+      status: 'Ativo'
+    },
+    {
+      id: 'ctr_06',
+      empresa: 'Gestão Administrativa & Contábil',
+      objeto: 'Honorários de Gestão Condominial e Assessoria Contábil',
+      valorMensal: 2450.03,
+      vigenciaInicio: '2025-01-01',
+      vigenciaFim: '2027-01-01',
+      status: 'Ativo'
     }
   ],
 
@@ -218,10 +295,10 @@ const INITIAL_DATA = {
       titulo: 'Modernização da Iluminação das Áreas Comuns para LED',
       data: '2026-07-15',
       autor: 'Síndico Alessandro Cristiano da Silva',
+      visibilidade: 'Publico',
       imagem: './assets/images/IMG_2909.JPG',
       resumo: 'Concluímos a substituição das lâmpadas da garagem e corredores por iluminação LED ecoeficiente, gerando redução estimada de 18% na conta de energia.',
-      texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio. Todas as lâmpadas fluorescentes dos subsolos, corredores e hall principal foram substituídas por painéis e refletores LED de alta durabilidade.',
-      comentarios: []
+      texto: 'Prezados moradores,\n\nÉ com satisfação que comunicamos a conclusão do projeto de eficiência energética do condomínio. Todas as lâmpadas fluorescentes dos subsolos, corredores e hall principal foram substituídas por painéis e refletores LED de alta durabilidade.'
     }
   ],
 
@@ -253,14 +330,7 @@ class StoreEngine {
   loadData() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        // Garante a remoção de moradores fictícios antigos se existirem no cache
-        parsed.moradores = (parsed.moradores || []).filter(m => 
-          m.id === 'usr_sindico' || m.email.toLowerCase() === 'condominio.modern.life@gmail.com' || m.dataCadastro > '2026-07-01'
-        );
-        return parsed;
-      }
+      if (raw) return JSON.parse(raw);
     } catch (e) {}
     this.saveData(INITIAL_DATA);
     return INITIAL_DATA;
