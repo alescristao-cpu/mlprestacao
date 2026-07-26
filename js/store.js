@@ -1,10 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Mock Data
-   Síndico: Alessandro Cristiano da Silva (Sem número de unidade)
-   Aprovação Direta no Painel do Administrador
+   Síndico: Alessandro Cristiano da Silva
+   Aprovação e Exclusão de Cadastros de Moradores
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V7';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V8';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER';
 
 const INITIAL_DATA = {
@@ -325,7 +325,7 @@ class StoreEngine {
     const newMorador = {
       id: 'usr_' + Date.now(),
       dataCadastro: new Date().toISOString().split('T')[0],
-      status: 'Pendente', // Aguarda aprovação direta pelo Síndico no Painel do Administrador
+      status: 'Pendente',
       role: 'Morador',
       ...morador
     };
@@ -345,6 +345,19 @@ class StoreEngine {
         this.setCurrentUser(this.currentUser);
       }
     }
+  }
+
+  deleteMorador(id) {
+    const target = this.data.moradores.find(m => m.id === id);
+    
+    // Regra de segurança: Impede exclusão da conta do Administrador (Síndico)
+    if (target && (target.role === 'Administrador' || target.id === 'usr_sindico' || target.email.toLowerCase() === 'condominio.modern.life@gmail.com')) {
+      return { success: false, message: 'O cadastro do Administrador Master (Síndico) não pode ser excluído por razões de segurança do sistema.' };
+    }
+
+    this.data.moradores = this.data.moradores.filter(m => m.id !== id);
+    this.saveData();
+    return { success: true };
   }
 
   addOcorrencia(oco) {

@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
-   Síndico: Alessandro Cristiano da Silva (Sem número de unidade)
-   Aprovação Direta de Cadastros de Moradores
+   Síndico: Alessandro Cristiano da Silva
+   Gerenciamento, Aprovação e Exclusão de Cadastros
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -16,7 +16,7 @@ window.AdminComponent = {
             Acesso Restrito à Administração
           </h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0;">
-            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação de cadastros de moradores e gestão condominial.
+            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para aprovação, gestão e exclusão de cadastros de moradores.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()">
             <span class="material-symbols-outlined">login</span> Entrar como Síndico / Administrador
@@ -49,7 +49,7 @@ window.AdminComponent = {
             </div>
             <div style="text-align: right;">
               <span class="badge badge-warning" style="font-size: 0.95rem; padding: 0.5rem 0.9rem;">
-                ${pendentes.length} Cadastros Aguardando Aprovação
+                ${pendentes.length} Cadastros Pendentes
               </span>
             </div>
           </div>
@@ -59,17 +59,17 @@ window.AdminComponent = {
         <div class="card-widget" style="border: 2px solid #FFE0B2;">
           <div class="card-header" style="background: #FFF8E1; padding: 1rem; border-radius: var(--radius-sm);">
             <div class="card-title" style="color: #E65100;">
-              <span class="material-symbols-outlined" style="font-size: 1.6rem;">how_to_reg</span> Solicitações de Cadastro de Moradores (${pendentes.length})
+              <span class="material-symbols-outlined" style="font-size: 1.6rem;">how_to_reg</span> Solicitações de Cadastro Aguardando Aprovação (${pendentes.length})
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">
-              Clique em <strong>"Autorizar Acesso"</strong> para liberar o acesso do morador às pastas e balancetes imediatamente.
+              Clique em <strong>"Autorizar Acesso"</strong> para aprovar ou em <strong>"Excluir"</strong> para remover a solicitação.
             </p>
           </div>
 
           ${pendentes.length === 0 ? `
             <div style="padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.92rem;">
               <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.5; display: block; margin-bottom: 0.4rem;">check_circle</span>
-              Nenhum cadastro de morador aguardando aprovação no momento. Todos os cadastros foram avaliados.
+              Nenhum cadastro de morador aguardando aprovação no momento.
             </div>
           ` : `
             <div class="table-responsive" style="margin-top: 1rem;">
@@ -80,8 +80,8 @@ window.AdminComponent = {
                     <th>Unidade</th>
                     <th>E-mail</th>
                     <th>Telefone</th>
-                    <th>Data do Cadastro</th>
-                    <th style="text-align: center;">Ação do Síndico</th>
+                    <th>Data Cadastro</th>
+                    <th style="text-align: center;">Ações do Síndico</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -93,12 +93,12 @@ window.AdminComponent = {
                       <td>${p.telefone || 'Não informado'}</td>
                       <td>${p.dataCadastro}</td>
                       <td style="text-align: center;">
-                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                          <button class="btn-primary btn-sm" style="background: #2E6B42; padding: 0.5rem 0.85rem; font-weight: 700;" onclick="AdminComponent.aprovarMorador('${p.id}')">
-                            <span class="material-symbols-outlined" style="font-size: 1rem;">check_circle</span> Autorizar Acesso
+                        <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap;">
+                          <button class="btn-primary btn-sm" style="background: #2E6B42; font-weight: 700;" onclick="AdminComponent.aprovarMorador('${p.id}')">
+                            <span class="material-symbols-outlined" style="font-size: 1rem;">check_circle</span> Autorizar
                           </button>
-                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.rejeitarMorador('${p.id}')">
-                            Rejeitar
+                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.excluirMorador('${p.id}', '${p.nome}')">
+                            <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span> Excluir
                           </button>
                         </div>
                       </td>
@@ -126,19 +126,37 @@ window.AdminComponent = {
                   <th>Unidade</th>
                   <th>E-mail</th>
                   <th>Perfil</th>
-                  <th>Status do Acesso</th>
+                  <th>Status</th>
+                  <th style="text-align: center;">Ações</th>
                 </tr>
               </thead>
               <tbody>
-                ${aprovados.map(m => `
-                  <tr>
-                    <td><strong>${m.nome}</strong></td>
-                    <td>Apto ${m.apartamento} - Bloco ${m.bloco || 'A'}</td>
-                    <td>${m.email}</td>
-                    <td><span class="badge badge-info">${m.role}</span></td>
-                    <td><span class="badge badge-success">${m.status}</span></td>
-                  </tr>
-                `).join('')}
+                ${aprovados.map(m => {
+                  const isAdmin = m.role === 'Administrador' || m.id === 'usr_sindico' || m.email.toLowerCase() === 'condominio.modern.life@gmail.com';
+                  return `
+                    <tr>
+                      <td>
+                        <strong>${m.nome}</strong>
+                        ${isAdmin ? '<span class="badge badge-info" style="margin-left: 6px;">Síndico Master</span>' : ''}
+                      </td>
+                      <td>Apto ${m.apartamento} - Bloco ${m.bloco || 'A'}</td>
+                      <td>${m.email}</td>
+                      <td><span class="badge badge-info">${m.role}</span></td>
+                      <td><span class="badge badge-success">${m.status}</span></td>
+                      <td style="text-align: center;">
+                        ${isAdmin ? `
+                          <span style="font-size: 0.78rem; color: var(--text-muted); font-style: italic;">
+                            <span class="material-symbols-outlined" style="font-size: 0.9rem; vertical-align: middle;">lock</span> Não Excluível
+                          </span>
+                        ` : `
+                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.4rem 0.75rem;" onclick="AdminComponent.excluirMorador('${m.id}', '${m.nome}')">
+                            <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir Cadastro
+                          </button>
+                        `}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -154,9 +172,17 @@ window.AdminComponent = {
     App.render();
   },
 
-  rejeitarMorador(id) {
-    window.CondoStore.updateMoradorStatus(id, 'Rejeitado');
-    App.showToast('Solicitação de cadastro rejeitada.', 'info');
-    App.render();
+  excluirMorador(id, nome) {
+    if (!confirm(`Tem certeza que deseja EXCLUIR permanentemente o cadastro de "${nome}"?`)) {
+      return;
+    }
+
+    const res = window.CondoStore.deleteMorador(id);
+    if (res.success) {
+      App.showToast(`Cadastro de "${nome}" foi excluído com sucesso.`, 'success');
+      App.render();
+    } else {
+      alert(res.message);
+    }
   }
 };
