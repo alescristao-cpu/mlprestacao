@@ -2,7 +2,7 @@
  * Google Apps Script - Condomínio Modern Life Residence
  * Conta oficial: condominio.modern.life@gmail.com
  * 
- * Envio automático de agendamentos para as planilhas:
+ * Envio automático de agendamentos para as planilhas do Google Drive:
  * 🏊 piscina.xls (para reservas de Piscina)
  * 🏋️ academia.xls (para reservas de Academia)
  */
@@ -22,19 +22,19 @@ function doPost(e) {
     // Se a planilha estiver vazia, adiciona os cabeçalhos formatados
     if (sheet.getLastRow() === 0) {
       sheet.appendRow([
-        "Data",
+        "Data do Uso",
         "Horário",
         "Nome do Morador",
         "Unidade / Apto",
         "Área Comum",
         "E-mail",
-        "Data do Registro"
+        "Data do Registro no Sistema"
       ]);
       sheet.getRange(1, 1, 1, 7).setFontWeight("bold").setBackground("#2E6B42").setFontColor("#FFFFFF");
       sheet.setFrozenRows(1);
     }
 
-    // Registra a reserva
+    // Registra a reserva na planilha
     sheet.appendRow([
       data.data,
       data.horario,
@@ -63,13 +63,12 @@ function getOrCreateSpreadsheet(fileName) {
     var file = files.next();
     return SpreadsheetApp.open(file);
   } else {
-    // Procura também sem a extensão .xls se não achar
     var cleanName = fileName.replace(".xls", "");
     var cleanFiles = DriveApp.getFilesByName(cleanName);
     if (cleanFiles.hasNext()) {
       return SpreadsheetApp.open(cleanFiles.next());
     }
-    // Se não existir nenhuma das duas no Google Drive, cria a nova planilha automaticamente
+    // Cria a nova planilha no Google Drive se não existir
     var newSs = SpreadsheetApp.create(fileName);
     return newSs;
   }

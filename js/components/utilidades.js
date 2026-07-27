@@ -1,7 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Utilidades, Reservas & Integração Google Drive
-   Alimenta piscina.xls e academia.xls no Drive de condominio.modern.life@gmail.com
-   Opção "Conexão Google Drive" visível APENAS para o Administrador (Síndico)
+   Exportação e Alimenta piscina.xls e academia.xls no Drive de condominio.modern.life@gmail.com
    ---------------------------------------------------- */
 
 const GOOGLE_SHEETS_URL_KEY = 'MODERN_LIFE_SHEETS_SCRIPT_URL';
@@ -24,7 +23,6 @@ window.UtilidadesComponent = {
   render(container, data) {
     const user = window.CondoStore.currentUser;
 
-    // Access Gate for non-approved visitors
     if (!user || user.status !== 'Aprovado') {
       container.innerHTML = `
         <div class="card-widget" style="text-align: center; padding: 3.5rem 1.5rem; max-width: 600px; margin: 2rem auto;">
@@ -107,15 +105,24 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined">pool</span> Agendamento de Piscina &amp; Academia
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                Selecione a área comum e o horário desejado (slots de hora em hora).
+                Os agendamentos são salvos no banco de dados e sincronizados em tempo real entre todos os dispositivos.
               </p>
             </div>
 
-            ${isSindico ? `
-              <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.openGoogleSheetsConfig()">
-                <span class="material-symbols-outlined">link</span> Conexão Google Drive
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.exportarPlanilha('Piscina')">
+                <span class="material-symbols-outlined">download</span> 📥 Exportar piscina.xls
               </button>
-            ` : ''}
+              <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.exportarPlanilha('Academia')">
+                <span class="material-symbols-outlined">download</span> 📥 Exportar academia.xls
+              </button>
+
+              ${isSindico ? `
+                <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.openGoogleSheetsConfig()">
+                  <span class="material-symbols-outlined">link</span> Conexão Google Drive
+                </button>
+              ` : ''}
+            </div>
           </div>
 
           <form onsubmit="UtilidadesComponent.submeterAgendamento(event)" style="margin-bottom: 1.5rem;">
@@ -142,12 +149,12 @@ window.UtilidadesComponent = {
             </div>
 
             <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento
+              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento (Enviar para Banco de Dados &amp; Google Drive)
             </button>
           </form>
 
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-            Quadro de Agendamentos Confirmados (Conferência na Tela)
+            Quadro de Agendamentos Confirmados (Banco de Dados em Tempo Real)
           </h4>
           <div class="table-responsive">
             <table class="custom-table" id="tableReservas">
@@ -158,11 +165,12 @@ window.UtilidadesComponent = {
                   <th>Nome do Morador</th>
                   <th>Unidade / Apto</th>
                   <th>Área Reservada</th>
+                  <th>E-mail</th>
                 </tr>
               </thead>
               <tbody>
                 ${reservasExistentes.length === 0 ? `
-                  <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum agendamento registrado ainda.</td></tr>
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento registrado ainda.</td></tr>
                 ` : reservasExistentes.map(r => `
                   <tr>
                     <td><strong>${r.data}</strong></td>
@@ -170,6 +178,7 @@ window.UtilidadesComponent = {
                     <td>${r.moradorNome}</td>
                     <td>Apto ${r.apartamento || 'Morador'}</td>
                     <td><span class="badge badge-success">${r.area}</span></td>
+                    <td style="font-size: 0.8rem; color: var(--text-muted);">${r.email || '-'}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -188,7 +197,7 @@ window.UtilidadesComponent = {
                 Reserva de Salão de Festas &amp; Churrasqueira
               </h3>
               <p style="font-size: 0.9rem; opacity: 0.95; line-height: 1.6; margin-bottom: 1.25rem;">
-                Para solicitar a reserva do Salão de Festas ou da Churrasqueira, baixe o aplicativo oficial no link abaixo e escaneie o QR CODE de acordo com o sistema do seu aparelho:
+                Para solicitar a reserva do Salão de Festas ou da Churrasqueira, baixe o aplicativo oficial no link abaixo:
               </p>
 
               <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
@@ -217,6 +226,34 @@ window.UtilidadesComponent = {
     `;
   },
 
+  exportarPlanilha(areaFiltro) {
+    const reservas = (window.CondoStore.data.agendaReservas || []).filter(r => r.area.toLowerCase().includes(areaFiltro.toLowerCase()));
+    
+    if (reservas.length === 0) {
+      alert(`Nenhum agendamento de ${areaFiltro} encontrado para exportação.`);
+      return;
+    }
+
+    const fileName = areaFiltro.toLowerCase().includes('piscina') ? 'piscina.xls' : 'academia.xls';
+
+    let csvContent = "Data\tHorario\tNome do Morador\tUnidade / Apto\tArea Comum\tEmail\tStatus\n";
+
+    reservas.forEach(r => {
+      csvContent += `${r.data}\t${r.horario}\t${r.moradorNome}\tApto ${r.apartamento}\t${r.area}\t${r.email || ''}\t${r.status || 'Confirmado'}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", fileName);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    App.showToast(`Planilha ${fileName} exportada com sucesso!`, 'success');
+  },
+
   openGoogleSheetsConfig() {
     const existing = document.getElementById('modalSheetsConfig');
     if (existing) existing.remove();
@@ -234,7 +271,7 @@ window.UtilidadesComponent = {
           </div>
           <div class="modal-body">
             <p style="font-size: 0.88rem; color: var(--text-main); margin-bottom: 1rem;">
-              Cole abaixo o link do Web App do Google Apps Script configurado na conta <code>condominio.modern.life@gmail.com</code>.
+              Cole abaixo o link do Web App do Google Apps Script configurado na conta <code>condominio.modern.life@gmail.com</code> para atualizar automaticamente as planilhas <code>piscina.xls</code> e <code>academia.xls</code> no Google Drive.
             </p>
 
             <div class="form-group">
@@ -291,6 +328,7 @@ window.UtilidadesComponent = {
       horario,
       moradorNome: user.nome,
       apartamento: user.apartamento,
+      email: user.email,
       status: 'Confirmado'
     });
 
@@ -306,7 +344,7 @@ window.UtilidadesComponent = {
       } catch (err) {}
     }
 
-    App.showToast(`Agendamento de ${area} (${horario}) confirmado!`, 'success');
+    App.showToast(`Agendamento de ${area} (${horario}) gravado no Banco de Dados!`, 'success');
     App.render();
   }
 };

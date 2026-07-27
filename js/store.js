@@ -1,12 +1,14 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Autenticação Protegida por Senha Individual do Morador
+   Sincronização de Moradores e Reservas (Piscina & Academia)
+   Conexão Nativa Google Cloud Firestore 'paginapretacao'
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V25';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V25';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V26';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V26';
 const FIRESTORE_PROJECT_ID = 'paginapretacao';
 const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
+const FIRESTORE_RESERVAS_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/reservas`;
 
 const INITIAL_DATA = {
   moradores: [
@@ -206,31 +208,7 @@ class StoreEngine {
     this.isSyncing = true;
 
     try {
-      if (window.firebase && window.firebase.firestore) {
-        try {
-          const db = window.firebase.firestore();
-          const snapshot = await db.collection('moradores').get();
-          if (!snapshot.empty) {
-            let changed = false;
-            snapshot.forEach(doc => {
-              const mCloud = doc.data();
-              const idx = this.data.moradores.findIndex(m => m.id === doc.id || m.email.toLowerCase().trim() === (mCloud.email || '').toLowerCase().trim());
-              if (idx === -1) {
-                this.data.moradores.push({ id: doc.id, ...mCloud });
-                changed = true;
-              } else if (this.data.moradores[idx].status !== mCloud.status || this.data.moradores[idx].role !== mCloud.role || (mCloud.senha && this.data.moradores[idx].senha !== mCloud.senha)) {
-                this.data.moradores[idx] = { id: doc.id, ...mCloud };
-                changed = true;
-              }
-            });
-            if (changed) {
-              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
-              this.notify();
-            }
-          }
-        } catch (err) {}
-      }
-
+      // 1. Moradores da Nuvem
       const response = await fetch(FIRESTORE_REST_URL, { method: 'GET' });
       if (response.ok) {
         const json = await response.json();
@@ -273,6 +251,44 @@ class StoreEngine {
           }
         }
       }
+
+      // 2. Reservas da Nuvem (Piscina & Academia)
+      const resReservas = await fetch(FIRESTORE_RESERVAS_URL, { method: 'GET' });
+      if (resReservas.ok) {
+        const jsonRes = await resReservas.json();
+        const docReservas = jsonRes.documents || [];
+
+        if (docReservas.length > 0) {
+          if (!this.data.agendaReservas) this.data.agendaReservas = [];
+          let resUpdated = false;
+
+          docReservas.forEach(doc => {
+            const f = doc.fields || {};
+            const r = {
+              id: f.id ? f.id.stringValue : doc.name.split('/').pop(),
+              area: f.area ? f.area.stringValue : 'Piscina',
+              data: f.data ? f.data.stringValue : '',
+              horario: f.horario ? f.horario.stringValue : '',
+              moradorNome: f.moradorNome ? f.moradorNome.stringValue : '',
+              apartamento: f.apartamento ? f.apartamento.stringValue : '',
+              email: f.email ? f.email.stringValue : '',
+              status: f.status ? f.status.stringValue : 'Confirmado'
+            };
+
+            const idx = this.data.agendaReservas.findIndex(item => item.id === r.id);
+            if (idx === -1) {
+              this.data.agendaReservas.unshift(r);
+              resUpdated = true;
+            }
+          });
+
+          if (resUpdated) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
+            this.notify();
+          }
+        }
+      }
+
     } catch (e) {
     } finally {
       this.isSyncing = false;
@@ -280,15 +296,7 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
-    if (window.firebase && window.firebase.firestore) {
-      try {
-        const db = window.firebase.firestore();
-        this.data.moradores.forEach(async (m) => {
-          await db.collection('moradores').doc(m.id).set(m, { merge: true });
-        });
-      } catch (e) {}
-    }
-
+    // 1. Transmite Moradores
     try {
       for (const m of this.data.moradores) {
         const docId = m.id || 'usr_' + Date.now();
@@ -307,6 +315,31 @@ class StoreEngine {
         };
 
         fetch(`${FIRESTORE_REST_URL}?documentId=${docId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(() => {});
+      }
+    } catch (e) {}
+
+    // 2. Transmite Reservas de Piscina e Academia para a Nuvem
+    try {
+      for (const r of (this.data.agendaReservas || [])) {
+        const resDocId = r.id || 'res_' + Date.now();
+        const payload = {
+          fields: {
+            id: { stringValue: resDocId },
+            area: { stringValue: r.area || 'Piscina' },
+            data: { stringValue: r.data || '' },
+            horario: { stringValue: r.horario || '' },
+            moradorNome: { stringValue: r.moradorNome || '' },
+            apartamento: { stringValue: `${r.apartamento || ''}` },
+            email: { stringValue: r.email || '' },
+            status: { stringValue: r.status || 'Confirmado' }
+          }
+        };
+
+        fetch(`${FIRESTORE_RESERVAS_URL}?documentId=${resDocId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
