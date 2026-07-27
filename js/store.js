@@ -1,10 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Banco de Dados 100% Exclusivo Supabase PostgreSQL
+   Suporte Completo a Gestão e Visibilidade por Perfil de Documentos
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V32';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V32';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V33';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V33';
 
 const INITIAL_DATA = {
   moradores: [
@@ -103,9 +103,19 @@ const INITIAL_DATA = {
 
   documentos: [
     {
+      id: 'doc_sistema_md',
+      nome: 'Manual de Operação & Documentação Técnica do Portal',
+      categoria: 'Manuais',
+      visibilidade: 'Sindico',
+      dataUpload: '2026-07-27',
+      tamanho: '15 KB',
+      arquivo: 'DOCUMENTACAO_SISTEMA.md'
+    },
+    {
       id: 'doc_01',
       nome: 'Convenção do Condomínio Modern Life Residence',
       categoria: 'Convenção',
+      visibilidade: 'Moradores',
       dataUpload: '2024-01-15',
       tamanho: '4.2 MB',
       arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
@@ -183,6 +193,24 @@ class StoreEngine {
       sindico.status = 'Aprovado';
       if (!sindico.senha) sindico.senha = 'ModernLife2026';
     }
+
+    // Garantir que a documentação técnica tem visibilidade restrita ao Síndico
+    if (!this.data.documentos) this.data.documentos = [];
+    let docTecnico = this.data.documentos.find(d => d.id === 'doc_sistema_md');
+    if (!docTecnico) {
+      this.data.documentos.unshift({
+        id: 'doc_sistema_md',
+        nome: 'Manual de Operação & Documentação Técnica do Portal',
+        categoria: 'Manuais',
+        visibilidade: 'Sindico',
+        dataUpload: '2026-07-27',
+        tamanho: '15 KB',
+        arquivo: 'DOCUMENTACAO_SISTEMA.md'
+      });
+    } else {
+      docTecnico.visibilidade = 'Sindico';
+    }
+
     this.saveData();
   }
 
@@ -311,6 +339,29 @@ class StoreEngine {
     if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
       window.SupabaseConfig.pushDataToSupabase(this.data);
     }
+  }
+
+  addDocumento(doc) {
+    if (!this.data.documentos) this.data.documentos = [];
+    const newDoc = {
+      id: 'doc_' + Date.now(),
+      dataUpload: new Date().toISOString().split('T')[0],
+      tamanho: doc.tamanho || '1.5 MB',
+      visibilidade: doc.visibilidade || 'Moradores',
+      ...doc
+    };
+
+    this.data.documentos.unshift(newDoc);
+    this.saveData();
+    return newDoc;
+  }
+
+  deleteDocumento(id) {
+    if (!this.data.documentos) return false;
+    if (id === 'doc_sistema_md') return false; // Impede exclusão da documentação do sistema
+    this.data.documentos = this.data.documentos.filter(d => d.id !== id);
+    this.saveData();
+    return true;
   }
 
   addMorador(morador) {
