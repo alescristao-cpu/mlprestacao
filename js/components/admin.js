@@ -1,7 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Aprovação, Recusa (Não Autorizar), Edição, Exclusão & Troca de Senha
+   Segurança & Privacidade de Senhas:
+   - A senha existente dos moradores NUNCA é exibida em tela.
+   - O Síndico pode redefinir/resetar a senha do morador caso este esqueça,
+     digitando uma nova senha no campo de redefinição.
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -106,7 +109,7 @@ window.AdminComponent = {
                     </button>
 
                     <button class="btn-outline-primary btn-sm" style="padding: 0.65rem;" onclick="AdminComponent.openEditMoradorModal('${p.id}')">
-                      <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span> Editar
+                      <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span> Editar / Redefinir Senha
                     </button>
 
                     <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.65rem;" onclick="AdminComponent.excluirMorador('${p.id}', '${p.nome}', '${p.apartamento}')">
@@ -146,8 +149,8 @@ window.AdminComponent = {
                   </div>
 
                   <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-                    <button class="btn-outline-primary btn-sm" onclick="AdminComponent.openEditMoradorModal('${m.id}')" title="Editar dados e função (Conselheiro)">
-                      <span class="material-symbols-outlined" style="font-size: 0.95rem;">edit</span> Editar / Função
+                    <button class="btn-outline-primary btn-sm" onclick="AdminComponent.openEditMoradorModal('${m.id}')" title="Editar dados ou Redefinir Senha caso o morador esqueça">
+                      <span class="material-symbols-outlined" style="font-size: 0.95rem;">key</span> Editar / Redefinir Senha
                     </button>
 
                     ${isAdmin ? `
@@ -207,7 +210,7 @@ window.AdminComponent = {
   async forcarSincronizacaoNuvem() {
     await window.CondoStore.pullFromCloudSilently();
     await window.CondoStore.broadcastToCloud();
-    App.showToast('Sincronização concluída!', 'success');
+    App.showToast('Sincronização com a nuvem concluída!', 'success');
     App.render();
   },
 
@@ -282,7 +285,7 @@ window.AdminComponent = {
         <div class="modal-card" style="max-width: 520px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
             <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem;">
-              ✏️ Editar Morador &amp; Definir Função (Conselheiro / Portaria)
+              ✏️ Editar Morador &amp; Redefinir Senha
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalEditMorador').remove()">✕</button>
           </div>
@@ -309,9 +312,16 @@ window.AdminComponent = {
                 <input type="email" id="editEmail" class="form-control" value="${morador.email}" required>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Senha do Morador</label>
-                <input type="password" id="editSenha" class="form-control" value="${morador.senha || '123456'}" placeholder="Redefinir senha">
+              <!-- REDEFINIÇÃO DE SENHA PROTEGIDA: Campo em branco por padrão para manter a senha atual oculta -->
+              <div class="form-group" style="background: #F5F5F5; padding: 0.85rem; border-radius: 6px; border: 1px dashed #CCCCCC;">
+                <label class="form-label" style="color: var(--primary-dark); font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                  <span class="material-symbols-outlined" style="font-size: 1.1rem; color: var(--primary);">key</span>
+                  Redefinir Senha do Morador (Caso tenha esquecido)
+                </label>
+                <input type="password" id="editSenha" class="form-control" value="" placeholder="Digite a nova senha APENAS se desejar redefinir" autocomplete="new-password">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px;">
+                  🔒 Por segurança, a senha atual fica oculta. Deixe este campo em branco caso não queira alterar a senha do morador.
+                </span>
               </div>
 
               <div class="form-grid">
@@ -346,21 +356,31 @@ window.AdminComponent = {
     const nome = document.getElementById('editNome').value.trim();
     const role = document.getElementById('editRole').value;
     const email = document.getElementById('editEmail').value.trim();
-    const senha = document.getElementById('editSenha').value.trim();
+    const novaSenha = document.getElementById('editSenha').value.trim();
     const apartamento = document.getElementById('editApto').value.trim();
     const telefone = document.getElementById('editTelefone').value.trim();
 
-    const res = window.CondoStore.updateMoradorDetails(moradorId, {
+    const payload = {
       nome,
       role,
       email,
-      senha,
       apartamento,
       telefone
-    });
+    };
+
+    // Apenas atualiza a senha se o Síndico tiver digitado uma nova senha no campo de redefinição
+    if (novaSenha) {
+      payload.senha = novaSenha;
+    }
+
+    const res = window.CondoStore.updateMoradorDetails(moradorId, payload);
 
     if (res.success) {
-      App.showToast(`Morador "${nome}" atualizado para ${role}!`, 'success');
+      if (novaSenha) {
+        App.showToast(`Senha do morador "${nome}" redefinida com sucesso!`, 'success');
+      } else {
+        App.showToast(`Morador "${nome}" atualizado!`, 'success');
+      }
       document.getElementById('modalEditMorador').remove();
       App.render();
     } else {
@@ -403,8 +423,8 @@ window.AdminComponent = {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Senha Inicial</label>
-                <input type="password" id="quickSenha" class="form-control" placeholder="Senha do morador" value="123456" required>
+                <label class="form-label">Criar Senha Inicial para o Morador</label>
+                <input type="password" id="quickSenha" class="form-control" placeholder="Digite uma senha inicial" required autocomplete="new-password">
               </div>
 
               <div class="form-grid">
@@ -457,7 +477,7 @@ window.AdminComponent = {
 
     window.CondoStore.updateMoradorStatus(res.morador.id, 'Aprovado');
 
-    App.showToast(`Morador "${nome}" (Apto ${apartamento}) APROVADO como ${role}!`, 'success');
+    App.showToast(`Morador "${nome}" (Apto ${apartamento}) APROVADO!`, 'success');
     document.getElementById('modalQuickApprove').remove();
     App.render();
   },
