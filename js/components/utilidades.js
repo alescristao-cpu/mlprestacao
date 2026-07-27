@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Utilidades & Agendamento Automático (Piscina & Academia)
-   Processamento 100% Automático no Banco de Dados com Retenção de 30 Dias
+   Visão Exclusiva para a Portaria: Oculta 2ª Via do Boleto e Reserva do Salão de Festas
    ---------------------------------------------------- */
 
 window.UtilidadesComponent = {
@@ -14,10 +14,10 @@ window.UtilidadesComponent = {
             <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
           </div>
           <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
-            Acesso Restrito: Utilidades, Reservas &amp; 2ª Via de Boleto
+            Acesso Restrito: Utilidades &amp; Reservas
           </h2>
           <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem; line-height: 1.6;">
-            O agendamento de áreas comuns (piscina e academia), emissão de 2ª via de boleto condominial e reservas de salão de festas são exclusivos para moradores cadastrados e autorizados.
+            O agendamento de áreas comuns é exclusivo para moradores e equipe autorizada.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
             <span class="material-symbols-outlined">login</span> Entrar / Cadastrar para Liberar Acesso
@@ -27,9 +27,10 @@ window.UtilidadesComponent = {
       return;
     }
 
+    const isPortaria = user && user.role === 'Portaria';
     const hojeStr = new Date().toISOString().split('T')[0];
 
-    // Filtra apenas agendamentos dos últimos 30 dias (Retenção Automática de 30 Dias)
+    // Filtra agendamentos dos últimos 30 dias
     const limite30Dias = new Date();
     limite30Dias.setDate(limite30Dias.getDate() - 30);
     const limiteStr = limite30Dias.toISOString().split('T')[0];
@@ -58,34 +59,36 @@ window.UtilidadesComponent = {
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
-        <!-- Section 1: 2ª Via do Boleto -->
-        <div class="card-widget" style="border-left: 5px solid #2E6B42;">
-          <div class="card-header">
-            <div>
-              <div class="card-title" style="color: var(--primary-dark);">
-                <span class="material-symbols-outlined" style="font-size: 1.6rem;">receipt_long</span> 2ª Via do Boleto Condominial
+        <!-- Section 1: 2ª Via do Boleto (OCULTO PARA A PORTARIA) -->
+        ${!isPortaria ? `
+          <div class="card-widget" style="border-left: 5px solid #2E6B42;">
+            <div class="card-header">
+              <div>
+                <div class="card-title" style="color: var(--primary-dark);">
+                  <span class="material-symbols-outlined" style="font-size: 1.6rem;">receipt_long</span> 2ª Via do Boleto Condominial
+                </div>
+                <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">
+                  Emita seu boleto atualizado diretamente no portal oficial da administradora.
+                </p>
               </div>
-              <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">
-                Emita seu boleto atualizado diretamente no portal oficial da administradora.
-              </p>
-            </div>
-          </div>
-
-          <div style="background: var(--bg-app); padding: 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-            <div>
-              <h4 style="font-weight: 700; color: var(--primary-dark); margin-bottom: 0.25rem;">
-                Acesse o Sistema da Real Administradora
-              </h4>
-              <p style="font-size: 0.85rem; color: var(--text-main);">
-                Entre ou faça seu cadastro para visualizar boletos, demonstrativos e saldo da sua unidade.
-              </p>
             </div>
 
-            <a href="https://realadministradoraapp.com21.com.br/frontend/public/#/login" target="_blank" class="btn-primary" style="text-decoration: none; padding: 0.8rem 1.25rem; font-weight: 700;">
-              <span class="material-symbols-outlined">open_in_new</span> Emitir 2ª Via do Boleto
-            </a>
+            <div style="background: var(--bg-app); padding: 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+              <div>
+                <h4 style="font-weight: 700; color: var(--primary-dark); margin-bottom: 0.25rem;">
+                  Acesse o Sistema da Real Administradora
+                </h4>
+                <p style="font-size: 0.85rem; color: var(--text-main);">
+                  Entre ou faça seu cadastro para visualizar boletos, demonstrativos e saldo da sua unidade.
+                </p>
+              </div>
+
+              <a href="https://realadministradoraapp.com21.com.br/frontend/public/#/login" target="_blank" class="btn-primary" style="text-decoration: none; padding: 0.8rem 1.25rem; font-weight: 700;">
+                <span class="material-symbols-outlined">open_in_new</span> Emitir 2ª Via do Boleto
+              </a>
+            </div>
           </div>
-        </div>
+        ` : ''}
 
         <!-- Section 2: Agendamento Automático de Piscina & Academia -->
         <div class="card-widget">
@@ -161,41 +164,43 @@ window.UtilidadesComponent = {
           </div>
         </div>
 
-        <!-- Section 3: Reserva de Salão de Festas & Churrasqueira -->
-        <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white;">
-          <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
-            <div style="flex: 1; min-width: 280px;">
-              <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.5rem;">
-                <span class="material-symbols-outlined" style="font-size: 0.85rem;">phone_iphone</span> APLICATIVO OFICIAL
-              </span>
-              <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">
-                Reserva de Salão de Festas &amp; Churrasqueira
-              </h3>
-              <p style="font-size: 0.9rem; opacity: 0.95; line-height: 1.6; margin-bottom: 1.25rem;">
-                Para solicitar a reserva do Salão de Festas ou da Churrasqueira, baixe o aplicativo oficial no link abaixo:
-              </p>
+        <!-- Section 3: Reserva de Salão de Festas & Churrasqueira (OCULTO PARA A PORTARIA) -->
+        ${!isPortaria ? `
+          <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white;">
+            <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;">
+              <div style="flex: 1; min-width: 280px;">
+                <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.5rem;">
+                  <span class="material-symbols-outlined" style="font-size: 0.85rem;">phone_iphone</span> APLICATIVO OFICIAL
+                </span>
+                <h3 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">
+                  Reserva de Salão de Festas &amp; Churrasqueira
+                </h3>
+                <p style="font-size: 0.9rem; opacity: 0.95; line-height: 1.6; margin-bottom: 1.25rem;">
+                  Para solicitar a reserva do Salão de Festas ou da Churrasqueira, baixe o aplicativo oficial no link abaixo:
+                </p>
 
-              <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                <a href="https://realadministradoraapp.com21.com.br/frontend/public/#/login" target="_blank" class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; text-decoration: none;">
-                  <span class="material-symbols-outlined">download_for_offline</span> Abrir Link do App Real Administradora
-                </a>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                  <a href="https://realadministradoraapp.com21.com.br/frontend/public/#/login" target="_blank" class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; text-decoration: none;">
+                    <span class="material-symbols-outlined">download_for_offline</span> Abrir Link do App Real Administradora
+                  </a>
+                </div>
               </div>
-            </div>
 
-            <!-- QR Code Box -->
-            <div style="background: white; padding: 1.25rem; border-radius: var(--radius-md); text-align: center; color: var(--text-main); min-width: 200px; box-shadow: var(--shadow-lg);">
-              <div style="font-weight: 700; font-size: 0.85rem; color: var(--primary-dark); margin-bottom: 0.5rem;">
-                Escaneie o QR CODE
+              <!-- QR Code Box -->
+              <div style="background: white; padding: 1.25rem; border-radius: var(--radius-md); text-align: center; color: var(--text-main); min-width: 200px; box-shadow: var(--shadow-lg);">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--primary-dark); margin-bottom: 0.5rem;">
+                  Escaneie o QR CODE
+                </div>
+                <div style="width: 140px; height: 140px; background: #000; margin: 0 auto 0.5rem auto; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
+                  <svg width="120" height="120" viewBox="0 0 24 24" fill="white">
+                    <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm9-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm13-2h2v2h-2v-2zm-4 0h2v2h-2v-2zm2 4h2v2h-2v-2zm2-2h2v2h-2v-2zm0 4h2v2h-2v-2zm-4 0h2v2h-2v-2z"/>
+                  </svg>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">iOS &amp; Android App</span>
               </div>
-              <div style="width: 140px; height: 140px; background: #000; margin: 0 auto 0.5rem auto; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
-                <svg width="120" height="120" viewBox="0 0 24 24" fill="white">
-                  <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm9-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm13-2h2v2h-2v-2zm-4 0h2v2h-2v-2zm2 4h2v2h-2v-2zm2-2h2v2h-2v-2zm0 4h2v2h-2v-2zm-4 0h2v2h-2v-2z"/>
-                </svg>
-              </div>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">iOS &amp; Android App</span>
             </div>
           </div>
-        </div>
+        ` : ''}
 
       </div>
     `;
