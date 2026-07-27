@@ -1,10 +1,13 @@
 /* ----------------------------------------------------
    Modern Life Residence - Documentos & Manuais Oficial
-   Filtro Restrito de Visibilidade por Perfil & Upload com Seleção de Público Alvo
+   Suporte Completo a Upload Real de Arquivos (PDF, DOC, Imagens e Textos)
    ---------------------------------------------------- */
 
 window.DocumentosComponent = {
   activeCategory: 'Todos',
+  uploadedFileDataUrl: '',
+  uploadedFileName: '',
+  uploadedFileSize: '',
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
@@ -97,12 +100,14 @@ window.DocumentosComponent = {
             const visLabel = doc.visibilidade === 'Sindico' ? '🔒 Apenas Síndico' : doc.visibilidade === 'Conselho' ? '👑 Conselho' : doc.visibilidade === 'Portaria' ? '🚪 Portaria' : '🏡 Todos os Moradores';
             const visBadgeClass = doc.visibilidade === 'Sindico' ? 'badge-danger' : doc.visibilidade === 'Conselho' ? 'badge-success' : doc.visibilidade === 'Portaria' ? 'badge-warning' : 'badge-info';
 
+            const isDataUrl = doc.arquivo && (doc.arquivo.startsWith('data:') || doc.arquivo.startsWith('blob:'));
+
             return `
               <div class="card-widget" style="display: flex; flex-direction: column; justify-content: space-between; border-left: 4px solid ${doc.visibilidade === 'Sindico' ? '#C62828' : 'var(--primary)'};">
                 <div>
                   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 4px;">
                     <span class="material-symbols-outlined" style="font-size: 2.2rem; color: var(--primary);">
-                      ${doc.arquivo.endsWith('.pdf') ? 'picture_as_pdf' : doc.arquivo.endsWith('.md') ? 'description' : 'article'}
+                      ${(doc.arquivo || '').includes('.pdf') ? 'picture_as_pdf' : (doc.arquivo || '').includes('.md') ? 'description' : 'article'}
                     </span>
                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;">
                       <span class="badge ${visBadgeClass}" style="font-size: 0.72rem;">${visLabel}</span>
@@ -114,15 +119,21 @@ window.DocumentosComponent = {
                     ${doc.nome}
                   </h3>
                   <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
-                    Publicado em: ${doc.dataUpload} &bull; ${doc.tamanho}
+                    Publicado em: ${doc.dataUpload} &bull; ${doc.tamanho || '1 MB'}
                   </div>
                 </div>
 
                 <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
                   ${isApproved ? `
-                    <a href="${doc.arquivo}" target="_blank" class="btn-primary btn-sm" style="flex: 1; justify-content: center; text-decoration: none; font-weight: 700;">
-                      <span class="material-symbols-outlined" style="font-size: 1.1rem;">visibility</span> Visualizar
-                    </a>
+                    ${isDataUrl ? `
+                      <button class="btn-primary btn-sm" style="flex: 1; justify-content: center; font-weight: 700;" onclick="DocumentosComponent.abrirOuBaixarDataUrl('${doc.id}')">
+                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">download</span> Baixar / Abrir
+                      </button>
+                    ` : `
+                      <a href="${doc.arquivo}" target="_blank" class="btn-primary btn-sm" style="flex: 1; justify-content: center; text-decoration: none; font-weight: 700;">
+                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">visibility</span> Visualizar
+                      </a>
+                    `}
                   ` : `
                     <button class="btn-secondary btn-sm" style="flex: 1; justify-content: center;" disabled>
                       <span class="material-symbols-outlined" style="font-size: 1.1rem;">lock</span> Requer Aprovação
@@ -150,12 +161,16 @@ window.DocumentosComponent = {
   },
 
   openUploadModal() {
+    this.uploadedFileDataUrl = '';
+    this.uploadedFileName = '';
+    this.uploadedFileSize = '';
+
     const existing = document.getElementById('modalUploadDoc');
     if (existing) existing.remove();
 
     const modalHtml = `
       <div class="modal-overlay active" id="modalUploadDoc" style="z-index: 999999;">
-        <div class="modal-card" style="max-width: 520px; border: 2px solid var(--primary);">
+        <div class="modal-card" style="max-width: 540px; border: 2px solid var(--primary);">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
             <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.4rem;">
               <span class="material-symbols-outlined">upload_file</span> 📤 Publicar Novo Documento Oficial
@@ -165,6 +180,22 @@ window.DocumentosComponent = {
           <div class="modal-body">
             <form onsubmit="DocumentosComponent.submeterUploadDocumento(event)">
               
+              <!-- Seletor Real de Arquivo do Computador/Celular -->
+              <div class="form-group" style="background: #F0FDF4; border: 2px dashed #3ECF8E; padding: 1.2rem; border-radius: 8px; text-align: center;">
+                <label for="realFileInput" style="cursor: pointer; display: block;">
+                  <span class="material-symbols-outlined" style="font-size: 2.8rem; color: #2E6B42; display: block; margin-bottom: 0.3rem;">cloud_upload</span>
+                  <strong style="color: var(--primary-dark); font-size: 1rem;">Clique aqui para selecionar o arquivo no seu dispositivo</strong>
+                  <span style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                    Suporta PDF, Word (.doc, .docx), Imagens e Documentos de Texto (até 15MB)
+                  </span>
+                </label>
+
+                <input type="file" id="realFileInput" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.md" style="display: none;" onchange="DocumentosComponent.manipularSelecaoArquivo(event)">
+
+                <div id="fileInfoDisplay" style="margin-top: 0.85rem; font-weight: 700; font-size: 0.88rem; color: #166534; display: none; background: white; padding: 0.6rem; border-radius: 6px; border: 1px solid #BBF7D0;">
+                </div>
+              </div>
+
               <div class="form-group">
                 <label class="form-label" style="font-weight: 700;">Título / Nome do Documento</label>
                 <input type="text" id="docNomeInput" class="form-control" placeholder="Ex: Regimento Interno 2026 / Edital de Convocação" required style="font-weight: 600;">
@@ -193,15 +224,13 @@ window.DocumentosComponent = {
                 </div>
               </div>
 
+              <!-- Alternativa de Link/Caminho Manual -->
               <div class="form-group">
-                <label class="form-label" style="font-weight: 700;">Link / Arquivo do Documento (PDF ou Texto)</label>
-                <input type="text" id="docArquivoInput" class="form-control" placeholder="assets/docs/nome_do_arquivo.pdf ou URL" value="assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf" required>
-                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px;">
-                  Insira o caminho local do PDF ou a URL web do documento.
-                </span>
+                <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: var(--text-muted);">Ou informe um Link/URL Web do Documento (Opcional caso não envie arquivo)</label>
+                <input type="text" id="docArquivoInput" class="form-control" placeholder="https://exemplo.com/documento.pdf ou assets/docs/..." style="font-size: 0.85rem;">
               </div>
 
-              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; margin-top: 0.5rem;">
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; margin-top: 0.5rem; background: var(--primary);">
                 <span class="material-symbols-outlined">send</span> Publicar Documento no Portal
               </button>
             </form>
@@ -213,26 +242,88 @@ window.DocumentosComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
+  manipularSelecaoArquivo(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Calcular Tamanho Formatado
+    let sizeStr = '';
+    if (file.size < 1024 * 1024) {
+      sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+    } else {
+      sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    this.uploadedFileName = file.name;
+    this.uploadedFileSize = sizeStr;
+
+    // Preencher automaticamente o nome do documento se estiver vazio
+    const inputNome = document.getElementById('docNomeInput');
+    if (inputNome && !inputNome.value) {
+      inputNome.value = file.name.replace(/\.[^/.]+$/, "");
+    }
+
+    // Ler arquivo via FileReader
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.uploadedFileDataUrl = e.target.result;
+
+      const display = document.getElementById('fileInfoDisplay');
+      if (display) {
+        display.style.display = 'block';
+        display.innerHTML = `
+          ✅ Arquivo Selecionado: <strong>${file.name}</strong> (${sizeStr})
+        `;
+      }
+    };
+    reader.readAsDataURL(file);
+  },
+
   submeterUploadDocumento(e) {
     e.preventDefault();
     const nome = document.getElementById('docNomeInput').value.trim();
     const categoria = document.getElementById('docCategoriaInput').value;
     const visibilidade = document.getElementById('docVisibilidadeInput').value;
-    const arquivo = document.getElementById('docArquivoInput').value.trim();
+    const urlManual = document.getElementById('docArquivoInput').value.trim();
 
-    if (!nome || !arquivo) return;
+    const arquivoFinal = this.uploadedFileDataUrl || urlManual || 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf';
+    const tamanhoFinal = this.uploadedFileSize || '1.8 MB';
+
+    if (!nome) return;
 
     window.CondoStore.addDocumento({
       nome,
       categoria,
       visibilidade,
-      arquivo,
-      tamanho: '2.4 MB'
+      arquivo: arquivoFinal,
+      tamanho: tamanhoFinal
     });
 
-    App.showToast(`Documento "${nome}" publicado com visibilidade para: ${visibilidade}!`, 'success');
+    App.showToast(`Documento "${nome}" publicado com sucesso! Visibilidade: ${visibilidade}`, 'success');
     document.getElementById('modalUploadDoc').remove();
     App.render();
+  },
+
+  abrirOuBaixarDataUrl(docId) {
+    const doc = (window.CondoStore.data.documentos || []).find(d => d.id === docId);
+    if (!doc || !doc.arquivo) return;
+
+    const win = window.open();
+    if (win) {
+      win.document.write(`
+        <html>
+          <head><title>${doc.nome}</title></head>
+          <body style="margin:0; background: #1C1C1C; display:flex; justify-content:center; align-items:center; height:100vh;">
+            <iframe src="${doc.arquivo}" style="width:100%; height:100%; border:none;"></iframe>
+          </body>
+        </html>
+      `);
+    } else {
+      const a = document.createElement('a');
+      a.href = doc.arquivo;
+      a.download = doc.nome;
+      a.click();
+    }
   },
 
   excluirDocumento(id, nome) {
