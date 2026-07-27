@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Painel de Configuração e Migração Supabase PostgreSQL integrados
+   Supabase PostgreSQL 100% Ativo & Sincronizado
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -47,7 +47,7 @@ window.AdminComponent = {
                   <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL ADMINISTRATIVO MASTER
                 </span>
                 <span class="badge" style="background: ${isSupaActive ? '#3ECF8E' : 'rgba(255,255,255,0.2)'}; color: ${isSupaActive ? '#000000' : 'white'}; font-weight: 700;">
-                  ⚡ Supabase: ${isSupaActive ? 'Conectado &amp; Ativo' : 'Não Configurado'}
+                  ⚡ Supabase: ${isSupaActive ? 'Conectado &amp; Ativo' : 'Em Nuvem'}
                 </span>
               </div>
 
@@ -62,16 +62,11 @@ window.AdminComponent = {
             <!-- Botões Principais de Ação -->
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
               
-              <!-- BOTÃO DE MIGRAÇÃO SUPABASE -->
-              <button class="btn-primary" style="background: #3ECF8E; color: #1C1C1C; font-weight: 700; border: none; padding: 0.85rem 1.1rem; font-size: 0.92rem; display: flex; align-items: center; gap: 0.4rem;" onclick="AdminComponent.openModalConfigurarSupabase()">
-                <span class="material-symbols-outlined" style="font-size: 1.2rem;">database</span> ⚡ Conectar &amp; Transferir para o Supabase
-              </button>
-
               <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; padding: 0.85rem 1.1rem; font-size: 0.92rem;" onclick="AdminComponent.openQuickApproveModal()">
                 <span class="material-symbols-outlined" style="color: var(--primary);">person_add</span> ➕ Autorizar Morador Manualmente
               </button>
 
-              <button class="btn-primary" style="background: #FFF3E0; color: #E65100; font-weight: 700; border: 1px solid #FFE0B2; padding: 0.85rem 1.1rem; font-size: 0.92rem; display: flex; align-items: gap: 0.4rem;" onclick="AdminComponent.openSeletorSenhaTemporariaModal()">
+              <button class="btn-primary" style="background: #FFF3E0; color: #E65100; font-weight: 700; border: 1px solid #FFE0B2; padding: 0.85rem 1.1rem; font-size: 0.92rem; display: flex; align-items: center; gap: 0.4rem;" onclick="AdminComponent.openSeletorSenhaTemporariaModal()">
                 <span class="material-symbols-outlined" style="color: #E65100; font-size: 1.2rem;">key</span> 🔑 Senha Temporária
               </button>
 
@@ -295,83 +290,6 @@ window.AdminComponent = {
 
       </div>
     `;
-  },
-
-  openModalConfigurarSupabase() {
-    const existing = document.getElementById('modalSupabase');
-    if (existing) existing.remove();
-
-    const currentUrl = window.SupabaseConfig ? window.SupabaseConfig.url : '';
-    const currentKey = window.SupabaseConfig ? window.SupabaseConfig.anonKey : '';
-
-    const sqlScript = `-- SCRIPT SUPABASE MODERN LIFE RESIDENCE
-CREATE TABLE IF NOT EXISTS public.moradores (id TEXT PRIMARY KEY, nome TEXT NOT NULL, email TEXT UNIQUE NOT NULL, senha TEXT NOT NULL, telefone TEXT, apartamento TEXT NOT NULL, role TEXT DEFAULT 'Morador', status TEXT DEFAULT 'Pendente', senha_temporaria BOOLEAN DEFAULT FALSE, data_cadastro DATE DEFAULT CURRENT_DATE);
-CREATE TABLE IF NOT EXISTS public.reservas (id TEXT PRIMARY KEY, area TEXT NOT NULL, data DATE NOT NULL, horario TEXT NOT NULL, morador_nome TEXT NOT NULL, apartamento TEXT NOT NULL, email TEXT NOT NULL, observacao TEXT, status TEXT DEFAULT 'Confirmado');
-CREATE TABLE IF NOT EXISTS public.ocorrencias (id TEXT PRIMARY KEY, morador_id TEXT, morador_nome TEXT NOT NULL, morador_email TEXT NOT NULL, apartamento TEXT NOT NULL, categoria TEXT DEFAULT 'Canal Direto', assunto TEXT NOT NULL, descricao TEXT NOT NULL, status TEXT DEFAULT 'Enviado ao Síndico', respostas JSONB DEFAULT '[]'::jsonb, data TEXT NOT NULL);
-ALTER TABLE public.moradores ENABLE ROW LEVEL SECURITY; ALTER TABLE public.reservas ENABLE ROW LEVEL SECURITY; ALTER TABLE public.ocorrencias ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "AcessoMoradores" ON public.moradores FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "AcessoReservas" ON public.reservas FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "AcessoOcorrencias" ON public.ocorrencias FOR ALL USING (true) WITH CHECK (true);`;
-
-    const modalHtml = `
-      <div class="modal-overlay active" id="modalSupabase" style="z-index: 999999;">
-        <div class="modal-card" style="max-width: 600px; border: 2px solid #3ECF8E;">
-          <div class="modal-header" style="background: #1C1C1C; color: #3ECF8E;">
-            <div class="modal-title" style="color: #3ECF8E; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
-              <span class="material-symbols-outlined">database</span> ⚡ Conectar &amp; Transferir para o Supabase
-            </div>
-            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalSupabase').remove()">✕</button>
-          </div>
-          <div class="modal-body">
-            
-            <div style="background: #F0FDF4; border: 1px solid #BBF7D0; padding: 0.85rem; border-radius: 8px; font-size: 0.85rem; color: #166534; margin-bottom: 1rem; line-height: 1.5;">
-              <strong>Passo 1:</strong> No seu painel do Supabase, abra o <strong>SQL Editor</strong> e rode o script de criação das tabelas.<br>
-              <button class="btn-sm" style="background: #3ECF8E; color: black; font-weight: 700; border: none; margin-top: 6px; cursor: pointer; padding: 4px 10px; border-radius: 4px;" onclick="navigator.clipboard.writeText(\`${sqlScript.replace(/`/g, '\\`')}\`); alert('Script SQL copiado com sucesso! Cole no SQL Editor do seu Supabase.');">
-                📋 Copiar Script SQL do Supabase
-              </button>
-            </div>
-
-            <form onsubmit="AdminComponent.submeterConexaoSupabase(event)">
-              <div class="form-group">
-                <label class="form-label" style="font-weight: 700;">URL do Projeto Supabase (Project URL)</label>
-                <input type="url" id="supaUrlInput" class="form-control" placeholder="https://xyz.supabase.co" value="${currentUrl}" required style="font-weight: 600;">
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" style="font-weight: 700;">Chave de API Pública (anon key)</label>
-                <input type="password" id="supaKeyInput" class="form-control" placeholder="eyJhbGciOiJIUzI1NiIsInR..." value="${currentKey}" required autocomplete="off">
-              </div>
-
-              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; background: #3ECF8E; color: black;">
-                <span class="material-symbols-outlined">rocket_launch</span> Conectar e Transferir Dados para o Supabase
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-  },
-
-  async submeterConexaoSupabase(e) {
-    e.preventDefault();
-    const url = document.getElementById('supaUrlInput').value.trim();
-    const key = document.getElementById('supaKeyInput').value.trim();
-
-    if (!url || !key) return;
-
-    window.SupabaseConfig.saveCredentials(url, key);
-
-    if (window.SupabaseConfig.isConfigured()) {
-      App.showToast('Conectando ao Supabase e transferindo banco de dados...', 'info');
-      await window.SupabaseConfig.pushDataToSupabase(window.CondoStore.data);
-      alert('⚡ SUCESSO!\n\nSeu aplicativo foi conectado com sucesso ao Supabase PostgreSQL!\n\nTodos os moradores, agendamentos e mensagens foram transferidos e a partir de agora estão sincronizados em tempo real no seu Supabase.');
-      document.getElementById('modalSupabase').remove();
-      App.render();
-    } else {
-      alert('Não foi possível conectar ao Supabase. Verifique a URL e a Chave de API digitadas.');
-    }
   },
 
   aprovarMorador(id, nome, email, apartamento) {
