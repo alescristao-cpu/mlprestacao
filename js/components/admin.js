@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Supabase PostgreSQL 100% Ativo & Sincronizado
+   Interface Limpa e Sem Exibição de Detalhes Técnicos de Infraestrutura
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -33,21 +33,16 @@ window.AdminComponent = {
 
     const ocorrencias = data.ocorrencias || [];
 
-    const isSupaActive = window.SupabaseConfig && window.SupabaseConfig.isConfigured();
-
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         
-        <!-- 1. Banner Principal do Painel Administrativo -->
+        <!-- 1. Banner Principal do Painel Administrativo (Limpo e Institucional) -->
         <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white; padding: 1.35rem;">
           <div style="display: flex; flex-direction: column; gap: 1rem;">
             <div>
               <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.4rem;">
                 <span class="badge" style="background: rgba(255,255,255,0.2); color: white;">
                   <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL ADMINISTRATIVO MASTER
-                </span>
-                <span class="badge" style="background: ${isSupaActive ? '#3ECF8E' : 'rgba(255,255,255,0.2)'}; color: ${isSupaActive ? '#000000' : 'white'}; font-weight: 700;">
-                  ⚡ Supabase: ${isSupaActive ? 'Conectado &amp; Ativo' : 'Em Nuvem'}
                 </span>
               </div>
 
@@ -72,10 +67,6 @@ window.AdminComponent = {
 
               <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.85rem;" onclick="AdminComponent.openAlterarSenhaSindicoModal()">
                 <span class="material-symbols-outlined">key</span> Alterar Minha Senha
-              </button>
-
-              <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.85rem;" onclick="AdminComponent.forcarSincronizacaoNuvem()">
-                <span class="material-symbols-outlined">sync</span> 🔄 Checar Nuvem
               </button>
             </div>
           </div>
@@ -511,13 +502,6 @@ window.AdminComponent = {
       App.showToast('Resposta publicada e disponibilizada para o morador!', 'success');
       App.render();
     }
-  },
-
-  async forcarSincronizacaoNuvem() {
-    await window.CondoStore.pullFromCloudSilently();
-    await window.CondoStore.broadcastToCloud();
-    App.showToast('Sincronização com a nuvem concluída!', 'success');
-    App.render();
   },
 
   openAlterarSenhaSindicoModal() {
