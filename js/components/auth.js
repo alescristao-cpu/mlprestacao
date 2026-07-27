@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Autenticação & Cadastro com Senha
-   Recuperação de Senha Segura, Senha Temporária e Troca Obrigatória
+   Notificação Instantânea de Novo Cadastro para o Síndico (Painel + E-mail + Nuvem)
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -507,6 +507,7 @@ window.AuthComponent = {
       return;
     }
 
+    // 1. Salva morador no estado local e dispara sincronização para Firebase Firestore em tempo real
     const result = window.CondoStore.addMorador({
       nome,
       email,
@@ -521,24 +522,38 @@ window.AuthComponent = {
       return;
     }
 
+    // 2. Cria notificação interna no site para o Painel do Síndico
+    window.CondoStore.addOcorrencia({
+      moradorId: result.morador.id,
+      moradorNome: nome,
+      moradorEmail: email,
+      apartamento: unidade,
+      categoria: 'Novo Cadastro',
+      assunto: `[SOLICITAÇÃO DE NOVO CADASTRO] ${nome} (Apto ${unidade})`,
+      descricao: `O morador ${nome} (E-mail: ${email}, Tel: ${telefone || 'Não informado'}, Apto: ${unidade}) realizou o cadastro no portal e aguarda sua autorização de acesso.`
+    });
+
     window.CondoStore.setCurrentUser(result.morador);
 
+    // 3. Dispara e-mail automático via FormSubmit com _replyto
     try {
       fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
           _subject: `[NOVO CADASTRO DE MORADOR] ${nome} (Apto ${unidade})`,
+          _replyto: email,
           "Nome do Morador": nome,
-          "E-mail": email,
-          "Telefone": telefone,
+          "E-mail do Morador": email,
+          "Telefone": telefone || 'Não informado',
           "Unidade": unidade,
+          "Status do Cadastro": "Pendente de Aprovação no Painel",
           "Data do Cadastro": new Date().toLocaleString("pt-BR")
         })
       }).catch(function() {});
     } catch (e) {}
 
-    alert(`Cadastro de "${nome}" registrado com sucesso com sua Senha!\n\nA sua solicitação foi enviada. O acesso aos balancetes e documentos será liberado assim que o Síndico (Alessandro) aprovar no Painel.`);
+    alert(`Cadastro de "${nome}" (Apto ${unidade}) registrado com sucesso!\n\nA sua solicitação foi encaminhada diretamente para o Painel do Síndico (Alessandro). O acesso será liberado assim que o Síndico aprovar no Painel.`);
 
     const modal = document.getElementById('modalAuth');
     if (modal) modal.remove();
