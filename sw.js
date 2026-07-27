@@ -1,9 +1,9 @@
 /* ----------------------------------------------------
    Modern Life Residence - Service Worker (PWA)
-   Cache v5 com suporte total a Sincronização Mobile
+   Cache v6 - Filtro Individual Rígido por E-mail do Morador
    ---------------------------------------------------- */
 
-const CACHE_NAME = 'modern-life-v5-cache';
+const CACHE_NAME = 'modern-life-v6-cache';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
