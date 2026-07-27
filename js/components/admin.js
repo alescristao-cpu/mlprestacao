@@ -1,7 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Envio Automático de E-mail para o Morador ao Gerar Senha Temporária
+   Entrega Tripla Infalível de Senha Temporária:
+   1. Envio por E-mail (FormSubmit AJAX)
+   2. Envio Direto via WhatsApp (1-Clique)
+   3. Cópia Instantânea na Tela com Alerta de Confirmação
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -295,6 +298,8 @@ window.AdminComponent = {
 
   enviarEmailSenhaTemporaria(morador, senhaTemp) {
     if (!morador || !morador.email) return;
+    
+    // Disparo 1: Para o e-mail do próprio morador
     try {
       fetch(`https://formsubmit.co/ajax/${morador.email}`, {
         method: 'POST',
@@ -305,12 +310,79 @@ window.AdminComponent = {
           "Unidade / Apto": morador.apartamento,
           "E-mail de Acesso": morador.email,
           "Senha Temporária": senhaTemp,
-          "Instruções": "Utilize a senha temporária acima para entrar no portal. No primeiro acesso, o sistema exigirá que você cadastre a sua nova senha pessoal.",
+          "Instruções": "Utilize a senha temporária acima para entrar no portal. No primeiro acesso, o sistema solicitará obrigatoriamente que você cadastre a sua nova senha pessoal.",
           "Link do Portal": "https://mlprestacao.vercel.app",
           "Data da Solicitação": new Date().toLocaleString("pt-BR")
         })
       }).catch(() => {});
     } catch (e) {}
+
+    // Disparo 2: Para o e-mail master do condomínio (condominio.modern.life@gmail.com) para registro oficial
+    try {
+      fetch(`https://formsubmit.co/ajax/condominio.modern.life@gmail.com`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          _subject: `[SENHA TEMPORÁRIA ENTREGUE] Morador ${morador.nome} (${morador.email})`,
+          "Nome do Morador": morador.nome,
+          "Unidade / Apto": morador.apartamento,
+          "E-mail do Morador": morador.email,
+          "Senha Temporária": senhaTemp,
+          "Data de Emissão": new Date().toLocaleString("pt-BR")
+        })
+      }).catch(() => {});
+    } catch (e) {}
+  },
+
+  exibirSucessoSenhaTemporariaModal(morador, senhaTemp) {
+    const existing = document.getElementById('modalSucessoSenhaTemp');
+    if (existing) existing.remove();
+
+    const msgWhatsapp = encodeURIComponent(`Olá, ${morador.nome}! Sua senha temporária de acesso ao portal do Modern Life Residence é: *${senhaTemp}*\n\nAcesse https://mlprestacao.vercel.app com seu e-mail (${morador.email}) e use essa senha para cadastrar sua nova senha pessoal no primeiro acesso.`);
+    const telClean = (morador.telefone || '').replace(/\D/g, '');
+    const waUrl = telClean ? `https://api.whatsapp.com/send?phone=55${telClean}&text=${msgWhatsapp}` : `https://api.whatsapp.com/send?text=${msgWhatsapp}`;
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalSucessoSenhaTemp" style="z-index: 999999;">
+        <div class="modal-card" style="max-width: 520px; border: 2px solid #E65100;">
+          <div class="modal-header" style="background: #E65100; color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem;">
+              🔑 Senha Temporária Gerada com Sucesso!
+            </div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalSucessoSenhaTemp').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div style="background: #FFF8E1; border: 1px solid #FFE0B2; padding: 1rem; border-radius: 8px; font-size: 0.9rem; color: #E65100; margin-bottom: 1.25rem;">
+              <strong>Morador:</strong> ${morador.nome} (Apto ${morador.apartamento})<br>
+              <strong>E-mail:</strong> <code>${morador.email}</code><br>
+              <div style="font-size: 1.25rem; font-weight: 800; color: #D84315; margin-top: 8px; background: white; padding: 0.6rem; border-radius: 6px; text-align: center; border: 1px dashed #FF7043; letter-spacing: 1.5px;">
+                🔑 ${senhaTemp}
+              </div>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5;">
+              Um e-mail de notificação foi disparado para <strong>${morador.email}</strong>. Você também pode enviar a senha temporária instantaneamente pelo WhatsApp ou copiá-la abaixo:
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+              <a href="${waUrl}" target="_blank" class="btn-primary" style="background: #25D366; color: white; justify-content: center; font-weight: 700; text-decoration: none; padding: 0.85rem;">
+                <span class="material-symbols-outlined">send</span> 📱 Enviar Senha no WhatsApp do Morador
+              </a>
+
+              <button class="btn-secondary" style="justify-content: center; font-weight: 700; padding: 0.8rem;" onclick="navigator.clipboard.writeText('${senhaTemp}'); alert('Senha temporária ${senhaTemp} copiada!');">
+                <span class="material-symbols-outlined">content_copy</span> 📋 Copiar Senha Temporária
+              </button>
+
+              <button class="btn-outline-primary" style="justify-content: center; padding: 0.75rem; margin-top: 0.25rem;" onclick="document.getElementById('modalSucessoSenhaTemp').remove(); App.render();">
+                Concluído
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
   openSeletorSenhaTemporariaModal() {
@@ -330,7 +402,7 @@ window.AdminComponent = {
           </div>
           <div class="modal-body">
             <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
-              Selecione o morador abaixo para gerar uma <strong>senha temporária</strong>. O sistema enviará a senha por e-mail e exigirá a troca no primeiro acesso.
+              Selecione o morador abaixo para gerar uma <strong>senha temporária</strong>. O sistema enviará a senha por e-mail, WhatsApp e exigirá a troca no primeiro acesso.
             </p>
 
             <form onsubmit="AdminComponent.submeterSeletorSenhaTemp(event)">
@@ -344,12 +416,12 @@ window.AdminComponent = {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Senha Temporária (Gerada automaticamente)</label>
+                <label class="form-label">Senha Temporária (Sugestão gerada automaticamente)</label>
                 <input type="text" id="inputSenhaTempManual" class="form-control" value="Temp${Math.floor(1000 + Math.random() * 9000)}" required style="font-weight: 700; color: #E65100; letter-spacing: 1px;">
               </div>
 
               <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; background: #E65100;">
-                <span class="material-symbols-outlined">send</span> Enviar Senha Temporária ao E-mail do Morador
+                <span class="material-symbols-outlined">send</span> Confirmar e Gerar Senha Temporária
               </button>
             </form>
           </div>
@@ -373,10 +445,8 @@ window.AdminComponent = {
     window.CondoStore.gerarSenhaTemporaria(morador.id, senhaTemp);
     this.enviarEmailSenhaTemporaria(morador, senhaTemp);
 
-    alert(`🔑 SENHA TEMPORÁRIA GERADA E E-MAIL ENVIADO!\n\nMorador: ${morador.nome} (Apto ${morador.apartamento})\nE-mail: ${morador.email}\nSenha Temporária: ${senhaTemp}\n\nUm e-mail com a senha temporária foi encaminhado para ${morador.email}. No primeiro acesso, o morador cadastrará a sua nova senha pessoal.`);
-    
     document.getElementById('modalSeletorSenhaTemp').remove();
-    App.render();
+    this.exibirSucessoSenhaTemporariaModal(morador, senhaTemp);
   },
 
   gerarSenhaTemporariaPorEmail(emailMorador) {
@@ -393,7 +463,7 @@ window.AdminComponent = {
     if (!morador) return;
 
     const tempAuto = 'Temp' + Math.floor(1000 + Math.random() * 9000);
-    const senhaFinal = prompt(`Digite ou confirme a Senha Temporária para o morador "${morador.nome}" (Apto ${morador.apartamento}):\n\nUm e-mail será disparado para ${morador.email} e a troca de senha será exigida no primeiro acesso.`, tempAuto);
+    const senhaFinal = prompt(`Digite ou confirme a Senha Temporária para o morador "${morador.nome}" (Apto ${morador.apartamento}):\n\nNo primeiro acesso, o morador cadastrará a sua nova senha pessoal.`, tempAuto);
 
     if (senhaFinal === null) return;
 
@@ -405,10 +475,7 @@ window.AdminComponent = {
 
     window.CondoStore.gerarSenhaTemporaria(morador.id, s);
     this.enviarEmailSenhaTemporaria(morador, s);
-
-    alert(`🔑 SENHA TEMPORÁRIA GERADA E E-MAIL ENVIADO!\n\nMorador: ${morador.nome} (Apto ${morador.apartamento})\nE-mail: ${morador.email}\nSenha Temporária: ${s}\n\nO e-mail foi encaminhado para ${morador.email}. No primeiro acesso, o sistema exigirá que o próprio morador cadastre a sua nova senha pessoal.`);
-    
-    App.render();
+    this.exibirSucessoSenhaTemporariaModal(morador, s);
   },
 
   responderMensagemMorador(ocoId) {
@@ -597,12 +664,13 @@ window.AdminComponent = {
     if (res.success) {
       if (novaSenha) {
         this.enviarEmailSenhaTemporaria(res.morador, novaSenha);
-        alert(`🔑 SENHA TEMPORÁRIA CADASTRADA E ENVIADA POR E-MAIL!\n\nSenha Temporária: ${novaSenha}\nE-mail enviado para: ${email}\n\nNo primeiro acesso, o morador cadastrará sua própria senha pessoal.`);
+        document.getElementById('modalEditMorador').remove();
+        this.exibirSucessoSenhaTemporariaModal(res.morador, novaSenha);
       } else {
         App.showToast(`Morador "${nome}" atualizado!`, 'success');
+        document.getElementById('modalEditMorador').remove();
+        App.render();
       }
-      document.getElementById('modalEditMorador').remove();
-      App.render();
     } else {
       alert(res.message);
     }
@@ -660,7 +728,7 @@ window.AdminComponent = {
               </div>
 
               <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
-                <span class="material-symbols-outlined">check_circle</span> Liberar e Enviar Senha Temporária por E-mail
+                <span class="material-symbols-outlined">check_circle</span> Liberar e Gerar Senha Temporária
               </button>
             </form>
           </div>
@@ -699,9 +767,8 @@ window.AdminComponent = {
     window.CondoStore.updateMoradorStatus(res.morador.id, 'Aprovado');
     this.enviarEmailSenhaTemporaria(res.morador, senha || '123456');
 
-    alert(`🔑 MORADOR APROVADO E E-MAIL COM SENHA TEMPORÁRIA ENVIADO!\n\nMorador: ${nome} (Apto ${apartamento})\nE-mail: ${email}\nSenha Temporária: ${senha || '123456'}\n\nUm e-mail automático foi enviado ao morador. No primeiro acesso, ele cadastrará sua nova senha pessoal.`);
     document.getElementById('modalQuickApprove').remove();
-    App.render();
+    this.exibirSucessoSenhaTemporariaModal(res.morador, senha || '123456');
   },
 
   aprovarMorador(id) {
