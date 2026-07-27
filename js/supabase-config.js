@@ -5,7 +5,7 @@
 
 window.SupabaseConfig = {
   url: localStorage.getItem('MODERN_LIFE_SUPABASE_URL') || 'https://lqguxjtczcxbnraoklem.supabase.co',
-  anonKey: localStorage.getItem('MODERN_LIFE_SUPABASE_KEY') || '',
+  anonKey: localStorage.getItem('MODERN_LIFE_SUPABASE_KEY') || 'sb_publishable_Oq01uGaW-flwj1qCHTiWMQ_2GL6cnH4',
   client: null,
 
   init() {
@@ -22,7 +22,7 @@ window.SupabaseConfig = {
 
   saveCredentials(url, key) {
     this.url = url.trim() || 'https://lqguxjtczcxbnraoklem.supabase.co';
-    this.anonKey = key.trim();
+    this.anonKey = key.trim() || 'sb_publishable_Oq01uGaW-flwj1qCHTiWMQ_2GL6cnH4';
     localStorage.setItem('MODERN_LIFE_SUPABASE_URL', this.url);
     localStorage.setItem('MODERN_LIFE_SUPABASE_KEY', this.anonKey);
     this.init();
