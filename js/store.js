@@ -1,10 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Senha do Administrador Master (condominio.modern.life@gmail.com)
+   Garantia Absoluta de Acesso ao Administrador Master (Síndico)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V28';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V28';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V29';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V29';
 const FIRESTORE_PROJECT_ID = 'paginapretacao';
 const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
 const FIRESTORE_RESERVAS_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/reservas`;
@@ -18,7 +18,7 @@ const INITIAL_DATA = {
       cpf: 'Cadastrado no Portal',
       telefone: '27992516970',
       email: 'condominio.modern.life@gmail.com',
-      senha: 'ModernLife2026', // Senha oficial do Administrador Master (Síndico)
+      senha: 'ModernLife2026',
       status: 'Aprovado',
       role: 'Administrador',
       dataCadastro: '2025-01-10',
@@ -153,7 +153,34 @@ class StoreEngine {
     this.listeners = [];
     this.isSyncing = false;
     
+    // Garante que o Síndico sempre tenha permissão e senha válidas
+    this.ensureSindicoMaster();
+
     this.startCloudSyncLoop();
+  }
+
+  ensureSindicoMaster() {
+    let sindico = this.data.moradores.find(m => m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!sindico) {
+      sindico = {
+        id: 'usr_sindico',
+        nome: 'Alessandro Cristiano da Silva',
+        apartamento: 'Administração',
+        cpf: 'Cadastrado no Portal',
+        telefone: '27992516970',
+        email: 'condominio.modern.life@gmail.com',
+        senha: 'ModernLife2026',
+        status: 'Aprovado',
+        role: 'Administrador',
+        dataCadastro: '2025-01-10'
+      };
+      this.data.moradores.unshift(sindico);
+    } else {
+      sindico.role = 'Administrador';
+      sindico.status = 'Aprovado';
+      if (!sindico.senha) sindico.senha = 'ModernLife2026';
+    }
+    this.saveData();
   }
 
   loadData() {
