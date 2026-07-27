@@ -1,7 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Mensagens Diretas, Reclamações e Elogios Integrados no Próprio Site
-   Sincronização Nativa Instantânea com o Painel do Gestor
+   Suporte a Senha Temporária e Troca Obrigatória no Primeiro Acesso
    ---------------------------------------------------- */
 
 const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V31';
@@ -265,6 +264,7 @@ class StoreEngine {
               apartamento: fields.apartamento ? fields.apartamento.stringValue : '',
               role: fields.role ? fields.role.stringValue : 'Morador',
               status: fields.status ? fields.status.stringValue : 'Pendente',
+              senhaTemporaria: fields.senhaTemporaria ? (fields.senhaTemporaria.booleanValue || false) : false,
               dataCadastro: fields.dataCadastro ? fields.dataCadastro.stringValue : new Date().toISOString().split('T')[0]
             };
 
@@ -275,7 +275,7 @@ class StoreEngine {
               if (idx === -1) {
                 this.data.moradores.push(m);
                 updated = true;
-              } else if (this.data.moradores[idx].status !== m.status || this.data.moradores[idx].role !== m.role || (m.senha && this.data.moradores[idx].senha !== m.senha)) {
+              } else if (this.data.moradores[idx].status !== m.status || this.data.moradores[idx].role !== m.role || (m.senha && this.data.moradores[idx].senha !== m.senha) || this.data.moradores[idx].senhaTemporaria !== m.senhaTemporaria) {
                 this.data.moradores[idx] = m;
                 updated = true;
               }
@@ -339,7 +339,6 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
-    // 1. Atualização Nativa para Firebase Web SDK
     if (window.firebase && window.firebase.firestore) {
       try {
         const db = window.firebase.firestore();
@@ -360,7 +359,6 @@ class StoreEngine {
       } catch (e) {}
     }
 
-    // 2. Atualização via REST API para compatibilidade universal
     try {
       for (const m of this.data.moradores) {
         const docId = m.id || 'usr_' + Date.now();
@@ -374,11 +372,12 @@ class StoreEngine {
             apartamento: { stringValue: m.apartamento || '' },
             role: { stringValue: m.role || 'Morador' },
             status: { stringValue: m.status || 'Pendente' },
+            senhaTemporaria: { booleanValue: !!m.senhaTemporaria },
             dataCadastro: { stringValue: m.dataCadastro || new Date().toISOString().split('T')[0] }
           }
         };
 
-        fetch(`${FIRESTORE_REST_URL}/${docId}?updateMask.fieldPaths=status&updateMask.fieldPaths=role&updateMask.fieldPaths=nome&updateMask.fieldPaths=email&updateMask.fieldPaths=senha&updateMask.fieldPaths=apartamento`, {
+        fetch(`${FIRESTORE_REST_URL}/${docId}?updateMask.fieldPaths=status&updateMask.fieldPaths=role&updateMask.fieldPaths=nome&updateMask.fieldPaths=email&updateMask.fieldPaths=senha&updateMask.fieldPaths=senhaTemporaria&updateMask.fieldPaths=apartamento`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -410,12 +409,54 @@ class StoreEngine {
       status: 'Pendente',
       role: morador.role || 'Morador',
       senha: morador.senha || '123456',
+      senhaTemporaria: false,
       ...morador
     };
 
     this.data.moradores.push(newMorador);
     this.saveData();
     return { success: true, morador: newMorador };
+  }
+
+  gerarSenhaTemporaria(moradorId, novaSenhaTemp) {
+    const target = this.data.moradores.find(m => m.id === moradorId || m.email.toLowerCase().trim() === moradorId.toLowerCase().trim());
+    if (!target) return { success: false, message: 'Morador não encontrado.' };
+
+    target.senha = novaSenhaTemp;
+    target.senhaTemporaria = true;
+
+    if (window.firebase && window.firebase.firestore) {
+      try {
+        window.firebase.firestore().collection('moradores').doc(target.id).set({ senha: novaSenhaTemp, senhaTemporaria: true }, { merge: true }).catch(() => {});
+      } catch (e) {}
+    }
+
+    this.saveData();
+    return { success: true, morador: target };
+  }
+
+  concluirTrocaSenhaPessoal(moradorId, novaSenhaPessoal) {
+    const target = this.data.moradores.find(m => m.id === moradorId || m.email.toLowerCase().trim() === moradorId.toLowerCase().trim());
+    if (!target) return { success: false, message: 'Morador não encontrado.' };
+
+    target.senha = novaSenhaPessoal;
+    target.senhaTemporaria = false;
+
+    if (window.firebase && window.firebase.firestore) {
+      try {
+        window.firebase.firestore().collection('moradores').doc(target.id).set({ senha: novaSenhaPessoal, senhaTemporaria: false }, { merge: true }).catch(() => {});
+      } catch (e) {}
+    }
+
+    this.saveData();
+
+    if (this.currentUser && (this.currentUser.id === target.id || this.currentUser.email.toLowerCase() === target.email.toLowerCase())) {
+      this.currentUser.senha = novaSenhaPessoal;
+      this.currentUser.senhaTemporaria = false;
+      this.setCurrentUser(this.currentUser);
+    }
+
+    return { success: true, morador: target };
   }
 
   updateMoradorDetails(id, details) {
@@ -434,7 +475,12 @@ class StoreEngine {
     target.email = details.email || target.email;
     target.telefone = details.telefone || target.telefone;
     target.apartamento = details.apartamento || target.apartamento;
-    if (details.senha) target.senha = details.senha;
+    if (details.senha) {
+      target.senha = details.senha;
+      if (details.senhaTemporaria !== undefined) {
+        target.senhaTemporaria = details.senhaTemporaria;
+      }
+    }
     if (details.role) target.role = details.role;
 
     this.saveData();

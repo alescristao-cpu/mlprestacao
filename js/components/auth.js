@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Autenticação & Cadastro com Senha
-   Aviso de Segurança: Senha Pessoal e Intransferível
+   Recuperação de Senha Segura, Senha Temporária e Troca Obrigatória
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -88,8 +88,13 @@ window.AuthComponent = {
         </div>
 
         <div class="form-group">
-          <label class="form-label">Sua Senha de Acesso</label>
-          <input type="password" id="loginSenha" class="form-control" placeholder="Digite sua senha" required autocomplete="current-password">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <label class="form-label" style="margin-bottom: 0;">Sua Senha de Acesso</label>
+            <a href="javascript:void(0)" onclick="AuthComponent.openEsqueciSenhaModal()" style="font-size: 0.78rem; color: var(--primary); font-weight: 600; text-decoration: none;">
+              🔑 Esqueci minha senha
+            </a>
+          </div>
+          <input type="password" id="loginSenha" class="form-control" placeholder="Digite sua senha ou senha temporária" required autocomplete="current-password">
         </div>
 
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
@@ -215,6 +220,136 @@ window.AuthComponent = {
     `;
   },
 
+  openEsqueciSenhaModal() {
+    const modalAuth = document.getElementById('modalAuth');
+    if (modalAuth) modalAuth.remove();
+
+    const existing = document.getElementById('modalEsqueciSenha');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalEsqueciSenha">
+        <div class="modal-card" style="max-width: 480px;">
+          <div class="modal-header" style="background: var(--primary-dark); color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.05rem;">
+              🔑 Solicitar Recuperação / Senha Temporária
+            </div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalEsqueciSenha').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5; margin-bottom: 1rem;">
+              Por razões de segurança do condomínio, a solicitação de redefinição de senha encaminha um pedido ao <strong>Painel do Síndico (Gestor)</strong>. O Síndico lhe fornecerá uma <strong>senha temporária</strong> para o primeiro acesso.
+            </p>
+
+            <form onsubmit="AuthComponent.submeterSolicitacaoEsqueciSenha(event)">
+              <div class="form-group">
+                <label class="form-label">Seu E-mail Cadastrado</label>
+                <input type="email" id="resetEmail" class="form-control" placeholder="seu.email@exemplo.com" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Unidade / Apto</label>
+                <input type="text" id="resetApto" class="form-control" placeholder="Ex: Apt 402" required>
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
+                <span class="material-symbols-outlined">send</span> Encaminhar Solicitação ao Síndico
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  submeterSolicitacaoEsqueciSenha(e) {
+    e.preventDefault();
+    const email = document.getElementById('resetEmail').value.trim();
+    const apto = document.getElementById('resetApto').value.trim();
+
+    // Registra a solicitação na central do gestor
+    window.CondoStore.addOcorrencia({
+      moradorId: 'usr_reset_' + Date.now(),
+      moradorNome: `Solicitação de Redefinição de Senha (${apto})`,
+      moradorEmail: email,
+      apartamento: apto,
+      categoria: 'Recuperação de Senha',
+      assunto: `[SOLICITAÇÃO DE SENHA TEMPORÁRIA] E-mail: ${email} (Apto ${apto})`,
+      descricao: `O morador com e-mail ${email} (Apto ${apto}) informou que esqueceu sua senha e solicitou a geração de uma senha temporária.`
+    });
+
+    alert(`Solicitação enviada com sucesso!\n\nO Síndico Alessandro (condominio.modern.life@gmail.com) gerará uma senha temporária para seu primeiro acesso.`);
+    document.getElementById('modalEsqueciSenha').remove();
+    App.render();
+  },
+
+  openTrocaSenhaObrigatoriaModal(user) {
+    const existing = document.getElementById('modalTrocaObrigatoria');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalTrocaObrigatoria" style="z-index: 99999;">
+        <div class="modal-card" style="max-width: 480px; border: 2px solid var(--primary);">
+          <div class="modal-header" style="background: var(--primary-dark); color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.05rem;">
+              🔒 Cadastre Sua Nova Senha Pessoal
+            </div>
+          </div>
+          <div class="modal-body">
+            <div style="background: #E8F5E9; border-left: 4px solid var(--primary); padding: 0.85rem; border-radius: 6px; font-size: 0.88rem; color: var(--primary-dark); margin-bottom: 1.25rem; line-height: 1.5;">
+              👋 Olá, <strong>${user.nome}</strong>!<br>
+              Você entrou utilizando uma <strong>senha temporária</strong> fornecida pela administração. Por razões de segurança, cadastre agora a sua nova senha pessoal antes de continuar.
+            </div>
+
+            <form onsubmit="AuthComponent.submeterTrocaSenhaObrigatoria(event, '${user.id}')">
+              <div class="form-group">
+                <label class="form-label">Crie Sua Nova Senha Pessoal</label>
+                <input type="password" id="novaSenhaPessoal" class="form-control" placeholder="Digite sua nova senha" required minlength="6" autocomplete="new-password">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px;">
+                  🔒 A senha é pessoal e intransferível. Recomendamos não reutilizar senhas de outros serviços.
+                </span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Confirme Sua Nova Senha Pessoal</label>
+                <input type="password" id="confirmaSenhaPessoal" class="form-control" placeholder="Repita a nova senha" required minlength="6" autocomplete="new-password">
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; font-size: 0.95rem;">
+                <span class="material-symbols-outlined">save</span> Cadastrar Minha Nova Senha
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  submeterTrocaSenhaObrigatoria(e, userId) {
+    e.preventDefault();
+    const s1 = document.getElementById('novaSenhaPessoal').value;
+    const s2 = document.getElementById('confirmaSenhaPessoal').value;
+
+    if (s1 !== s2) {
+      alert('As senhas digitadas não coincidem!');
+      return;
+    }
+
+    const res = window.CondoStore.concluirTrocaSenhaPessoal(userId, s1);
+    if (res.success) {
+      alert('Sua nova senha pessoal foi cadastrada com sucesso!\n\nAgora você já pode acessar o portal com sua própria senha.');
+      const modal = document.getElementById('modalTrocaObrigatoria');
+      if (modal) modal.remove();
+      App.render();
+    } else {
+      alert(res.message);
+    }
+  },
+
   handleGoogleRegister() {
     const emailGmail = prompt('Digite o seu e-mail do Gmail para cadastro:', 'seu.nome@gmail.com');
     if (!emailGmail) return;
@@ -334,13 +469,21 @@ window.AuthComponent = {
     }
 
     window.CondoStore.setCurrentUser(user);
+
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.remove();
+
+    // VERIFICAÇÃO DE SENHA TEMPORÁRIA: Se entrou com senha temporária, exige cadastro de nova senha pessoal!
+    if (user.senhaTemporaria) {
+      this.openTrocaSenhaObrigatoriaModal(user);
+      return;
+    }
+
     if (user.status === 'Aprovado') {
       App.showToast(`Bem-vindo(a), ${user.nome}!`, 'success');
     } else {
       App.showToast('Seu cadastro está aguardando aprovação no Painel do Administrador (Síndico).', 'info');
     }
-    const modal = document.getElementById('modalAuth');
-    if (modal) modal.remove();
     App.render();
   },
 
