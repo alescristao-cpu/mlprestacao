@@ -1,9 +1,9 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Service Worker (pwa)
-   Cache v4 com inclusão do componente Portaria
+   Modern Life Residence - Service Worker (PWA)
+   Cache v5 com suporte total a Sincronização Mobile
    ---------------------------------------------------- */
 
-const CACHE_NAME = 'modern-life-v4-cache';
+const CACHE_NAME = 'modern-life-v5-cache';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -1,10 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Garantia Absoluta de Acesso ao Administrador Master (Síndico)
+   Sincronização Nativa Instantânea (Android, iOS & Desktop)
+   Garantia Total de Aprovação e Atualização no Firestore
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V29';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V29';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V30';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V30';
 const FIRESTORE_PROJECT_ID = 'paginapretacao';
 const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
 const FIRESTORE_RESERVAS_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/reservas`;
@@ -153,9 +154,7 @@ class StoreEngine {
     this.listeners = [];
     this.isSyncing = false;
     
-    // Garante que o Síndico sempre tenha permissão e senha válidas
     this.ensureSindicoMaster();
-
     this.startCloudSyncLoop();
   }
 
@@ -246,6 +245,7 @@ class StoreEngine {
     this.isSyncing = true;
 
     try {
+      // 1. Puxa moradores da Nuvem
       const response = await fetch(FIRESTORE_REST_URL, { method: 'GET' });
       if (response.ok) {
         const json = await response.json();
@@ -289,6 +289,7 @@ class StoreEngine {
         }
       }
 
+      // 2. Puxa reservas da Nuvem
       const resReservas = await fetch(FIRESTORE_RESERVAS_URL, { method: 'GET' });
       if (resReservas.ok) {
         const jsonRes = await resReservas.json();
@@ -338,6 +339,18 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
+    // 1. Atualização para Firebase Web SDK nativo (Garantia para Celular e PC)
+    if (window.firebase && window.firebase.firestore) {
+      try {
+        const db = window.firebase.firestore();
+        for (const m of this.data.moradores) {
+          const docId = m.id || 'usr_' + Date.now();
+          db.collection('moradores').doc(docId).set(m, { merge: true }).catch(() => {});
+        }
+      } catch (e) {}
+    }
+
+    // 2. Atualização via REST API para compatibilidade universal
     try {
       for (const m of this.data.moradores) {
         const docId = m.id || 'usr_' + Date.now();
@@ -355,11 +368,18 @@ class StoreEngine {
           }
         };
 
-        fetch(`${FIRESTORE_REST_URL}?documentId=${docId}`, {
-          method: 'POST',
+        // Usa PATCH no REST API do Firestore para garantir atualização de documentos existentes sem 409 Conflict
+        fetch(`${FIRESTORE_REST_URL}/${docId}?updateMask.fieldPaths=status&updateMask.fieldPaths=role&updateMask.fieldPaths=nome&updateMask.fieldPaths=email&updateMask.fieldPaths=senha&updateMask.fieldPaths=apartamento`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        }).catch(() => {});
+        }).catch(() => {
+          fetch(`${FIRESTORE_REST_URL}?documentId=${docId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }).catch(() => {});
+        });
       }
     } catch (e) {}
 
@@ -380,11 +400,17 @@ class StoreEngine {
           }
         };
 
-        fetch(`${FIRESTORE_RESERVAS_URL}?documentId=${resDocId}`, {
-          method: 'POST',
+        fetch(`${FIRESTORE_RESERVAS_URL}/${resDocId}?updateMask.fieldPaths=status&updateMask.fieldPaths=observacao`, {
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        }).catch(() => {});
+        }).catch(() => {
+          fetch(`${FIRESTORE_RESERVAS_URL}?documentId=${resDocId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          }).catch(() => {});
+        });
       }
     } catch (e) {}
   }
@@ -415,7 +441,7 @@ class StoreEngine {
   }
 
   updateMoradorDetails(id, details) {
-    const target = this.data.moradores.find(m => m.id === id);
+    const target = this.data.moradores.find(m => m.id === id || m.email.toLowerCase().trim() === id.toLowerCase().trim());
     if (!target) return { success: false, message: 'Morador não encontrado.' };
 
     if (details.email) {
@@ -435,7 +461,7 @@ class StoreEngine {
 
     this.saveData();
 
-    if (this.currentUser && this.currentUser.id === id) {
+    if (this.currentUser && (this.currentUser.id === target.id || this.currentUser.email.toLowerCase() === target.email.toLowerCase())) {
       this.setCurrentUser(target);
     }
 
@@ -443,12 +469,20 @@ class StoreEngine {
   }
 
   updateMoradorStatus(id, newStatus) {
-    const item = this.data.moradores.find(m => m.id === id);
+    const item = this.data.moradores.find(m => m.id === id || m.email.toLowerCase().trim() === id.toLowerCase().trim());
     if (item) {
       item.status = newStatus;
+      
+      // Atualização imediata em tempo real no SDK do Firebase para dispositivos móveis
+      if (window.firebase && window.firebase.firestore) {
+        try {
+          window.firebase.firestore().collection('moradores').doc(item.id).set({ status: newStatus }, { merge: true }).catch(() => {});
+        } catch (e) {}
+      }
+
       this.saveData();
 
-      if (this.currentUser && (this.currentUser.id === id || this.currentUser.email.toLowerCase() === item.email.toLowerCase())) {
+      if (this.currentUser && (this.currentUser.id === item.id || this.currentUser.email.toLowerCase() === item.email.toLowerCase())) {
         this.currentUser.status = newStatus;
         this.setCurrentUser(this.currentUser);
       }
@@ -456,25 +490,27 @@ class StoreEngine {
   }
 
   deleteMorador(id) {
-    const target = this.data.moradores.find(m => m.id === id);
+    const target = this.data.moradores.find(m => m.id === id || m.email.toLowerCase().trim() === id.toLowerCase().trim());
     
     if (target && (target.role === 'Administrador' || target.id === 'usr_sindico' || target.email.toLowerCase() === 'condominio.modern.life@gmail.com')) {
       return { success: false, message: 'O cadastro do Administrador Master (Síndico) não pode ser excluído por razões de segurança do sistema.' };
     }
 
-    this.data.moradores = this.data.moradores.filter(m => m.id !== id);
+    const deleteId = target ? target.id : id;
 
-    if (window.firebase && window.firebase.firestore && id) {
+    this.data.moradores = this.data.moradores.filter(m => m.id !== deleteId && m.email.toLowerCase() !== deleteId.toLowerCase());
+
+    if (window.firebase && window.firebase.firestore && deleteId) {
       try {
-        window.firebase.firestore().collection('moradores').doc(id).delete().catch(() => {});
+        window.firebase.firestore().collection('moradores').doc(deleteId).delete().catch(() => {});
       } catch (e) {}
     }
 
-    if (id) {
-      fetch(`${FIRESTORE_REST_URL}/${id}`, { method: 'DELETE' }).catch(() => {});
+    if (deleteId) {
+      fetch(`${FIRESTORE_REST_URL}/${deleteId}`, { method: 'DELETE' }).catch(() => {});
     }
 
-    if (this.currentUser && (this.currentUser.id === id || (target && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
+    if (this.currentUser && (this.currentUser.id === deleteId || (target && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
       this.setCurrentUser(null);
     } else {
       this.saveData();
