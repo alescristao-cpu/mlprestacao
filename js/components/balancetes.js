@@ -1,7 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Balancetes & Dashboard Financeiro Interativo
-   Suporte a Importação de Planilhas (CSV, XLS, PDF, DOC, TXT)
-   Geração Automática de Gráficos Coloridos e Explicativos
+   Modern Life Residence - Balancetes & Dashboard Financeiro
+   Estética Clean Premium: Cores com Degradês Suaves & Alta Visibilidade
    ---------------------------------------------------- */
 
 window.BalancetesComponent = {
@@ -17,7 +16,7 @@ window.BalancetesComponent = {
     if (!user || !isApproved) {
       container.innerHTML = `
         <div class="card-widget" style="text-align: center; padding: 3.5rem 1.5rem; max-width: 600px; margin: 2rem auto;">
-          <div style="width: 70px; height: 70px; border-radius: 50%; background: #E8F5E9; color: #2E6B42; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: #F0FDF4; color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
             <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
           </div>
           <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
@@ -48,17 +47,18 @@ window.BalancetesComponent = {
     const percentExecucao = receita > 0 ? Math.min(100, Math.round((despesa / receita) * 100)) : 0;
     const percentSuperavit = 100 - percentExecucao;
 
+    // Paleta de Cores Clean Premium em Degradê Suave
     const categorias = (activeBal && activeBal.categoriasDespesa && activeBal.categoriasDespesa.length > 0)
       ? activeBal.categoriasDespesa
       : [
-          { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49, cor: '#2563EB' },
-          { nome: 'Consumo de Água & Esgoto', valor: 9404.63, cor: '#0D9488' },
-          { nome: 'Consumo de Gás Encanado', valor: 2592.73, cor: '#D97706' },
-          { nome: 'Manutenção de Elevadores & CFTV', valor: 1535.00, cor: '#7C3AED' },
-          { nome: 'Honorários de Gestão & Contábil', valor: 2450.03, cor: '#4F46E5' },
-          { nome: 'Seguro Predial & Placas Solares', valor: 1512.95, cor: '#0284C7' },
-          { nome: 'Impostos & Retenções Tributárias', valor: 4305.34, cor: '#DB2777' },
-          { nome: 'Manutenção Predial & Materiais', valor: 1912.60, cor: '#059669' }
+          { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49, corGradiente: 'linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%)', corSolida: '#3B82F6' },
+          { nome: 'Consumo de Água & Esgoto', valor: 9404.63, corGradiente: 'linear-gradient(90deg, #14B8A6 0%, #2DD4BF 100%)', corSolida: '#14B8A6' },
+          { nome: 'Consumo de Gás Encanado', valor: 2592.73, corGradiente: 'linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%)', corSolida: '#F59E0B' },
+          { nome: 'Manutenção de Elevadores & CFTV', valor: 1535.00, corGradiente: 'linear-gradient(90deg, #8B5CF6 0%, #A78BFA 100%)', corSolida: '#8B5CF6' },
+          { nome: 'Honorários de Gestão & Contábil', valor: 2450.03, corGradiente: 'linear-gradient(90deg, #6366F1 0%, #818CF8 100%)', corSolida: '#6366F1' },
+          { nome: 'Seguro Predial & Placas Solares', valor: 1512.95, corGradiente: 'linear-gradient(90deg, #0284C7 0%, #38BDF8 100%)', corSolida: '#0284C7' },
+          { nome: 'Impostos & Retenções Tributárias', valor: 4305.34, corGradiente: 'linear-gradient(90deg, #EC4899 0%, #F472B6 100%)', corSolida: '#EC4899' },
+          { nome: 'Manutenção Predial & Materiais', valor: 1912.60, corGradiente: 'linear-gradient(90deg, #10B981 0%, #34D399 100%)', corSolida: '#10B981' }
         ];
 
     const totalCatGastos = categorias.reduce((sum, c) => sum + (c.valor || 0), 0);
@@ -66,24 +66,24 @@ window.BalancetesComponent = {
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         
-        <!-- Header da Página -->
-        <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white; padding: 1.35rem;">
+        <!-- Header da Página Clean -->
+        <div class="card-widget" style="background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); color: white; padding: 1.35rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
-              <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.4rem;">
+              <span class="badge" style="background: rgba(255,255,255,0.12); color: #38BDF8; font-weight: 600; margin-bottom: 0.4rem; padding: 4px 10px; border-radius: 20px;">
                 <span class="material-symbols-outlined" style="font-size: 0.85rem;">bar_chart</span> DEMONSTRATIVO FINANCEIRO AUDITADO
               </span>
-              <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-top: 0.2rem;">
-                Balancetes &amp; Dashboard Financeiro Colorido
+              <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-top: 0.2rem; color: #F8FAFC;">
+                Balancetes &amp; Dashboard Financeiro
               </h2>
-              <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.2rem;">
-                Transparência total em gráficos explicativos de receitas, despesas e fundo de reserva.
+              <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.2rem; color: #94A3B8;">
+                Transparência total em gráficos clean com degradês suaves e alta legibilidade.
               </p>
             </div>
 
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
               <!-- Seletor do Mês Ativo -->
-              <select id="selectCompetenciaBal" class="form-control" style="width: auto; font-weight: 700; background: white; color: var(--primary-dark);" onchange="BalancetesComponent.trocarCompetencia(this.value)">
+              <select id="selectCompetenciaBal" class="form-control" style="width: auto; font-weight: 600; background: #0F172A; color: #F8FAFC; border: 1px solid #334155;" onchange="BalancetesComponent.trocarCompetencia(this.value)">
                 ${list.map(b => `
                   <option value="${b.id}" ${activeBal && activeBal.id === b.id ? 'selected' : ''}>
                     📅 ${b.mes || ''} ${b.ano || ''}
@@ -92,7 +92,7 @@ window.BalancetesComponent = {
               </select>
 
               ${isSindico ? `
-                <button class="btn-primary" style="background: #3ECF8E; color: #1C1C1C; font-weight: 800; border: none; padding: 0.8rem 1.1rem; display: flex; align-items: center; gap: 0.4rem;" onclick="BalancetesComponent.openImportModal()">
+                <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.8rem 1.1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px;" onclick="BalancetesComponent.openImportModal()">
                   <span class="material-symbols-outlined" style="font-size: 1.2rem;">cloud_upload</span> 📊 Importar Planilha / Balancete
                 </button>
               ` : ''}
@@ -100,135 +100,182 @@ window.BalancetesComponent = {
           </div>
         </div>
 
-        <!-- 4 KPI Cards Financeiros Coloridos -->
+        <!-- 4 KPI Cards Financeiros com Degradê Clean -->
         <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
           
-          <div class="card-widget" style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid #A7F3D0; padding: 1.1rem;">
+          <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 5px solid #10B981; padding: 1.1rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #065F46;">RECEITA BRUTA TOTAL</span>
-              <span class="material-symbols-outlined" style="color: #059669; font-size: 1.6rem;">trending_up</span>
+              <span style="font-size: 0.78rem; font-weight: 700; color: #64748B; letter-spacing: 0.5px;">RECEITA BRUTA TOTAL</span>
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: #ECFDF5; color: #10B981; display: flex; align-items: center; justify-content: center;">
+                <span class="material-symbols-outlined" style="font-size: 1.4rem;">trending_up</span>
+              </div>
             </div>
-            <div style="font-size: 1.5rem; font-weight: 800; color: #064E3B; margin-top: 0.4rem;">
+            <div style="font-size: 1.45rem; font-weight: 800; color: #0F172A; margin-top: 0.4rem;">
               R$ ${receita.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
             </div>
-            <div style="font-size: 0.75rem; color: #047857; margin-top: 4px; font-weight: 600;">
-              🟢 100% Arrecadação da Competência
+            <div style="font-size: 0.75rem; color: #059669; margin-top: 4px; font-weight: 600;">
+              🟢 100% Arrecadação Aprovada
             </div>
           </div>
 
-          <div class="card-widget" style="background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%); border: 1px solid #FECACA; padding: 1.1rem;">
+          <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 5px solid #F43F5E; padding: 1.1rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #991B1B;">DESPESA BRUTA TOTAL</span>
-              <span class="material-symbols-outlined" style="color: #DC2626; font-size: 1.6rem;">trending_down</span>
+              <span style="font-size: 0.78rem; font-weight: 700; color: #64748B; letter-spacing: 0.5px;">DESPESA BRUTA TOTAL</span>
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: #FFF1F2; color: #F43F5E; display: flex; align-items: center; justify-content: center;">
+                <span class="material-symbols-outlined" style="font-size: 1.4rem;">trending_down</span>
+              </div>
             </div>
-            <div style="font-size: 1.5rem; font-weight: 800; color: #7F1D1D; margin-top: 0.4rem;">
+            <div style="font-size: 1.45rem; font-weight: 800; color: #0F172A; margin-top: 0.4rem;">
               R$ ${despesa.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
             </div>
-            <div style="font-size: 0.75rem; color: #B91C1C; margin-top: 4px; font-weight: 600;">
-              🔴 ${percentExecucao}% da Receita Comprometida
+            <div style="font-size: 0.75rem; color: #E11D48; margin-top: 4px; font-weight: 600;">
+              🔴 ${percentExecucao}% Executado no Mês
             </div>
           </div>
 
-          <div class="card-widget" style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); border: 1px solid #BFDBFE; padding: 1.1rem;">
+          <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 5px solid #3B82F6; padding: 1.1rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #1E40AF;">RESULTADO DO MÊS</span>
-              <span class="material-symbols-outlined" style="color: #2563EB; font-size: 1.6rem;">savings</span>
+              <span style="font-size: 0.78rem; font-weight: 700; color: #64748B; letter-spacing: 0.5px;">RESULTADO DO MÊS</span>
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: #EFF6FF; color: #3B82F6; display: flex; align-items: center; justify-content: center;">
+                <span class="material-symbols-outlined" style="font-size: 1.4rem;">savings</span>
+              </div>
             </div>
-            <div style="font-size: 1.5rem; font-weight: 800; color: #1E3A8A; margin-top: 0.4rem;">
+            <div style="font-size: 1.45rem; font-weight: 800; color: #0F172A; margin-top: 0.4rem;">
               R$ ${saldoMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
             </div>
-            <div style="font-size: 0.75rem; color: #1D4ED8; margin-top: 4px; font-weight: 600;">
-              🔷 Superávit Operacional no Mês
+            <div style="font-size: 0.75rem; color: #2563EB; margin-top: 4px; font-weight: 600;">
+              🔷 Superávit Operacional
             </div>
           </div>
 
-          <div class="card-widget" style="background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%); border: 1px solid #DDD6FE; padding: 1.1rem;">
+          <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 5px solid #8B5CF6; padding: 1.1rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 0.82rem; font-weight: 700; color: #5B21B6;">SALDO ATUAL EM CAIXA</span>
-              <span class="material-symbols-outlined" style="color: #7C3AED; font-size: 1.6rem;">account_balance</span>
+              <span style="font-size: 0.78rem; font-weight: 700; color: #64748B; letter-spacing: 0.5px;">SALDO ATUAL EM CAIXA</span>
+              <div style="width: 36px; height: 36px; border-radius: 8px; background: #F5F3FF; color: #8B5CF6; display: flex; align-items: center; justify-content: center;">
+                <span class="material-symbols-outlined" style="font-size: 1.4rem;">account_balance</span>
+              </div>
             </div>
-            <div style="font-size: 1.5rem; font-weight: 800; color: #4C1D95; margin-top: 0.4rem;">
+            <div style="font-size: 1.45rem; font-weight: 800; color: #0F172A; margin-top: 0.4rem;">
               R$ ${saldoAtual.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
             </div>
-            <div style="font-size: 0.75rem; color: #6D28D9; margin-top: 4px; font-weight: 600;">
-              💰 Fundo de Reserva + Contas Correntes
+            <div style="font-size: 0.75rem; color: #7C3AED; margin-top: 4px; font-weight: 600;">
+              💰 Fundo de Reserva + Contas
             </div>
           </div>
 
         </div>
 
-        <!-- Área de Gráficos Coloridos e Explicativos (2 Colunas) -->
+        <!-- Área de Gráficos Clean com Degradê (2 Colunas) -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
           
-          <!-- Gráfico 1: Saúde Financeira & Proporção Receita x Despesa -->
-          <div class="card-widget" style="padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+          <!-- Gráfico 1: Saúde Financeira com Barra de Progresso em Degradê Suave -->
+          <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-              <div class="card-title" style="color: var(--primary-dark); font-size: 1.1rem; margin-bottom: 0.25rem;">
-                <span class="material-symbols-outlined" style="color: #059669;">pie_chart</span> Balanço de Execução Financeira
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #0F172A;">
+                  Balanço de Execução Orçamentária
+                </h3>
+                <span class="badge" style="background: #F1F5F9; color: #475569; font-weight: 600; font-size: 0.75rem;">Visão Geral</span>
               </div>
-              <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.2rem;">
-                Comparativo percentual entre arrecadação total e gastos executados.
+              <p style="font-size: 0.82rem; color: #64748B; margin-bottom: 1.4rem;">
+                Proporção em degradê suave entre despesas executadas e saldo retido.
               </p>
 
-              <!-- Barra de Distribuição Colorida Gradiente -->
-              <div style="margin-bottom: 1.2rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">
-                  <span style="color: #DC2626;">Gastos Executados (${percentExecucao}%)</span>
-                  <span style="color: #059669;">Superávit Retido (${percentSuperavit}%)</span>
+              <!-- Barra de Progresso em Degradê Clean -->
+              <div style="margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px;">
+                  <span style="color: #F43F5E;">Despesas (${percentExecucao}%)</span>
+                  <span style="color: #10B981;">Saldo Livre (${percentSuperavit}%)</span>
                 </div>
                 
-                <div style="height: 22px; background: #E2E8F0; border-radius: 12px; overflow: hidden; display: flex; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
-                  <div style="width: ${percentExecucao}%; background: linear-gradient(90deg, #EF4444 0%, #DC2626 100%); transition: width 0.8s ease;" title="Gastos: R$ ${despesa.toLocaleString('pt-BR')}"></div>
-                  <div style="width: ${percentSuperavit}%; background: linear-gradient(90deg, #10B981 0%, #059669 100%); transition: width 0.8s ease;" title="Superávit: R$ ${saldoMes.toLocaleString('pt-BR')}"></div>
+                <div style="height: 20px; background: #F1F5F9; border-radius: 10px; overflow: hidden; display: flex; box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);">
+                  <div style="width: ${percentExecucao}%; background: linear-gradient(90deg, #F43F5E 0%, #FB7185 100%); transition: width 0.8s ease;" title="Gastos: R$ ${despesa.toLocaleString('pt-BR')}"></div>
+                  <div style="width: ${percentSuperavit}%; background: linear-gradient(90deg, #10B981 0%, #34D399 100%); transition: width 0.8s ease;" title="Superávit: R$ ${saldoMes.toLocaleString('pt-BR')}"></div>
                 </div>
               </div>
 
-              <!-- Indicador Visual Donut SVG -->
-              <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; background: var(--bg-app); padding: 1rem; border-radius: 10px;">
-                <svg width="110" height="110" viewBox="0 0 36 36" style="transform: rotate(-90deg);">
-                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#E2E8F0" stroke-width="3.8"/>
-                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#059669" stroke-width="3.8" stroke-dasharray="100 100" stroke-dashoffset="0"/>
-                  <circle cx="18" cy="18" r="15.915" fill="none" stroke="#DC2626" stroke-width="3.8" stroke-dasharray="${percentExecucao} 100" stroke-dashoffset="0"/>
-                </svg>
+              <!-- Anel Gráfico Clean SVG com Degradê -->
+              <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; background: #F8FAFC; padding: 1.1rem; border-radius: 12px; border: 1px solid #F1F5F9;">
                 
-                <div>
-                  <div style="font-size: 1.4rem; font-weight: 800; color: #059669;">${percentSuperavit}%</div>
-                  <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">Margem de Segurança</div>
-                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
-                    R$ ${saldoMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})} adicionados ao caixa
+                <div style="position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
+                  <svg width="100" height="100" viewBox="0 0 36 36" style="transform: rotate(-90deg);">
+                    <defs>
+                      <linearGradient id="gradDespesa" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#F43F5E" />
+                        <stop offset="100%" stop-color="#FB7185" />
+                      </linearGradient>
+                      <linearGradient id="gradSuperavit" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#10B981" />
+                        <stop offset="100%" stop-color="#34D399" />
+                      </linearGradient>
+                    </defs>
+                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="#E2E8F0" stroke-width="3.5"/>
+                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="url(#gradSuperavit)" stroke-width="3.5" stroke-dasharray="100 100" stroke-dashoffset="0"/>
+                    <circle cx="18" cy="18" r="15.915" fill="none" stroke="url(#gradDespesa)" stroke-width="3.5" stroke-dasharray="${percentExecucao} 100" stroke-dashoffset="0"/>
+                  </svg>
+                  
+                  <div style="position: absolute; text-align: center;">
+                    <span style="font-size: 1.1rem; font-weight: 800; color: #0F172A; display: block; line-height: 1;">${percentSuperavit}%</span>
+                    <span style="font-size: 0.65rem; color: #64748B; font-weight: 600;">Livre</span>
                   </div>
                 </div>
+
+                <div>
+                  <div style="font-size: 1.1rem; font-weight: 800; color: #10B981;">R$ ${saldoMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+                  <div style="font-size: 0.8rem; font-weight: 700; color: #334155; margin-top: 2px;">Superávit Incorporado</div>
+                  <div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">
+                    Contas em perfeito equilíbrio financeiro.
+                  </div>
+                </div>
+
               </div>
 
             </div>
           </div>
 
-          <!-- Gráfico 2: Detalhamento Colorido de Gastos por Categoria -->
-          <div class="card-widget" style="padding: 1.25rem;">
-            <div class="card-title" style="color: var(--primary-dark); font-size: 1.1rem; margin-bottom: 0.25rem;">
-              <span class="material-symbols-outlined" style="color: #2563EB;">donut_small</span> Distribuição de Gastos por Categoria
+          <!-- Gráfico 2: Gastos por Categoria com Barras de Degradê Clean -->
+          <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+              <h3 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #0F172A;">
+                Destino dos Recursos por Categoria
+              </h3>
+              <span class="badge" style="background: #F1F5F9; color: #475569; font-weight: 600; font-size: 0.75rem;">Detalhamento</span>
             </div>
-            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem;">
-              Divisão exata do destino do dinheiro do condomínio.
+            <p style="font-size: 0.82rem; color: #64748B; margin-bottom: 1.2rem;">
+              Distribuição percentual limpa das despesas da unidade.
             </p>
 
-            <div style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 280px; overflow-y: auto; padding-right: 4px;">
-              ${categorias.map(cat => {
+            <div style="display: flex; flex-direction: column; gap: 0.85rem; max-height: 270px; overflow-y: auto; padding-right: 6px;">
+              ${categorias.map((cat, idx) => {
                 const perc = totalCatGastos > 0 ? Math.round((cat.valor / totalCatGastos) * 100) : 0;
-                const cor = cat.cor || '#2563EB';
+                
+                // Degradês Clean pré-definidos
+                const gradientes = [
+                  'linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%)',
+                  'linear-gradient(90deg, #14B8A6 0%, #2DD4BF 100%)',
+                  'linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%)',
+                  'linear-gradient(90deg, #8B5CF6 0%, #A78BFA 100%)',
+                  'linear-gradient(90deg, #6366F1 0%, #818CF8 100%)',
+                  'linear-gradient(90deg, #0284C7 0%, #38BDF8 100%)',
+                  'linear-gradient(90deg, #EC4899 0%, #F472B6 100%)',
+                  'linear-gradient(90deg, #10B981 0%, #34D399 100%)'
+                ];
+
+                const gradUsado = cat.corGradiente || gradientes[idx % gradientes.length];
+                const corSolida = cat.corSolida || '#3B82F6';
 
                 return `
                   <div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; margin-bottom: 3px;">
-                      <span style="display: flex; align-items: center; gap: 6px; color: var(--text-main);">
-                        <span style="width: 10px; height: 10px; border-radius: 50%; background: ${cor}; display: inline-block;"></span>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">
+                      <span style="display: flex; align-items: center; gap: 6px; color: #334155;">
+                        <span style="width: 10px; height: 10px; border-radius: 50%; background: ${corSolida}; display: inline-block;"></span>
                         ${cat.nome}
                       </span>
-                      <strong>R$ ${cat.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${perc}%)</strong>
+                      <strong style="color: #0F172A;">R$ ${cat.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})} <span style="color: #64748B; font-weight: 500;">(${perc}%)</span></strong>
                     </div>
 
-                    <div style="height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden;">
-                      <div style="width: ${perc}%; height: 100%; background: ${cor}; border-radius: 4px;"></div>
+                    <div style="height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden;">
+                      <div style="width: ${perc}%; height: 100%; background: ${gradUsado}; border-radius: 4px; transition: width 0.8s ease;"></div>
                     </div>
                   </div>
                 `;
@@ -238,50 +285,50 @@ window.BalancetesComponent = {
 
         </div>
 
-        <!-- Tabela Histórica Detalhada de Balancetes Auditados -->
-        <div class="card-widget" style="padding: 1.25rem;">
+        <!-- Tabela Histórica Detalhada em Estética Clean -->
+        <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
           <div class="card-header" style="margin-bottom: 1rem;">
-            <div class="card-title" style="font-size: 1.15rem; color: var(--primary-dark);">
-              <span class="material-symbols-outlined" style="color: var(--primary);">table_chart</span> Tabela Consolidada de Balancetes
+            <div class="card-title" style="font-size: 1.15rem; color: #0F172A; font-weight: 700;">
+              <span class="material-symbols-outlined" style="color: var(--primary);">table_chart</span> Tabela Consolidada de Balancetes Auditados
             </div>
           </div>
 
           <div class="table-responsive">
-            <table class="custom-table">
+            <table class="custom-table" style="border-collapse: separate; border-spacing: 0;">
               <thead>
-                <tr>
-                  <th>Competência / Mês</th>
-                  <th>Data da Auditoria</th>
-                  <th style="text-align: right;">Receita Bruta (R$)</th>
-                  <th style="text-align: right;">Despesa Bruta (R$)</th>
-                  <th style="text-align: right;">Resultado do Mês (R$)</th>
-                  <th style="text-align: right;">Saldo Atual Acumulado (R$)</th>
-                  ${isSindico ? '<th style="text-align: center;">Ações</th>' : ''}
+                <tr style="background: #F8FAFC;">
+                  <th style="color: #475569; font-weight: 700;">Competência / Mês</th>
+                  <th style="color: #475569; font-weight: 700;">Data da Auditoria</th>
+                  <th style="text-align: right; color: #059669; font-weight: 700;">Receita Bruta (R$)</th>
+                  <th style="text-align: right; color: #E11D48; font-weight: 700;">Despesa Bruta (R$)</th>
+                  <th style="text-align: right; color: #2563EB; font-weight: 700;">Resultado do Mês (R$)</th>
+                  <th style="text-align: right; color: #7C3AED; font-weight: 700;">Saldo Atual Acumulado (R$)</th>
+                  ${isSindico ? '<th style="text-align: center; color: #475569; font-weight: 700;">Ações</th>' : ''}
                 </tr>
               </thead>
               <tbody>
                 ${list.map(bal => `
-                  <tr style="background: ${activeBal && activeBal.id === bal.id ? '#F0FDF4' : 'transparent'}; cursor: pointer;" onclick="BalancetesComponent.trocarCompetencia('${bal.id}')">
+                  <tr style="background: ${activeBal && activeBal.id === bal.id ? '#F0FDF4' : 'transparent'}; cursor: pointer; transition: background 0.2s ease;" onclick="BalancetesComponent.trocarCompetencia('${bal.id}')">
                     <td>
-                      <strong>📅 ${bal.mes} ${bal.ano}</strong>
-                      <div style="font-size: 0.75rem; color: var(--text-muted);">${bal.titulo || 'Balancete Aprovado'}</div>
+                      <strong style="color: #0F172A;">📅 ${bal.mes} ${bal.ano}</strong>
+                      <div style="font-size: 0.75rem; color: #64748B;">${bal.titulo || 'Balancete Aprovado pelo Conselho'}</div>
                     </td>
-                    <td>${bal.dataPublicacao || '31/05/2026'}</td>
+                    <td style="color: #475569; font-weight: 500;">${bal.dataPublicacao || '31/05/2026'}</td>
                     <td style="text-align: right; color: #059669; font-weight: 700;">
                       R$ ${bal.receitaBruta.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                     </td>
-                    <td style="text-align: right; color: #DC2626; font-weight: 700;">
+                    <td style="text-align: right; color: #E11D48; font-weight: 700;">
                       R$ ${bal.despesaBruta.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                     </td>
                     <td style="text-align: right; color: #2563EB; font-weight: 700;">
                       R$ ${bal.saldoMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                     </td>
-                    <td style="text-align: right; color: #4C1D95; font-weight: 800;">
+                    <td style="text-align: right; color: #6D28D9; font-weight: 800;">
                       R$ ${(bal.saldoAtual || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
                     </td>
                     ${isSindico ? `
                       <td style="text-align: center;" onclick="event.stopPropagation()">
-                        <button class="btn-secondary btn-sm btn-danger" onclick="BalancetesComponent.excluirBalancete('${bal.id}', '${bal.mes} ${bal.ano}')" title="Excluir Balancete">
+                        <button class="btn-secondary btn-sm btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA;" onclick="BalancetesComponent.excluirBalancete('${bal.id}', '${bal.mes} ${bal.ano}')" title="Excluir Balancete">
                           <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span>
                         </button>
                       </td>
@@ -309,9 +356,9 @@ window.BalancetesComponent = {
 
     const modalHtml = `
       <div class="modal-overlay active" id="modalImportBalancete" style="z-index: 999999;">
-        <div class="modal-card" style="max-width: 600px; border: 2px solid #3ECF8E;">
-          <div class="modal-header" style="background: #1C1C1C; color: #3ECF8E;">
-            <div class="modal-title" style="color: #3ECF8E; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+        <div class="modal-card" style="max-width: 600px; border: 2px solid #10B981; border-radius: 12px;">
+          <div class="modal-header" style="background: #0F172A; color: #34D399;">
+            <div class="modal-title" style="color: #34D399; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
               <span class="material-symbols-outlined">cloud_upload</span> 📊 Importar Planilha / Balancete (CSV, XLS, PDF, DOC)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalImportBalancete').remove()">✕</button>
@@ -319,18 +366,18 @@ window.BalancetesComponent = {
           <div class="modal-body">
             
             <!-- Seletor de Arquivos Real -->
-            <div class="form-group" style="background: #F0FDF4; border: 2px dashed #3ECF8E; padding: 1.25rem; border-radius: 8px; text-align: center;">
+            <div class="form-group" style="background: #F0FDF4; border: 2px dashed #34D399; padding: 1.25rem; border-radius: 8px; text-align: center;">
               <label for="balFileSelector" style="cursor: pointer; display: block;">
-                <span class="material-symbols-outlined" style="font-size: 3rem; color: #2E6B42; display: block; margin-bottom: 0.3rem;">table_chart</span>
-                <strong style="color: var(--primary-dark); font-size: 1.05rem;">Clique aqui para selecionar sua Planilha ou Arquivo</strong>
-                <span style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                <span class="material-symbols-outlined" style="font-size: 3rem; color: #059669; display: block; margin-bottom: 0.3rem;">table_chart</span>
+                <strong style="color: #0F172A; font-size: 1.05rem;">Clique aqui para selecionar sua Planilha ou Arquivo</strong>
+                <span style="display: block; font-size: 0.8rem; color: #64748B; margin-top: 4px;">
                   Suporta Planilhas Excel (.xls, .xlsx), CSV, PDF e Documentos Word/Texto
                 </span>
               </label>
 
               <input type="file" id="balFileSelector" accept=".csv,.xls,.xlsx,.pdf,.doc,.docx,.txt" style="display: none;" onchange="BalancetesComponent.manipularArquivoPlanilha(event)">
 
-              <div id="balFileInfo" style="margin-top: 0.85rem; font-weight: 700; font-size: 0.88rem; color: #166534; display: none; background: white; padding: 0.6rem; border-radius: 6px; border: 1px solid #BBF7D0;">
+              <div id="balFileInfo" style="margin-top: 0.85rem; font-weight: 700; font-size: 0.88rem; color: #065F46; display: none; background: white; padding: 0.6rem; border-radius: 6px; border: 1px solid #A7F3D0;">
               </div>
             </div>
 
@@ -368,8 +415,8 @@ window.BalancetesComponent = {
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label" style="font-weight: 700; color: #DC2626;">Despesa Bruta Total (R$)</label>
-                  <input type="number" step="0.01" id="importDespesa" class="form-control" placeholder="Ex: 69866.77" value="71200.00" required style="font-weight: 700; color: #DC2626;">
+                  <label class="form-label" style="font-weight: 700; color: #E11D48;">Despesa Bruta Total (R$)</label>
+                  <input type="number" step="0.01" id="importDespesa" class="form-control" placeholder="Ex: 69866.77" value="71200.00" required style="font-weight: 700; color: #E11D48;">
                 </div>
               </div>
 
@@ -385,7 +432,7 @@ window.BalancetesComponent = {
                 </div>
               </div>
 
-              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 800; background: #3ECF8E; color: #1C1C1C; margin-top: 0.5rem;">
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 800; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; margin-top: 0.5rem; border: none; border-radius: 8px;">
                 <span class="material-symbols-outlined">rocket_launch</span> 🚀 Transformar em Dashboard Colorido
               </button>
             </form>
@@ -408,7 +455,6 @@ window.BalancetesComponent = {
       info.innerHTML = `✅ Planilha Carregada: <strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
     }
 
-    // Leitura inteligente do conteúdo do arquivo CSV / Text
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target.result;
@@ -426,7 +472,6 @@ window.BalancetesComponent = {
 
     lines.forEach(line => {
       const clean = line.toLowerCase();
-      // Extração inteligente de valores numéricos de CSV
       if (clean.includes('receita') || clean.includes('arrecadacao') || clean.includes('taxa')) {
         const matches = line.match(/\d+[\.,]?\d*/g);
         if (matches && matches.length > 0) {
@@ -466,16 +511,15 @@ window.BalancetesComponent = {
     const saldoMes = receitaBruta - despesaBruta;
     const saldoAtual = saldoAnterior + saldoMes;
 
-    // Gerar Categorias Coloridas com base na Despesa Total
     const categoriasDespesa = [
-      { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: Math.round(despesaBruta * 0.42 * 100) / 100, cor: '#2563EB' },
-      { nome: 'Consumo de Água & Esgoto', valor: Math.round(despesaBruta * 0.14 * 100) / 100, cor: '#0D9488' },
-      { nome: 'Consumo de Gás Encanado', valor: Math.round(despesaBruta * 0.04 * 100) / 100, cor: '#D97706' },
-      { nome: 'Manutenção de Elevadores & CFTV', valor: Math.round(despesaBruta * 0.08 * 100) / 100, cor: '#7C3AED' },
-      { nome: 'Honorários de Gestão & Contábil', valor: Math.round(despesaBruta * 0.05 * 100) / 100, cor: '#4F46E5' },
-      { nome: 'Seguro Predial & Placas Solares', valor: Math.round(despesaBruta * 0.03 * 100) / 100, cor: '#0284C7' },
-      { nome: 'Impostos & Retenções Tributárias', valor: Math.round(despesaBruta * 0.09 * 100) / 100, cor: '#DB2777' },
-      { nome: 'Manutenção Predial & Conservação', valor: Math.round(despesaBruta * 0.15 * 100) / 100, cor: '#059669' }
+      { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: Math.round(despesaBruta * 0.42 * 100) / 100, corGradiente: 'linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%)', corSolida: '#3B82F6' },
+      { nome: 'Consumo de Água & Esgoto', valor: Math.round(despesaBruta * 0.14 * 100) / 100, corGradiente: 'linear-gradient(90deg, #14B8A6 0%, #2DD4BF 100%)', corSolida: '#14B8A6' },
+      { nome: 'Consumo de Gás Encanado', valor: Math.round(despesaBruta * 0.04 * 100) / 100, corGradiente: 'linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%)', corSolida: '#F59E0B' },
+      { nome: 'Manutenção de Elevadores & CFTV', valor: Math.round(despesaBruta * 0.08 * 100) / 100, corGradiente: 'linear-gradient(90deg, #8B5CF6 0%, #A78BFA 100%)', corSolida: '#8B5CF6' },
+      { nome: 'Honorários de Gestão & Contábil', valor: Math.round(despesaBruta * 0.05 * 100) / 100, corGradiente: 'linear-gradient(90deg, #6366F1 0%, #818CF8 100%)', corSolida: '#6366F1' },
+      { nome: 'Seguro Predial & Placas Solares', valor: Math.round(despesaBruta * 0.03 * 100) / 100, corGradiente: 'linear-gradient(90deg, #0284C7 0%, #38BDF8 100%)', corSolida: '#0284C7' },
+      { nome: 'Impostos & Retenções Tributárias', valor: Math.round(despesaBruta * 0.09 * 100) / 100, corGradiente: 'linear-gradient(90deg, #EC4899 0%, #F472B6 100%)', corSolida: '#EC4899' },
+      { nome: 'Manutenção Predial & Conservação', valor: Math.round(despesaBruta * 0.15 * 100) / 100, corGradiente: 'linear-gradient(90deg, #10B981 0%, #34D399 100%)', corSolida: '#10B981' }
     ];
 
     const newBal = window.CondoStore.addBalancete({
@@ -491,7 +535,7 @@ window.BalancetesComponent = {
     });
 
     this.selectedBalanceteId = newBal.id;
-    App.showToast(`Balancete de ${mes}/${ano} transformado em Dashboard Colorido com sucesso!`, 'success');
+    App.showToast(`Balancete de ${mes}/${ano} transformado em Dashboard Clean com sucesso!`, 'success');
     document.getElementById('modalImportBalancete').remove();
     App.render();
   },
