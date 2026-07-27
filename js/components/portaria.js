@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel de Controle da Portaria & Guarita
-   Gestão Exclusiva de Agendamentos: Piscina, Academia e Salão de Festas
-   Permissões: Autorizar Uso, Bloquear, Adicionar Observação e Excluir
+   Gestão de Agendamentos (Piscina, Academia e Salão de Festas)
+   Envio Automático de Observações para o Gmail condominio.modern.life@gmail.com
    ---------------------------------------------------- */
 
 window.PortariaComponent = {
@@ -54,7 +54,7 @@ window.PortariaComponent = {
                 Controle de Acesso: Piscina, Academia &amp; Salão de Festas
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 2px;">
-                Conferência em tempo real e liberação de entrada dos moradores.
+                As observações registradas são enviadas automaticamente para <code>condominio.modern.life@gmail.com</code>.
               </p>
             </div>
 
@@ -161,7 +161,7 @@ window.PortariaComponent = {
 
         ${r.observacao ? `
           <div style="background: #FFF8E1; border: 1px solid #FFE0B2; padding: 0.6rem 0.85rem; border-radius: 6px; font-size: 0.82rem; color: #E65100;">
-            📝 <strong>Anotação da Portaria:</strong> ${r.observacao}
+            📝 <strong>Anotação da Portaria (Enviada ao Gmail):</strong> ${r.observacao}
           </div>
         ` : ''}
 
@@ -188,9 +188,35 @@ window.PortariaComponent = {
     `;
   },
 
+  enviarObservacaoParaGmail(reserva, observacaoTexto, tipoAcao = 'Anotação da Portaria') {
+    try {
+      fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          _subject: `[OBSERVAÇÃO DE AGENDAMENTO] ${reserva.area} - Apto ${reserva.apartamento} (${reserva.moradorNome})`,
+          "Tipo de Ação": tipoAcao,
+          "Área Reservada": reserva.area,
+          "Data do Uso": reserva.data,
+          "Horário": reserva.horario,
+          "Nome do Morador": reserva.moradorNome,
+          "Unidade / Apto": reserva.apartamento,
+          "Observação Registrada": observacaoTexto,
+          "Data do Registro": new Date().toLocaleString("pt-BR")
+        })
+      }).catch(() => {});
+    } catch (e) {}
+  },
+
   autorizarUso(id) {
+    const reserva = (window.CondoStore.data.agendaReservas || []).find(r => r.id === id);
     window.CondoStore.updateReservaStatus(id, 'Entrada Autorizada', 'Uso liberado na portaria.');
-    App.showToast('Entrada do morador AUTORIZADA com sucesso!', 'success');
+    
+    if (reserva) {
+      this.enviarObservacaoParaGmail(reserva, 'Uso liberado e autorizado na portaria.', 'Entrada Autorizada');
+    }
+
+    App.showToast('Entrada AUTORIZADA e notificação enviada ao Gmail!', 'success');
     App.render();
   },
 
@@ -198,25 +224,46 @@ window.PortariaComponent = {
     const motivo = prompt('Digite o motivo do bloqueio de acesso (ex: Inadimplente, Fora do horário):', 'Acesso negado pela portaria');
     if (motivo === null) return;
 
-    window.CondoStore.updateReservaStatus(id, 'Acesso Bloqueado', motivo.trim() || 'Bloqueado na portaria');
-    App.showToast('Uso do morador BLOQUEADO!', 'info');
+    const observacaoTexto = motivo.trim() || 'Bloqueado na portaria';
+    const reserva = (window.CondoStore.data.agendaReservas || []).find(r => r.id === id);
+    
+    window.CondoStore.updateReservaStatus(id, 'Acesso Bloqueado', observacaoTexto);
+    
+    if (reserva) {
+      this.enviarObservacaoParaGmail(reserva, observacaoTexto, 'Acesso Bloqueado pela Portaria');
+    }
+
+    App.showToast('Uso BLOQUEADO e motivo enviado ao Gmail!', 'info');
     App.render();
   },
 
   openObservacaoModal(id, observacaoAtual) {
-    const obs = prompt('Adicionar / Editar Anotação da Portaria (ex: Entregue pulseira 04):', observacaoAtual);
+    const obs = prompt('Adicionar / Editar Anotação da Portaria (enviada ao Gmail):', observacaoAtual);
     if (obs === null) return;
 
-    window.CondoStore.updateReservaStatus(id, undefined, obs.trim());
-    App.showToast('Anotação da Portaria salva!', 'success');
+    const observacaoTexto = obs.trim();
+    const reserva = (window.CondoStore.data.agendaReservas || []).find(r => r.id === id);
+
+    window.CondoStore.updateReservaStatus(id, undefined, observacaoTexto);
+    
+    if (reserva && observacaoTexto) {
+      this.enviarObservacaoParaGmail(reserva, observacaoTexto, 'Anotação Registrada pela Portaria');
+    }
+
+    App.showToast('Anotação salva e enviada ao Gmail!', 'success');
     App.render();
   },
 
   excluirReserva(id) {
     if (!confirm('Tem certeza que deseja EXCLUIR este agendamento?')) return;
 
+    const reserva = (window.CondoStore.data.agendaReservas || []).find(r => r.id === id);
+    if (reserva) {
+      this.enviarObservacaoParaGmail(reserva, 'Agendamento Excluído da Lista', 'Exclusão de Agendamento');
+    }
+
     window.CondoStore.deleteReserva(id);
-    App.showToast('Agendamento excluído da lista.', 'success');
+    App.showToast('Agendamento excluído da lista e notificado ao Gmail.', 'success');
     App.render();
   },
 
@@ -271,7 +318,7 @@ window.PortariaComponent = {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Observação da Portaria</label>
+                <label class="form-label">Observação da Portaria (Enviada ao Gmail)</label>
                 <input type="text" id="pObs" class="form-control" placeholder="Ex: Apresentou atestado / liberado">
               </div>
 
@@ -296,7 +343,7 @@ window.PortariaComponent = {
     const horario = document.getElementById('pHorario').value.trim();
     const observacao = document.getElementById('pObs').value.trim();
 
-    window.CondoStore.addAgendamento({
+    const novaReserva = window.CondoStore.addAgendamento({
       moradorNome,
       apartamento,
       area,
@@ -306,7 +353,11 @@ window.PortariaComponent = {
       status: 'Entrada Autorizada'
     });
 
-    App.showToast(`Reserva de ${moradorNome} (${area}) registrada!`, 'success');
+    if (observacao) {
+      this.enviarObservacaoParaGmail(novaReserva, observacao, 'Nova Reserva Presencial na Portaria');
+    }
+
+    App.showToast(`Reserva de ${moradorNome} (${area}) registrada e notificada ao Gmail!`, 'success');
     document.getElementById('modalNovaReservaPortaria').remove();
     App.render();
   }
