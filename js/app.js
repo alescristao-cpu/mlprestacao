@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Main Application Orchestrator
-   Garantia de Navegação Instantânea & Tema Claro por Padrão
+   Suporte Completo ao Perfil e Rota da Portaria (Guarita)
    ---------------------------------------------------- */
 
 window.App = {
@@ -32,7 +32,7 @@ window.App = {
     const validRoutes = [
       'dashboard', 'prestacao', 'balancetes', 'contratos',
       'transparencia', 'documentos', 'recados', 'ocorrencias',
-      'canal', 'utilidades', 'agenda', 'galeria', 'admin'
+      'canal', 'utilidades', 'agenda', 'galeria', 'admin', 'portaria'
     ];
     return validRoutes.includes(route);
   },
@@ -160,6 +160,9 @@ window.App = {
       case 'admin':
         if (window.AdminComponent) window.AdminComponent.render(pageContainer, data);
         break;
+      case 'portaria':
+        if (window.PortariaComponent) window.PortariaComponent.render(pageContainer, data);
+        break;
       default:
         if (window.DashboardComponent) window.DashboardComponent.render(pageContainer, data);
     }
@@ -188,7 +191,8 @@ window.App = {
       utilidades: 'Utilidades & Reservas',
       agenda: 'Agenda & Calendário',
       galeria: 'Galeria do Condomínio',
-      admin: 'Painel Administrativo do Síndico'
+      admin: 'Painel Administrativo do Síndico',
+      portaria: 'Painel da Portaria & Guarita'
     };
 
     const headerTitleEl = document.getElementById('pageHeaderTitle');

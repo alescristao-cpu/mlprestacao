@@ -1,9 +1,9 @@
 /* ----------------------------------------------------
    Modern Life Residence - Service Worker (pwa)
-   Cache inteligente v3 com atualização automática no Desktop
+   Cache v4 com inclusão do componente Portaria
    ---------------------------------------------------- */
 
-const CACHE_NAME = 'modern-life-v3-cache';
+const CACHE_NAME = 'modern-life-v4-cache';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -22,6 +22,7 @@ const ASSETS_TO_CACHE = [
   './js/components/canal.js',
   './js/components/ocorrencias.js',
   './js/components/utilidades.js',
+  './js/components/portaria.js',
   './js/components/agenda.js',
   './js/components/galeria.js',
   './js/components/admin.js',

@@ -1,11 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Sincronização de Moradores e Reservas (Piscina & Academia)
-   Conexão Nativa Google Cloud Firestore 'paginapretacao'
+   Suporte ao Perfil "Portaria" (Controle de Piscina, Academia & Salão de Festas)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V26';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V26';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V27';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V27';
 const FIRESTORE_PROJECT_ID = 'paginapretacao';
 const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
 const FIRESTORE_RESERVAS_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/reservas`;
@@ -24,6 +23,18 @@ const INITIAL_DATA = {
       role: 'Administrador',
       dataCadastro: '2025-01-10',
       photoURL: 'https://lh3.googleusercontent.com/a/default-user'
+    },
+    {
+      id: 'usr_portaria',
+      nome: 'Portaria & Guarita',
+      apartamento: 'Guarita',
+      cpf: 'Portaria Condomínio',
+      telefone: '27999999999',
+      email: 'portaria.modern.life@gmail.com',
+      senha: '123456',
+      status: 'Aprovado',
+      role: 'Portaria',
+      dataCadastro: '2025-01-10'
     }
   ],
 
@@ -252,7 +263,7 @@ class StoreEngine {
         }
       }
 
-      // 2. Reservas da Nuvem (Piscina & Academia)
+      // 2. Reservas da Nuvem (Piscina, Academia e Salão de Festas)
       const resReservas = await fetch(FIRESTORE_RESERVAS_URL, { method: 'GET' });
       if (resReservas.ok) {
         const jsonRes = await resReservas.json();
@@ -272,6 +283,7 @@ class StoreEngine {
               moradorNome: f.moradorNome ? f.moradorNome.stringValue : '',
               apartamento: f.apartamento ? f.apartamento.stringValue : '',
               email: f.email ? f.email.stringValue : '',
+              observacao: f.observacao ? f.observacao.stringValue : '',
               status: f.status ? f.status.stringValue : 'Confirmado'
             };
 
@@ -279,6 +291,11 @@ class StoreEngine {
             if (idx === -1) {
               this.data.agendaReservas.unshift(r);
               resUpdated = true;
+            } else {
+              if (this.data.agendaReservas[idx].status !== r.status || this.data.agendaReservas[idx].observacao !== r.observacao) {
+                this.data.agendaReservas[idx] = r;
+                resUpdated = true;
+              }
             }
           });
 
@@ -296,7 +313,6 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
-    // 1. Transmite Moradores
     try {
       for (const m of this.data.moradores) {
         const docId = m.id || 'usr_' + Date.now();
@@ -322,7 +338,6 @@ class StoreEngine {
       }
     } catch (e) {}
 
-    // 2. Transmite Reservas de Piscina e Academia para a Nuvem
     try {
       for (const r of (this.data.agendaReservas || [])) {
         const resDocId = r.id || 'res_' + Date.now();
@@ -335,6 +350,7 @@ class StoreEngine {
             moradorNome: { stringValue: r.moradorNome || '' },
             apartamento: { stringValue: `${r.apartamento || ''}` },
             email: { stringValue: r.email || '' },
+            observacao: { stringValue: r.observacao || '' },
             status: { stringValue: r.status || 'Confirmado' }
           }
         };
@@ -447,11 +463,35 @@ class StoreEngine {
     const newReserva = {
       id: 'res_' + Date.now(),
       status: 'Confirmado',
+      observacao: '',
       ...reserva
     };
     this.data.agendaReservas.unshift(newReserva);
     this.saveData();
     return newReserva;
+  }
+
+  updateReservaStatus(id, newStatus, observacao = '') {
+    const r = (this.data.agendaReservas || []).find(item => item.id === id);
+    if (r) {
+      r.status = newStatus;
+      if (observacao) r.observacao = observacao;
+      this.saveData();
+      return true;
+    }
+    return false;
+  }
+
+  deleteReserva(id) {
+    if (!this.data.agendaReservas) return false;
+    this.data.agendaReservas = this.data.agendaReservas.filter(r => r.id !== id);
+
+    if (id) {
+      fetch(`${FIRESTORE_RESERVAS_URL}/${id}`, { method: 'DELETE' }).catch(() => {});
+    }
+
+    this.saveData();
+    return true;
   }
 
   addOcorrencia(oco) {
