@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel de Controle da Portaria & Guarita
    Gestão de Agendamentos (Piscina, Academia e Salão de Festas)
-   Status de Liberação: "Autorizado"
+   Remoção do Botão 'Autorizar Uso' após o Agendamento ser Autorizado
    ---------------------------------------------------- */
 
 window.PortariaComponent = {
@@ -174,9 +174,17 @@ window.PortariaComponent = {
 
         <!-- Botões de Ação Exclusivos para a Portaria -->
         <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; border-top: 1px solid var(--border-light); padding-top: 0.6rem;">
-          <button class="btn-primary btn-sm" style="background: #2E6B42; flex: 1; justify-content: center; min-width: 140px;" onclick="PortariaComponent.autorizarUso('${r.id}')">
-            <span class="material-symbols-outlined" style="font-size: 0.95rem;">check_circle</span> Autorizar Uso
-          </button>
+          
+          <!-- O BOTÃO 'AUTORIZAR USO' SÓ APARECE SE O AGENDAMENTO AINDA NÃO FOI AUTORIZADO -->
+          ${!isAutorizado ? `
+            <button class="btn-primary btn-sm" style="background: #2E6B42; flex: 1; justify-content: center; min-width: 140px;" onclick="PortariaComponent.autorizarUso('${r.id}')">
+              <span class="material-symbols-outlined" style="font-size: 0.95rem;">check_circle</span> Autorizar Uso
+            </button>
+          ` : `
+            <div style="display: flex; align-items: center; gap: 0.3rem; color: #2E6B42; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.6rem; background: #E8F5E9; border-radius: 6px;">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem;">verified</span> Entrada Liberada
+            </div>
+          `}
 
           <button class="btn-secondary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2;" onclick="PortariaComponent.bloquearUso('${r.id}')">
             <span class="material-symbols-outlined" style="font-size: 0.95rem;">block</span> Bloquear
