@@ -1,10 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Suporte Completo a Gestão e Visibilidade por Perfil de Documentos
+   Suporte a Balancetes & Importação de Planilhas CSV/XLS/PDF
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V34';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V34';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V35';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V35';
 
 const INITIAL_DATA = {
   moradores: [
@@ -57,7 +57,7 @@ const INITIAL_DATA = {
         { categoria: 'Energia Áreas Comuns', valor: 419.58 }
       ],
       categoriasDespesa: [
-        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza Geral)', valor: 28933.49 },
+        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49 },
         { nome: 'Consumo de Água & Esgoto', valor: 9404.63 },
         { nome: 'Consumo de Gás Encanado', valor: 2592.73 },
         { nome: 'Manutenção de Elevadores', valor: 1050.00 },
@@ -85,7 +85,17 @@ const INITIAL_DATA = {
       despesaBruta: 69866.77,
       saldoAnterior: 498438.09,
       saldoMes: 20484.24,
-      saldoAtual: 518922.33
+      saldoAtual: 518922.33,
+      categoriasDespesa: [
+        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49, cor: '#2563EB' },
+        { nome: 'Consumo de Água & Esgoto', valor: 9404.63, cor: '#0D9488' },
+        { nome: 'Consumo de Gás Encanado', valor: 2592.73, cor: '#D97706' },
+        { nome: 'Manutenção de Elevadores & CFTV', valor: 1535.00, cor: '#7C3AED' },
+        { nome: 'Honorários de Gestão & Contábil', valor: 2450.03, cor: '#4F46E5' },
+        { nome: 'Seguro Predial & Placas Solares', valor: 1512.95, cor: '#0284C7' },
+        { nome: 'Impostos & Retenções Tributárias', valor: 4305.34, cor: '#DB2777' },
+        { nome: 'Manutenção Predial & Materiais', valor: 1912.60, cor: '#059669' }
+      ]
     }
   ],
 
@@ -185,7 +195,6 @@ class StoreEngine {
       if (!sindico.senha) sindico.senha = 'ModernLife2026';
     }
 
-    // Remover doc_sistema_md de qualquer cache se existir
     if (this.data.documentos) {
       this.data.documentos = this.data.documentos.filter(d => d.id !== 'doc_sistema_md');
     }
@@ -318,6 +327,55 @@ class StoreEngine {
     if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
       window.SupabaseConfig.pushDataToSupabase(this.data);
     }
+  }
+
+  addBalancete(balancete) {
+    if (!this.data.balancetes) this.data.balancetes = [];
+    const newBal = {
+      id: 'bal_' + Date.now(),
+      dataPublicacao: new Date().toISOString().split('T')[0],
+      ...balancete
+    };
+
+    // Atualizar ou adicionar em balancetes
+    const existingIdx = this.data.balancetes.findIndex(b => b.mes === newBal.mes && b.ano === newBal.ano);
+    if (existingIdx !== -1) {
+      this.data.balancetes[existingIdx] = newBal;
+    } else {
+      this.data.balancetes.unshift(newBal);
+    }
+
+    // Atualizar também na prestação de contas
+    if (!this.data.prestacaoContas) this.data.prestacaoContas = [];
+    const pcIdx = this.data.prestacaoContas.findIndex(p => p.mes === newBal.mes && p.ano === newBal.ano);
+    const newPc = {
+      id: 'pc_' + Date.now(),
+      mesAno: `${newBal.mes} ${newBal.ano}`,
+      mes: newBal.mes,
+      ano: newBal.ano,
+      saldoInicial: newBal.saldoAnterior || 0,
+      receitas: newBal.receitaBruta || 0,
+      despesas: newBal.despesaBruta || 0,
+      saldoAtual: newBal.saldoAtual || 0,
+      status: 'Auditado & Aprovado',
+      categoriasDespesa: (newBal.categoriasDespesa || []).map(c => ({ nome: c.nome, valor: c.valor }))
+    };
+
+    if (pcIdx !== -1) {
+      this.data.prestacaoContas[pcIdx] = newPc;
+    } else {
+      this.data.prestacaoContas.unshift(newPc);
+    }
+
+    this.saveData();
+    return newBal;
+  }
+
+  deleteBalancete(id) {
+    if (!this.data.balancetes) return false;
+    this.data.balancetes = this.data.balancetes.filter(b => b.id !== id);
+    this.saveData();
+    return true;
   }
 
   addDocumento(doc) {
