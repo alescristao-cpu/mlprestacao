@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Autenticação & Cadastro de Morador
-   Cadastro de Novo Usuário: Criação de Senha Própria + Notificação ao Síndico
+   Modern Life Residence - Autenticação & Cadastro com Senha
+   Notificação Dupla Infalível de Novo Cadastro para o Síndico (Painel + E-mail Dual Engine)
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -472,7 +472,6 @@ window.AuthComponent = {
     const modal = document.getElementById('modalAuth');
     if (modal) modal.remove();
 
-    // Se entrou com senha temporária fornecida pela administração, exige troca de senha!
     if (user.senhaTemporaria) {
       this.openTrocaSenhaObrigatoriaModal(user);
       return;
@@ -484,6 +483,50 @@ window.AuthComponent = {
       App.showToast('Seu cadastro está aguardando aprovação no Painel do Administrador (Síndico).', 'info');
     }
     App.render();
+  },
+
+  notificarEmailSindicoNovoCadastro(morador) {
+    if (!morador) return;
+
+    // Disparo 1: FormSubmit JSON REST API com captcha false
+    try {
+      fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          _subject: `[SOLICITAÇÃO DE NOVO CADASTRO] ${morador.nome} (Apto ${morador.apartamento})`,
+          _replyto: morador.email,
+          _captcha: "false",
+          "Nome do Morador": morador.nome,
+          "E-mail do Morador": morador.email,
+          "Telefone": morador.telefone || 'Não informado',
+          "Unidade / Apto": morador.apartamento,
+          "Ação no Portal": "Acesse https://mlprestacao.vercel.app para aprovar no Painel do Síndico.",
+          "Data do Registro": new Date().toLocaleString("pt-BR")
+        })
+      }).catch(function() {});
+    } catch (e) {}
+
+    // Disparo 2: FormSubmit Standard Form Backup (evita bloqueios de CORS/adblockers)
+    try {
+      const formData = new FormData();
+      formData.append('_subject', `[CADASTRO PENDENTE] ${morador.nome} - Apto ${morador.apartamento}`);
+      formData.append('_replyto', morador.email);
+      formData.append('_captcha', 'false');
+      formData.append('Nome', morador.nome);
+      formData.append('Email', morador.email);
+      formData.append('Telefone', morador.telefone || 'Não informado');
+      formData.append('Apartamento', morador.apartamento);
+
+      fetch('https://formsubmit.co/condominio.modern.life@gmail.com', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: formData
+      }).catch(function() {});
+    } catch (e) {}
   },
 
   handleRegisterSubmit() {
@@ -506,11 +549,11 @@ window.AuthComponent = {
       return;
     }
 
-    // 1. O novo morador cria a sua PRÓPRIA SENHA no momento do cadastro (senhaTemporaria: false)
+    // 1. Adiciona morador pendente no CondoStore
     const result = window.CondoStore.addMorador({
       nome,
       email,
-      senha, // Senha própria escolhida pelo novo usuário
+      senha,
       senhaTemporaria: false,
       telefone,
       apartamento: unidade,
@@ -522,7 +565,7 @@ window.AuthComponent = {
       return;
     }
 
-    // 2. Registra a Notificação de Solicitação de Aprovação na Central do Síndico
+    // 2. Registra Notificação no Painel de Mensagens do Gestor
     window.CondoStore.addOcorrencia({
       moradorId: result.morador.id,
       moradorNome: nome,
@@ -530,30 +573,15 @@ window.AuthComponent = {
       apartamento: unidade,
       categoria: 'Solicitação de Cadastro',
       assunto: `[SOLICITAÇÃO DE NOVO CADASTRO] ${nome} (Apto ${unidade})`,
-      descricao: `O novo morador ${nome} (E-mail: ${email}, Tel: ${telefone || 'Não informado'}, Apto: ${unidade}) realizou o cadastro no portal criando sua própria senha e aguarda a sua autorização para liberar o acesso.`
+      descricao: `O novo morador ${nome} (E-mail: ${email}, Tel: ${telefone || 'Não informado'}, Apto: ${unidade}) realizou o cadastro no portal e aguarda sua autorização no Painel.`
     });
+
+    // 3. Dispara a notificação por e-mail via motor duplo
+    this.notificarEmailSindicoNovoCadastro(result.morador);
 
     window.CondoStore.setCurrentUser(result.morador);
 
-    // 3. Dispara e-mail de notificação de novo cadastro para o Síndico (condominio.modern.life@gmail.com)
-    try {
-      fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-          _subject: `[SOLICITAÇÃO DE APROVAÇÃO DE CADASTRO] ${nome} (Apto ${unidade})`,
-          _replyto: email,
-          "Nome do Morador": nome,
-          "E-mail do Morador": email,
-          "Telefone": telefone || 'Não informado',
-          "Unidade": unidade,
-          "Ação Necessária": "Acesse o Painel do Síndico e clique em [ ✅ Autorizar ] para liberar o acesso.",
-          "Data do Cadastro": new Date().toLocaleString("pt-BR")
-        })
-      }).catch(function() {});
-    } catch (e) {}
-
-    alert(`Solicitação de Cadastro Registrada!\n\nSeus dados foram enviados para a aprovação do Síndico Alessandro (condominio.modern.life@gmail.com).\n\nAssim que o Síndico clicar em [ Autorizar ] no Painel, você já poderá entrar no portal utilizando o seu e-mail (${email}) e a senha que você acabou de criar.`);
+    alert(`Solicitação de Cadastro Registrada!\n\nSeus dados foram enviados para a aprovação do Síndico Alessandro (condominio.modern.life@gmail.com).\n\nAssim que o Síndico clicar em [ Autorizar ] no Painel, você já poderá entrar no portal utilizando o seu e-mail (${email}) e a senha que você criou.`);
 
     const modal = document.getElementById('modalAuth');
     if (modal) modal.remove();
