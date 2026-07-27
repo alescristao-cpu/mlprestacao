@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Suporte a Senha Temporária e Troca Obrigatória no Primeiro Acesso
+   Suporte a Nuvem Híbrida: Google Firestore + Supabase PostgreSQL
    ---------------------------------------------------- */
 
 const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V31';
@@ -154,6 +154,11 @@ class StoreEngine {
     this.isSyncing = false;
     
     this.ensureSindicoMaster();
+
+    setTimeout(() => {
+      if (window.SupabaseConfig) window.SupabaseConfig.init();
+    }, 100);
+
     this.startCloudSyncLoop();
   }
 
@@ -244,7 +249,61 @@ class StoreEngine {
     this.isSyncing = true;
 
     try {
-      // 1. Puxa moradores da Nuvem
+      // A. Sincronização via SUPABASE (Se configurado pelo Síndico)
+      if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+        const supaData = await window.SupabaseConfig.pullDataFromSupabase();
+        if (supaData) {
+          let updatedSupa = false;
+
+          if (supaData.moradores && supaData.moradores.length > 0) {
+            supaData.moradores.forEach(m => {
+              const idx = this.data.moradores.findIndex(item => item.id === m.id || item.email.toLowerCase().trim() === m.email.toLowerCase().trim());
+              if (idx === -1) {
+                this.data.moradores.push(m);
+                updatedSupa = true;
+              } else if (this.data.moradores[idx].status !== m.status || this.data.moradores[idx].senha !== m.senha) {
+                this.data.moradores[idx] = m;
+                updatedSupa = true;
+              }
+            });
+          }
+
+          if (supaData.reservas && supaData.reservas.length > 0) {
+            if (!this.data.agendaReservas) this.data.agendaReservas = [];
+            supaData.reservas.forEach(r => {
+              const idx = this.data.agendaReservas.findIndex(item => item.id === r.id);
+              if (idx === -1) {
+                this.data.agendaReservas.unshift(r);
+                updatedSupa = true;
+              } else if (this.data.agendaReservas[idx].status !== r.status) {
+                this.data.agendaReservas[idx] = r;
+                updatedSupa = true;
+              }
+            });
+          }
+
+          if (supaData.ocorrencias && supaData.ocorrencias.length > 0) {
+            if (!this.data.ocorrencias) this.data.ocorrencias = [];
+            supaData.ocorrencias.forEach(o => {
+              const idx = this.data.ocorrencias.findIndex(item => item.id === o.id);
+              if (idx === -1) {
+                this.data.ocorrencias.unshift(o);
+                updatedSupa = true;
+              } else if (this.data.ocorrencias[idx].status !== o.status || (o.respostas && o.respostas.length !== (this.data.ocorrencias[idx].respostas || []).length)) {
+                this.data.ocorrencias[idx] = o;
+                updatedSupa = true;
+              }
+            });
+          }
+
+          if (updatedSupa) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
+            this.notify();
+          }
+        }
+      }
+
+      // B. Sincronização via GOOGLE FIRESTORE (REST Engine)
       const response = await fetch(FIRESTORE_REST_URL, { method: 'GET' });
       if (response.ok) {
         const json = await response.json();
@@ -289,7 +348,7 @@ class StoreEngine {
         }
       }
 
-      // 2. Puxa reservas da Nuvem
+      // Reservas via FIRESTORE
       const resReservas = await fetch(FIRESTORE_RESERVAS_URL, { method: 'GET' });
       if (resReservas.ok) {
         const jsonRes = await resReservas.json();
@@ -339,6 +398,12 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
+    // 1. Sincronização com Supabase (Se ativado)
+    if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+      window.SupabaseConfig.pushDataToSupabase(this.data);
+    }
+
+    // 2. Sincronização com Google Cloud Firestore
     if (window.firebase && window.firebase.firestore) {
       try {
         const db = window.firebase.firestore();
