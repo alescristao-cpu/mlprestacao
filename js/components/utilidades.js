@@ -1,7 +1,8 @@
 /* ----------------------------------------------------
    Modern Life Residence - Utilidades & Agendamento Automático (Piscina & Academia)
-   Privacidade Total de Moradores: Tanto para a Piscina quanto para a Academia,
-   cada morador visualiza EXCLUSIVAMENTE os agendamentos de sua própria unidade.
+   REGRA DE PRIVACIDADE E SIGILO RÍGIDO:
+   - Para o uso confirmado da PISCINA e da ACADEMIA, nenhum agendamento é exibido para outro morador.
+   - SOMENTE o Painel do Síndico e o Painel da Portaria podem visualizar TODOS os agendamentos da Piscina e Academia.
    ---------------------------------------------------- */
 
 window.UtilidadesComponent = {
@@ -32,9 +33,9 @@ window.UtilidadesComponent = {
     const isPortaria = user && user.role === 'Portaria';
     const hojeStr = new Date().toISOString().split('T')[0];
 
-    // Filtra agendamentos dos últimos 30 dias com PRIVACIDADE RÍGIDA PARA PISCINA E ACADEMIA:
-    // Síndico Master e Portaria vêem todas as reservas.
-    // Moradores comuns vêem APENAS SEUS PRÓPRIOS agendamentos da Piscina e da Academia.
+    // PRIVACIDADE ESTREITA DA PISCINA E ACADEMIA:
+    // SOMENTE o Síndico Master e o Painel da Portaria visualizam a lista inteira de agendamentos.
+    // Para qualquer outro morador, NENHUM agendamento de outro vizinho é exibido.
     const limite30Dias = new Date();
     limite30Dias.setDate(limite30Dias.getDate() - 30);
     const limiteStr = limite30Dias.toISOString().split('T')[0];
@@ -43,11 +44,12 @@ window.UtilidadesComponent = {
 
     const reservasExistentes = (isMasterAdmin || isPortaria)
       ? todasReservas
-      : todasReservas.filter(r => 
-          (r.email && r.email.toLowerCase().trim() === user.email.toLowerCase().trim()) ||
-          (r.moradorNome && r.moradorNome.toLowerCase().trim() === user.nome.toLowerCase().trim()) ||
-          (r.apartamento && r.apartamento.toString().trim() === user.apartamento.toString().trim())
-        );
+      : todasReservas.filter(r => {
+          const isSameEmail = r.email && user.email && r.email.toLowerCase().trim() === user.email.toLowerCase().trim();
+          const isSameName = r.moradorNome && user.nome && r.moradorNome.toLowerCase().trim() === user.nome.toLowerCase().trim();
+          const isSameApto = r.apartamento && user.apartamento && r.apartamento.toString().trim() === user.apartamento.toString().trim();
+          return isSameEmail || isSameName || isSameApto;
+        });
 
     const hourlySlots = [
       '06:00 às 07:00',
@@ -110,7 +112,7 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined">pool</span> Agendamento (Piscina &amp; Academia)
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                🔒 <strong>Privacidade Total das Áreas Comuns:</strong> ${isMasterAdmin ? 'Visão Master do Síndico (Acesso Completo).' : isPortaria ? 'Visão Operacional da Portaria.' : 'Tanto para a Piscina quanto para a Academia, você visualiza exclusivamente os agendamentos da sua própria unidade.'}
+                🔒 <strong>Garantia de Sigilo:</strong> ${isMasterAdmin ? 'Visão Master do Síndico (Acesso Completo a Todos os Agendamentos).' : isPortaria ? 'Visão Operacional da Portaria (Conferência de Acesso na Guarita).' : 'Para o uso da Piscina e da Academia, os agendamentos não aparecem para outros moradores. Somente o Síndico e a Portaria visualizam o quadro geral.'}
               </p>
             </div>
           </div>
@@ -144,7 +146,7 @@ window.UtilidadesComponent = {
           </form>
 
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-            ${isMasterAdmin ? 'Quadro Master de Agendamentos (Síndico Master)' : isPortaria ? 'Quadro de Agendamentos (Portaria)' : 'Meus Agendamentos de Piscina & Academia (Caixa Pessoal do Morador)'}
+            ${isMasterAdmin ? 'Quadro Master de Agendamentos (Síndico Master)' : isPortaria ? 'Quadro Operacional de Agendamentos (Portaria)' : 'Meus Agendamentos Privados (Visível Apenas para Você)'}
           </h4>
           <div class="table-responsive">
             <table class="custom-table" id="tableReservas">
@@ -160,7 +162,7 @@ window.UtilidadesComponent = {
               </thead>
               <tbody>
                 ${reservasExistentes.length === 0 ? `
-                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento pessoal de Piscina ou Academia registrado nos últimos 30 dias.</td></tr>
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento pessoal registrado nos últimos 30 dias.</td></tr>
                 ` : reservasExistentes.map(r => `
                   <tr>
                     <td><strong>${r.data}</strong></td>
