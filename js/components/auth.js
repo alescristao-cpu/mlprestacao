@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Autenticação & Cadastro com Senha
-   Garantia Total de Autenticação Master do Síndico
+   Aviso de Segurança: Senha Pessoal e Intransferível
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -134,6 +134,9 @@ window.AuthComponent = {
         <div class="form-group">
           <label class="form-label">Crie Uma Senha de Acesso</label>
           <input type="password" id="regSenha" class="form-control" placeholder="Crie sua senha de acesso" required autocomplete="new-password">
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4; background: var(--bg-app); padding: 0.6rem 0.85rem; border-radius: 6px; border-left: 3px solid var(--primary);">
+            🔒 <strong>Aviso de Segurança:</strong> A senha de acesso é <strong>pessoal e intransferível</strong>. Recomendamos não utilizar a mesma senha usada para acessar seus e-mails e contas pessoais.
+          </div>
         </div>
 
         <div class="form-grid">
