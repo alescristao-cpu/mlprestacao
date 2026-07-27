@@ -1,6 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Utilidades & Agendamento Automático (Piscina & Academia)
-   Visão Exclusiva para a Portaria: Oculta 2ª Via do Boleto e Reserva do Salão de Festas
+   Privacidade Total: Cada morador visualiza apenas seus próprios agendamentos.
+   Síndico e Portaria possuem acesso a todos os agendamentos.
    ---------------------------------------------------- */
 
 window.UtilidadesComponent = {
@@ -27,15 +28,25 @@ window.UtilidadesComponent = {
       return;
     }
 
+    const isMasterAdmin = user && user.role === 'Administrador';
     const isPortaria = user && user.role === 'Portaria';
     const hojeStr = new Date().toISOString().split('T')[0];
 
-    // Filtra agendamentos dos últimos 30 dias
+    // Filtra agendamentos dos últimos 30 dias com PRIVACIDADE RÍGIDA:
+    // Síndico e Portaria vêem todos. Moradores vêem APENAS SEUS PRÓPRIOS agendamentos.
     const limite30Dias = new Date();
     limite30Dias.setDate(limite30Dias.getDate() - 30);
     const limiteStr = limite30Dias.toISOString().split('T')[0];
 
-    const reservasExistentes = (data.agendaReservas || []).filter(r => r.data >= limiteStr);
+    const todasReservas = (data.agendaReservas || []).filter(r => r.data >= limiteStr);
+
+    const reservasExistentes = (isMasterAdmin || isPortaria)
+      ? todasReservas
+      : todasReservas.filter(r => 
+          (r.email && r.email.toLowerCase().trim() === user.email.toLowerCase().trim()) ||
+          (r.moradorNome && r.moradorNome.toLowerCase().trim() === user.nome.toLowerCase().trim()) ||
+          (r.apartamento && r.apartamento.toString().trim() === user.apartamento.toString().trim())
+        );
 
     const hourlySlots = [
       '06:00 às 07:00',
@@ -95,10 +106,10 @@ window.UtilidadesComponent = {
           <div class="card-header">
             <div>
               <div class="card-title">
-                <span class="material-symbols-outlined">pool</span> Agendamento Automático (Piscina &amp; Academia)
+                <span class="material-symbols-outlined">pool</span> Agendamento (Piscina &amp; Academia)
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                Os horários agendados são processados e salvos automaticamente no banco de dados com retenção por 30 dias.
+                🔒 <strong>Privacidade Garantida:</strong> ${isMasterAdmin || isPortaria ? 'Visão de Gerenciamento da Administração.' : 'Você visualiza exclusivamente os agendamentos da sua unidade.'}
               </p>
             </div>
           </div>
@@ -132,7 +143,7 @@ window.UtilidadesComponent = {
           </form>
 
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-            Quadro de Agendamentos Confirmados (Sincronizado em Tempo Real)
+            ${isMasterAdmin || isPortaria ? 'Quadro Geral de Agendamentos (Sincronizado em Tempo Real)' : 'Meus Agendamentos Confirmados (Caixa Pessoal)'}
           </h4>
           <div class="table-responsive">
             <table class="custom-table" id="tableReservas">
@@ -148,7 +159,7 @@ window.UtilidadesComponent = {
               </thead>
               <tbody>
                 ${reservasExistentes.length === 0 ? `
-                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento registrado nos últimos 30 dias.</td></tr>
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento pessoal registrado nos últimos 30 dias.</td></tr>
                 ` : reservasExistentes.map(r => `
                   <tr>
                     <td><strong>${r.data}</strong></td>
