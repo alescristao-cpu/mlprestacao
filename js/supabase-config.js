@@ -1,11 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Supabase Integration Engine
-   Conexão e Sincronização em Tempo Real com Supabase PostgreSQL
+   Conexão Oficial com Projeto Supabase: lqguxjtczcxbnraoklem
    ---------------------------------------------------- */
 
 window.SupabaseConfig = {
-  // O Síndico pode salvar suas chaves pelo Painel ou diretamente aqui:
-  url: localStorage.getItem('MODERN_LIFE_SUPABASE_URL') || '',
+  url: localStorage.getItem('MODERN_LIFE_SUPABASE_URL') || 'https://lqguxjtczcxbnraoklem.supabase.co',
   anonKey: localStorage.getItem('MODERN_LIFE_SUPABASE_KEY') || '',
   client: null,
 
@@ -22,7 +21,7 @@ window.SupabaseConfig = {
   },
 
   saveCredentials(url, key) {
-    this.url = url.trim();
+    this.url = url.trim() || 'https://lqguxjtczcxbnraoklem.supabase.co';
     this.anonKey = key.trim();
     localStorage.setItem('MODERN_LIFE_SUPABASE_URL', this.url);
     localStorage.setItem('MODERN_LIFE_SUPABASE_KEY', this.anonKey);
