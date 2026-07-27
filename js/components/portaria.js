@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel de Controle da Portaria & Guarita
    Gestão de Agendamentos (Piscina, Academia e Salão de Festas)
-   Envio Automático de Observações para o Gmail condominio.modern.life@gmail.com
+   Status de Liberação: "Autorizado"
    ---------------------------------------------------- */
 
 window.PortariaComponent = {
@@ -125,12 +125,19 @@ window.PortariaComponent = {
   },
 
   renderReservaCard(r, isHistory = false) {
-    const isAutorizado = r.status === 'Entrada Autorizada' || r.status === 'Uso Concluído';
+    const isAutorizado = r.status === 'Autorizado' || r.status === 'Entrada Autorizada' || r.status === 'Uso Concluído';
     const isBloqueado = r.status === 'Acesso Bloqueado' || r.status === 'Cancelado';
 
     let badgeStyle = 'badge-warning';
-    if (isAutorizado) badgeStyle = 'badge-success';
-    if (isBloqueado) badgeStyle = 'badge-danger';
+    let labelStatus = r.status || 'Confirmado';
+
+    if (isAutorizado) {
+      badgeStyle = 'badge-success';
+      labelStatus = '✓ Autorizado';
+    } else if (isBloqueado) {
+      badgeStyle = 'badge-danger';
+      labelStatus = '🚫 Acesso Bloqueado';
+    }
 
     let iconArea = 'pool';
     if (r.area.toLowerCase().includes('academia')) iconArea = 'fitness_center';
@@ -154,8 +161,8 @@ window.PortariaComponent = {
             </div>
           </div>
 
-          <span class="badge ${badgeStyle}" style="font-size: 0.82rem; padding: 0.4rem 0.75rem;">
-            ${r.status || 'Confirmado'}
+          <span class="badge ${badgeStyle}" style="font-size: 0.82rem; padding: 0.4rem 0.75rem; font-weight: 700;">
+            ${labelStatus}
           </span>
         </div>
 
@@ -194,8 +201,8 @@ window.PortariaComponent = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          _subject: `[OBSERVAÇÃO DE AGENDAMENTO] ${reserva.area} - Apto ${reserva.apartamento} (${reserva.moradorNome})`,
-          "Tipo de Ação": tipoAcao,
+          _subject: `[AUTORIZAÇÃO / OBSERVAÇÃO DE AGENDAMENTO] ${reserva.area} - Apto ${reserva.apartamento} (${reserva.moradorNome})`,
+          "Status Atual": tipoAcao,
           "Área Reservada": reserva.area,
           "Data do Uso": reserva.data,
           "Horário": reserva.horario,
@@ -210,13 +217,13 @@ window.PortariaComponent = {
 
   autorizarUso(id) {
     const reserva = (window.CondoStore.data.agendaReservas || []).find(r => r.id === id);
-    window.CondoStore.updateReservaStatus(id, 'Entrada Autorizada', 'Uso liberado na portaria.');
+    window.CondoStore.updateReservaStatus(id, 'Autorizado', 'Uso liberado na portaria.');
     
     if (reserva) {
-      this.enviarObservacaoParaGmail(reserva, 'Uso liberado e autorizado na portaria.', 'Entrada Autorizada');
+      this.enviarObservacaoParaGmail(reserva, 'Uso liberado e autorizado na portaria.', 'Autorizado');
     }
 
-    App.showToast('Entrada AUTORIZADA e notificação enviada ao Gmail!', 'success');
+    App.showToast('Status alterado para AUTORIZADO!', 'success');
     App.render();
   },
 
@@ -230,10 +237,10 @@ window.PortariaComponent = {
     window.CondoStore.updateReservaStatus(id, 'Acesso Bloqueado', observacaoTexto);
     
     if (reserva) {
-      this.enviarObservacaoParaGmail(reserva, observacaoTexto, 'Acesso Bloqueado pela Portaria');
+      this.enviarObservacaoParaGmail(reserva, observacaoTexto, 'Acesso Bloqueado');
     }
 
-    App.showToast('Uso BLOQUEADO e motivo enviado ao Gmail!', 'info');
+    App.showToast('Uso BLOQUEADO e notificação enviada ao Gmail!', 'info');
     App.render();
   },
 
@@ -323,7 +330,7 @@ window.PortariaComponent = {
               </div>
 
               <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
-                <span class="material-symbols-outlined">check_circle</span> Registrar e Autorizar Entrada
+                <span class="material-symbols-outlined">check_circle</span> Registrar como Autorizado
               </button>
             </form>
           </div>
@@ -350,14 +357,14 @@ window.PortariaComponent = {
       data,
       horario,
       observacao,
-      status: 'Entrada Autorizada'
+      status: 'Autorizado'
     });
 
     if (observacao) {
-      this.enviarObservacaoParaGmail(novaReserva, observacao, 'Nova Reserva Presencial na Portaria');
+      this.enviarObservacaoParaGmail(novaReserva, observacao, 'Nova Reserva Autorizada na Portaria');
     }
 
-    App.showToast(`Reserva de ${moradorNome} (${area}) registrada e notificada ao Gmail!`, 'success');
+    App.showToast(`Reserva de ${moradorNome} (${area}) registrada como AUTORIZADO!`, 'success');
     document.getElementById('modalNovaReservaPortaria').remove();
     App.render();
   }
