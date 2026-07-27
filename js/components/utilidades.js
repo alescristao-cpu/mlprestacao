@@ -1,8 +1,7 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Utilidades & Agendamento Automático
-   Controle Estrito de Permissões:
-   - APENAS o Síndico Master (Administrador) e a Portaria visualizam o quadro geral.
-   - Moradores visualizam EXCLUSIVAMENTE seus próprios agendamentos.
+   Modern Life Residence - Utilidades & Agendamento Automático (Piscina & Academia)
+   Privacidade Total de Moradores: Tanto para a Piscina quanto para a Academia,
+   cada morador visualiza EXCLUSIVAMENTE os agendamentos de sua própria unidade.
    ---------------------------------------------------- */
 
 window.UtilidadesComponent = {
@@ -33,9 +32,9 @@ window.UtilidadesComponent = {
     const isPortaria = user && user.role === 'Portaria';
     const hojeStr = new Date().toISOString().split('T')[0];
 
-    // Filtra agendamentos dos últimos 30 dias com PRIVACIDADE RÍGIDA:
-    // Síndico Master e Portaria (Operacional) vêem todas as reservas.
-    // Moradores comuns vêem APENAS SEUS PRÓPRIOS agendamentos.
+    // Filtra agendamentos dos últimos 30 dias com PRIVACIDADE RÍGIDA PARA PISCINA E ACADEMIA:
+    // Síndico Master e Portaria vêem todas as reservas.
+    // Moradores comuns vêem APENAS SEUS PRÓPRIOS agendamentos da Piscina e da Academia.
     const limite30Dias = new Date();
     limite30Dias.setDate(limite30Dias.getDate() - 30);
     const limiteStr = limite30Dias.toISOString().split('T')[0];
@@ -111,7 +110,7 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined">pool</span> Agendamento (Piscina &amp; Academia)
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                🔒 <strong>Visibilidade Restrita:</strong> ${isMasterAdmin ? 'Visão Master do Síndico (Acesso Completo).' : isPortaria ? 'Visão Operacional da Portaria.' : 'Você visualiza exclusivamente os agendamentos da sua unidade.'}
+                🔒 <strong>Privacidade Total das Áreas Comuns:</strong> ${isMasterAdmin ? 'Visão Master do Síndico (Acesso Completo).' : isPortaria ? 'Visão Operacional da Portaria.' : 'Tanto para a Piscina quanto para a Academia, você visualiza exclusivamente os agendamentos da sua própria unidade.'}
               </p>
             </div>
           </div>
@@ -145,7 +144,7 @@ window.UtilidadesComponent = {
           </form>
 
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-            ${isMasterAdmin ? 'Quadro Master de Agendamentos (Síndico Master)' : isPortaria ? 'Quadro de Agendamentos (Portaria)' : 'Meus Agendamentos Confirmados (Caixa Pessoal)'}
+            ${isMasterAdmin ? 'Quadro Master de Agendamentos (Síndico Master)' : isPortaria ? 'Quadro de Agendamentos (Portaria)' : 'Meus Agendamentos de Piscina & Academia (Caixa Pessoal do Morador)'}
           </h4>
           <div class="table-responsive">
             <table class="custom-table" id="tableReservas">
@@ -161,7 +160,7 @@ window.UtilidadesComponent = {
               </thead>
               <tbody>
                 ${reservasExistentes.length === 0 ? `
-                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento registrado nos últimos 30 dias.</td></tr>
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento pessoal de Piscina ou Academia registrado nos últimos 30 dias.</td></tr>
                 ` : reservasExistentes.map(r => `
                   <tr>
                     <td><strong>${r.data}</strong></td>
