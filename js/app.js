@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Main Application Orchestrator
-   Suporte Completo ao Perfil e Rota da Portaria (Guarita)
+   Filtro de Menu Exclusivo para o Perfil "Portaria"
    ---------------------------------------------------- */
 
 window.App = {
@@ -13,14 +13,23 @@ window.App = {
       this.bindEvents();
       this.registerServiceWorker();
       
-      const hash = window.location.hash.replace('#', '');
-      if (hash && this.isValidRoute(hash)) {
-        this.currentRoute = hash;
+      const user = window.CondoStore.currentUser;
+      if (user && user.role === 'Portaria') {
+        this.currentRoute = 'portaria';
+      } else {
+        const hash = window.location.hash.replace('#', '');
+        if (hash && this.isValidRoute(hash)) {
+          this.currentRoute = hash;
+        }
       }
 
       this.render();
 
       window.CondoStore.subscribe(() => {
+        const currentUser = window.CondoStore.currentUser;
+        if (currentUser && currentUser.role === 'Portaria' && !['portaria', 'utilidades', 'agenda'].includes(this.currentRoute)) {
+          this.currentRoute = 'portaria';
+        }
         this.render();
       });
     } catch (err) {
@@ -96,7 +105,15 @@ window.App = {
   },
 
   navigateTo(route) {
-    if (!this.isValidRoute(route)) route = 'dashboard';
+    const user = window.CondoStore.currentUser;
+    const isPortaria = user && user.role === 'Portaria';
+
+    if (isPortaria && !['portaria', 'utilidades', 'agenda'].includes(route)) {
+      route = 'portaria';
+    } else if (!this.isValidRoute(route)) {
+      route = 'dashboard';
+    }
+
     this.currentRoute = route;
     window.location.hash = route;
 
@@ -169,8 +186,25 @@ window.App = {
   },
 
   updateNavigationUI() {
+    const user = window.CondoStore.currentUser;
+    const isPortaria = user && user.role === 'Portaria';
+
+    // Oculta menus financeiros e administrativos para o Perfil da Portaria
+    const portariaAllowedRoutes = ['portaria', 'utilidades', 'agenda'];
+
     document.querySelectorAll('.nav-item').forEach(item => {
       const route = item.getAttribute('data-route');
+
+      if (isPortaria) {
+        if (portariaAllowedRoutes.includes(route)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      } else {
+        item.style.display = 'flex';
+      }
+
       if (route === this.currentRoute) {
         item.classList.add('active');
       } else {
@@ -200,7 +234,6 @@ window.App = {
       headerTitleEl.innerText = titleMap[this.currentRoute] || 'Modern Life Residence';
     }
 
-    const user = window.CondoStore.currentUser;
     const userNameEl = document.getElementById('sidebarUserName');
     const userRoleEl = document.getElementById('sidebarUserRole');
     const userAvatarEl = document.getElementById('sidebarUserAvatar');
