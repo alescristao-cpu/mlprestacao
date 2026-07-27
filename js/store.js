@@ -1,13 +1,10 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Suporte a Nuvem Híbrida: Google Firestore + Supabase PostgreSQL
+   Banco de Dados 100% Exclusivo Supabase PostgreSQL
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V31';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V31';
-const FIRESTORE_PROJECT_ID = 'paginapretacao';
-const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
-const FIRESTORE_RESERVAS_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/reservas`;
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V32';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V32';
 
 const INITIAL_DATA = {
   moradores: [
@@ -156,8 +153,11 @@ class StoreEngine {
     this.ensureSindicoMaster();
 
     setTimeout(() => {
-      if (window.SupabaseConfig) window.SupabaseConfig.init();
-    }, 100);
+      if (window.SupabaseConfig) {
+        window.SupabaseConfig.init();
+        this.pullFromCloudSilently();
+      }
+    }, 150);
 
     this.startCloudSyncLoop();
   }
@@ -249,7 +249,6 @@ class StoreEngine {
     this.isSyncing = true;
 
     try {
-      // A. Sincronização via SUPABASE (Se configurado pelo Síndico)
       if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
         const supaData = await window.SupabaseConfig.pullDataFromSupabase();
         if (supaData) {
@@ -302,95 +301,6 @@ class StoreEngine {
           }
         }
       }
-
-      // B. Sincronização via GOOGLE FIRESTORE (REST Engine)
-      const response = await fetch(FIRESTORE_REST_URL, { method: 'GET' });
-      if (response.ok) {
-        const json = await response.json();
-        const documents = json.documents || [];
-        
-        if (documents.length > 0) {
-          let updated = false;
-
-          documents.forEach(doc => {
-            const fields = doc.fields || {};
-            const m = {
-              id: fields.id ? fields.id.stringValue : doc.name.split('/').pop(),
-              nome: fields.nome ? fields.nome.stringValue : '',
-              email: fields.email ? fields.email.stringValue : '',
-              senha: fields.senha ? fields.senha.stringValue : '',
-              telefone: fields.telefone ? fields.telefone.stringValue : '',
-              apartamento: fields.apartamento ? fields.apartamento.stringValue : '',
-              role: fields.role ? fields.role.stringValue : 'Morador',
-              status: fields.status ? fields.status.stringValue : 'Pendente',
-              senhaTemporaria: fields.senhaTemporaria ? (fields.senhaTemporaria.booleanValue || false) : false,
-              dataCadastro: fields.dataCadastro ? fields.dataCadastro.stringValue : new Date().toISOString().split('T')[0]
-            };
-
-            if (m.email) {
-              const emailNorm = m.email.toLowerCase().trim();
-              const idx = this.data.moradores.findIndex(item => item.id === m.id || item.email.toLowerCase().trim() === emailNorm);
-
-              if (idx === -1) {
-                this.data.moradores.push(m);
-                updated = true;
-              } else if (this.data.moradores[idx].status !== m.status || this.data.moradores[idx].role !== m.role || (m.senha && this.data.moradores[idx].senha !== m.senha) || this.data.moradores[idx].senhaTemporaria !== m.senhaTemporaria) {
-                this.data.moradores[idx] = m;
-                updated = true;
-              }
-            }
-          });
-
-          if (updated) {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
-            this.notify();
-          }
-        }
-      }
-
-      // Reservas via FIRESTORE
-      const resReservas = await fetch(FIRESTORE_RESERVAS_URL, { method: 'GET' });
-      if (resReservas.ok) {
-        const jsonRes = await resReservas.json();
-        const docReservas = jsonRes.documents || [];
-
-        if (docReservas.length > 0) {
-          if (!this.data.agendaReservas) this.data.agendaReservas = [];
-          let resUpdated = false;
-
-          docReservas.forEach(doc => {
-            const f = doc.fields || {};
-            const r = {
-              id: f.id ? f.id.stringValue : doc.name.split('/').pop(),
-              area: f.area ? f.area.stringValue : 'Piscina',
-              data: f.data ? f.data.stringValue : '',
-              horario: f.horario ? f.horario.stringValue : '',
-              moradorNome: f.moradorNome ? f.moradorNome.stringValue : '',
-              apartamento: f.apartamento ? f.apartamento.stringValue : '',
-              email: f.email ? f.email.stringValue : '',
-              observacao: f.observacao ? f.observacao.stringValue : '',
-              status: f.status ? f.status.stringValue : 'Confirmado'
-            };
-
-            const idx = this.data.agendaReservas.findIndex(item => item.id === r.id);
-            if (idx === -1) {
-              this.data.agendaReservas.unshift(r);
-              resUpdated = true;
-            } else {
-              if (this.data.agendaReservas[idx].status !== r.status || this.data.agendaReservas[idx].observacao !== r.observacao) {
-                this.data.agendaReservas[idx] = r;
-                resUpdated = true;
-              }
-            }
-          });
-
-          if (resUpdated) {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
-            this.notify();
-          }
-        }
-      }
-
     } catch (e) {
     } finally {
       this.isSyncing = false;
@@ -398,63 +308,9 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
-    // 1. Sincronização com Supabase (Se ativado)
     if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
       window.SupabaseConfig.pushDataToSupabase(this.data);
     }
-
-    // 2. Sincronização com Google Cloud Firestore
-    if (window.firebase && window.firebase.firestore) {
-      try {
-        const db = window.firebase.firestore();
-        for (const m of this.data.moradores) {
-          const docId = m.id || 'usr_' + Date.now();
-          db.collection('moradores').doc(docId).set(m, { merge: true }).catch(() => {});
-        }
-
-        for (const r of (this.data.agendaReservas || [])) {
-          const resDocId = r.id || 'res_' + Date.now();
-          db.collection('reservas').doc(resDocId).set(r, { merge: true }).catch(() => {});
-        }
-
-        for (const o of (this.data.ocorrencias || [])) {
-          const ocoDocId = o.id || 'oco_' + Date.now();
-          db.collection('ocorrencias').doc(ocoDocId).set(o, { merge: true }).catch(() => {});
-        }
-      } catch (e) {}
-    }
-
-    try {
-      for (const m of this.data.moradores) {
-        const docId = m.id || 'usr_' + Date.now();
-        const payload = {
-          fields: {
-            id: { stringValue: docId },
-            nome: { stringValue: m.nome || '' },
-            email: { stringValue: m.email || '' },
-            senha: { stringValue: m.senha || '' },
-            telefone: { stringValue: m.telefone || '' },
-            apartamento: { stringValue: m.apartamento || '' },
-            role: { stringValue: m.role || 'Morador' },
-            status: { stringValue: m.status || 'Pendente' },
-            senhaTemporaria: { booleanValue: !!m.senhaTemporaria },
-            dataCadastro: { stringValue: m.dataCadastro || new Date().toISOString().split('T')[0] }
-          }
-        };
-
-        fetch(`${FIRESTORE_REST_URL}/${docId}?updateMask.fieldPaths=status&updateMask.fieldPaths=role&updateMask.fieldPaths=nome&updateMask.fieldPaths=email&updateMask.fieldPaths=senha&updateMask.fieldPaths=senhaTemporaria&updateMask.fieldPaths=apartamento`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }).catch(() => {
-          fetch(`${FIRESTORE_REST_URL}?documentId=${docId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          }).catch(() => {});
-        });
-      }
-    } catch (e) {}
   }
 
   addMorador(morador) {
@@ -489,13 +345,6 @@ class StoreEngine {
 
     target.senha = novaSenhaTemp;
     target.senhaTemporaria = true;
-
-    if (window.firebase && window.firebase.firestore) {
-      try {
-        window.firebase.firestore().collection('moradores').doc(target.id).set({ senha: novaSenhaTemp, senhaTemporaria: true }, { merge: true }).catch(() => {});
-      } catch (e) {}
-    }
-
     this.saveData();
     return { success: true, morador: target };
   }
@@ -506,12 +355,6 @@ class StoreEngine {
 
     target.senha = novaSenhaPessoal;
     target.senhaTemporaria = false;
-
-    if (window.firebase && window.firebase.firestore) {
-      try {
-        window.firebase.firestore().collection('moradores').doc(target.id).set({ senha: novaSenhaPessoal, senhaTemporaria: false }, { merge: true }).catch(() => {});
-      } catch (e) {}
-    }
 
     this.saveData();
 
@@ -561,13 +404,6 @@ class StoreEngine {
     const item = this.data.moradores.find(m => m.id === id || m.email.toLowerCase().trim() === id.toLowerCase().trim());
     if (item) {
       item.status = newStatus;
-      
-      if (window.firebase && window.firebase.firestore) {
-        try {
-          window.firebase.firestore().collection('moradores').doc(item.id).set({ status: newStatus }, { merge: true }).catch(() => {});
-        } catch (e) {}
-      }
-
       this.saveData();
 
       if (this.currentUser && (this.currentUser.id === item.id || this.currentUser.email.toLowerCase() === item.email.toLowerCase())) {
@@ -588,16 +424,6 @@ class StoreEngine {
 
     this.data.moradores = this.data.moradores.filter(m => m.id !== deleteId && m.email.toLowerCase() !== deleteId.toLowerCase());
 
-    if (window.firebase && window.firebase.firestore && deleteId) {
-      try {
-        window.firebase.firestore().collection('moradores').doc(deleteId).delete().catch(() => {});
-      } catch (e) {}
-    }
-
-    if (deleteId) {
-      fetch(`${FIRESTORE_REST_URL}/${deleteId}`, { method: 'DELETE' }).catch(() => {});
-    }
-
     if (this.currentUser && (this.currentUser.id === deleteId || (target && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
       this.setCurrentUser(null);
     } else {
@@ -617,13 +443,6 @@ class StoreEngine {
       ...reserva
     };
     this.data.agendaReservas.unshift(newReserva);
-
-    if (window.firebase && window.firebase.firestore) {
-      try {
-        window.firebase.firestore().collection('reservas').doc(resId).set(newReserva, { merge: true }).catch(() => {});
-      } catch (e) {}
-    }
-
     this.saveData();
     return newReserva;
   }
@@ -633,13 +452,6 @@ class StoreEngine {
     if (r) {
       if (newStatus) r.status = newStatus;
       if (observacao) r.observacao = observacao;
-
-      if (window.firebase && window.firebase.firestore) {
-        try {
-          window.firebase.firestore().collection('reservas').doc(r.id).set(r, { merge: true }).catch(() => {});
-        } catch (e) {}
-      }
-
       this.saveData();
       return true;
     }
@@ -649,17 +461,6 @@ class StoreEngine {
   deleteReserva(id) {
     if (!this.data.agendaReservas) return false;
     this.data.agendaReservas = this.data.agendaReservas.filter(r => r.id !== id);
-
-    if (window.firebase && window.firebase.firestore && id) {
-      try {
-        window.firebase.firestore().collection('reservas').doc(id).delete().catch(() => {});
-      } catch (e) {}
-    }
-
-    if (id) {
-      fetch(`${FIRESTORE_RESERVAS_URL}/${id}`, { method: 'DELETE' }).catch(() => {});
-    }
-
     this.saveData();
     return true;
   }
@@ -674,13 +475,6 @@ class StoreEngine {
       ...oco
     };
     this.data.ocorrencias.unshift(newOco);
-
-    if (window.firebase && window.firebase.firestore) {
-      try {
-        window.firebase.firestore().collection('ocorrencias').doc(newOco.id).set(newOco, { merge: true }).catch(() => {});
-      } catch (e) {}
-    }
-
     this.saveData();
     return newOco;
   }
@@ -695,13 +489,6 @@ class StoreEngine {
         texto: respostaTexto
       });
       oco.status = 'Respondido pelo Síndico';
-
-      if (window.firebase && window.firebase.firestore) {
-        try {
-          window.firebase.firestore().collection('ocorrencias').doc(oco.id).set(oco, { merge: true }).catch(() => {});
-        } catch (e) {}
-      }
-
       this.saveData();
       return true;
     }
