@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Aprovação, Recusa (Não Autorizar), Edição & Exclusão
+   Aprovação, Recusa (Não Autorizar), Edição, Exclusão & Troca de Senha
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -54,6 +54,10 @@ window.AdminComponent = {
                 <span class="material-symbols-outlined" style="color: var(--primary);">person_add</span> ➕ Autorizar Novo Morador Manualmente
               </button>
 
+              <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.85rem;" onclick="AdminComponent.openAlterarSenhaSindicoModal()">
+                <span class="material-symbols-outlined">key</span> 🔑 Alterar Minha Senha de Síndico
+              </button>
+
               <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.85rem;" onclick="AdminComponent.forcarSincronizacaoNuvem()">
                 <span class="material-symbols-outlined">sync</span> 🔄 Checar Cadastros na Nuvem
               </button>
@@ -92,7 +96,6 @@ window.AdminComponent = {
                     <div>📱 Telefone: <strong>${p.telefone || 'Não informado'}</strong></div>
                   </div>
 
-                  <!-- Botões de Ação Completa: Autorizar / Não Autorizar / Editar / Excluir -->
                   <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem;">
                     <button class="btn-primary btn-sm" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.65rem; font-weight: 700; min-width: 120px;" onclick="AdminComponent.aprovarMorador('${p.id}')">
                       <span class="material-symbols-outlined" style="font-size: 1rem;">check_circle</span> Autorizar
@@ -167,7 +170,7 @@ window.AdminComponent = {
           </div>
         </div>
 
-        <!-- Seção 3: Cadastros Não Autorizados / Recusados (Se houver) -->
+        <!-- Seção 3: Cadastros Não Autorizados / Recusados -->
         ${recusados.length > 0 ? `
           <div class="card-widget" style="border: 1px solid #FFCDD2; padding: 1.25rem;">
             <div class="card-header" style="margin-bottom: 0.85rem;">
@@ -208,6 +211,65 @@ window.AdminComponent = {
     App.render();
   },
 
+  openAlterarSenhaSindicoModal() {
+    const existing = document.getElementById('modalSenhaSindico');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalSenhaSindico">
+        <div class="modal-card" style="max-width: 480px;">
+          <div class="modal-header" style="background: var(--primary-dark); color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700;">
+              🔑 Alterar Senha do Administrador Master (Síndico)
+            </div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalSenhaSindico').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+              E-mail master: <code>condominio.modern.life@gmail.com</code>
+            </p>
+            <form onsubmit="AdminComponent.submeterTrocaSenhaSindico(event)">
+              <div class="form-group">
+                <label class="form-label">Nova Senha de Acesso do Síndico</label>
+                <input type="password" id="novaSenhaSindico" class="form-control" placeholder="Digite sua nova senha" required minlength="6">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Confirme a Nova Senha</label>
+                <input type="password" id="confirmaSenhaSindico" class="form-control" placeholder="Repita a nova senha" required minlength="6">
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
+                <span class="material-symbols-outlined">save</span> Atualizar Senha Master
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  submeterTrocaSenhaSindico(e) {
+    e.preventDefault();
+    const s1 = document.getElementById('novaSenhaSindico').value;
+    const s2 = document.getElementById('confirmaSenhaSindico').value;
+
+    if (s1 !== s2) {
+      alert('As senhas digitadas não coincidem!');
+      return;
+    }
+
+    const sindico = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === 'condominio.modern.life@gmail.com');
+    if (sindico) {
+      sindico.senha = s1;
+      window.CondoStore.saveData();
+      App.showToast('Senha master do Síndico alterada com sucesso!', 'success');
+      document.getElementById('modalSenhaSindico').remove();
+    }
+  },
+
   openEditMoradorModal(moradorId) {
     const morador = window.CondoStore.data.moradores.find(m => m.id === moradorId);
     if (!morador) return;
@@ -220,7 +282,7 @@ window.AdminComponent = {
         <div class="modal-card" style="max-width: 520px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
             <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem;">
-              ✏️ Editar Morador &amp; Definir Função (Conselheiro)
+              ✏️ Editar Morador &amp; Definir Função (Conselheiro / Portaria)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalEditMorador').remove()">✕</button>
           </div>
@@ -237,6 +299,7 @@ window.AdminComponent = {
                 <select id="editRole" class="form-control" style="font-weight: 700;" required>
                   <option value="Morador" ${morador.role === 'Morador' ? 'selected' : ''}>🏡 Morador Padrão</option>
                   <option value="Conselheiro" ${morador.role === 'Conselheiro' ? 'selected' : ''}>👑 Conselheiro (Conselho Consultivo / Fiscal)</option>
+                  <option value="Portaria" ${morador.role === 'Portaria' ? 'selected' : ''}>🚪 Portaria &amp; Guarita</option>
                   <option value="Administrador" ${morador.role === 'Administrador' ? 'selected' : ''}>🛡️ Administrador (Síndico)</option>
                 </select>
               </div>
@@ -244,6 +307,11 @@ window.AdminComponent = {
               <div class="form-group">
                 <label class="form-label">E-mail Principal</label>
                 <input type="email" id="editEmail" class="form-control" value="${morador.email}" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Senha do Morador</label>
+                <input type="password" id="editSenha" class="form-control" value="${morador.senha || '123456'}" placeholder="Redefinir senha">
               </div>
 
               <div class="form-grid">
@@ -278,6 +346,7 @@ window.AdminComponent = {
     const nome = document.getElementById('editNome').value.trim();
     const role = document.getElementById('editRole').value;
     const email = document.getElementById('editEmail').value.trim();
+    const senha = document.getElementById('editSenha').value.trim();
     const apartamento = document.getElementById('editApto').value.trim();
     const telefone = document.getElementById('editTelefone').value.trim();
 
@@ -285,6 +354,7 @@ window.AdminComponent = {
       nome,
       role,
       email,
+      senha,
       apartamento,
       telefone
     });
@@ -323,12 +393,18 @@ window.AdminComponent = {
                 <select id="quickRole" class="form-control" style="font-weight: 700;" required>
                   <option value="Morador">🏡 Morador Padrão</option>
                   <option value="Conselheiro">👑 Conselheiro (Conselho Consultivo / Fiscal)</option>
+                  <option value="Portaria">🚪 Portaria &amp; Guarita</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label class="form-label">E-mail do Morador</label>
                 <input type="email" id="quickEmail" class="form-control" placeholder="morador@exemplo.com" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Senha Inicial</label>
+                <input type="password" id="quickSenha" class="form-control" placeholder="Senha do morador" value="123456" required>
               </div>
 
               <div class="form-grid">
@@ -360,6 +436,7 @@ window.AdminComponent = {
     const nome = document.getElementById('quickNome').value.trim();
     const role = document.getElementById('quickRole').value;
     const email = document.getElementById('quickEmail').value.trim();
+    const senha = document.getElementById('quickSenha').value.trim();
     const apartamento = document.getElementById('quickApto').value.trim();
     const telefone = document.getElementById('quickTelefone') ? document.getElementById('quickTelefone').value.trim() : '';
 
@@ -367,6 +444,7 @@ window.AdminComponent = {
       nome,
       role,
       email,
+      senha: senha || '123456',
       telefone,
       apartamento,
       cpf: 'Autorizado Pelo Síndico'
