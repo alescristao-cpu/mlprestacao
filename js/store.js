@@ -1,11 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Sincronização Nativa Instantânea (Android, iOS & Desktop)
-   Garantia Total de Aprovação e Atualização no Firestore
+   Sincronização Nativa Instantânea de Agendamentos (Piscina, Academia e Salão)
+   Garantia Total de Autorização de Uso da Piscina no Celular e PC
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V30';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V30';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V31';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V31';
 const FIRESTORE_PROJECT_ID = 'paginapretacao';
 const FIRESTORE_REST_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/moradores`;
 const FIRESTORE_RESERVAS_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/reservas`;
@@ -339,13 +339,18 @@ class StoreEngine {
   }
 
   async broadcastToCloud() {
-    // 1. Atualização para Firebase Web SDK nativo (Garantia para Celular e PC)
+    // 1. Atualização Nativa para Firebase Web SDK
     if (window.firebase && window.firebase.firestore) {
       try {
         const db = window.firebase.firestore();
         for (const m of this.data.moradores) {
           const docId = m.id || 'usr_' + Date.now();
           db.collection('moradores').doc(docId).set(m, { merge: true }).catch(() => {});
+        }
+
+        for (const r of (this.data.agendaReservas || [])) {
+          const resDocId = r.id || 'res_' + Date.now();
+          db.collection('reservas').doc(resDocId).set(r, { merge: true }).catch(() => {});
         }
       } catch (e) {}
     }
@@ -368,7 +373,6 @@ class StoreEngine {
           }
         };
 
-        // Usa PATCH no REST API do Firestore para garantir atualização de documentos existentes sem 409 Conflict
         fetch(`${FIRESTORE_REST_URL}/${docId}?updateMask.fieldPaths=status&updateMask.fieldPaths=role&updateMask.fieldPaths=nome&updateMask.fieldPaths=email&updateMask.fieldPaths=senha&updateMask.fieldPaths=apartamento`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -473,7 +477,7 @@ class StoreEngine {
     if (item) {
       item.status = newStatus;
       
-      // Atualização imediata em tempo real no SDK do Firebase para dispositivos móveis
+      // Atualização em tempo real no SDK do Firebase para dispositivos móveis
       if (window.firebase && window.firebase.firestore) {
         try {
           window.firebase.firestore().collection('moradores').doc(item.id).set({ status: newStatus }, { merge: true }).catch(() => {});
@@ -521,13 +525,21 @@ class StoreEngine {
 
   addAgendamento(reserva) {
     if (!this.data.agendaReservas) this.data.agendaReservas = [];
+    const resId = 'res_' + Date.now();
     const newReserva = {
-      id: 'res_' + Date.now(),
+      id: resId,
       status: 'Confirmado',
       observacao: '',
       ...reserva
     };
     this.data.agendaReservas.unshift(newReserva);
+
+    if (window.firebase && window.firebase.firestore) {
+      try {
+        window.firebase.firestore().collection('reservas').doc(resId).set(newReserva, { merge: true }).catch(() => {});
+      } catch (e) {}
+    }
+
     this.saveData();
     return newReserva;
   }
@@ -537,6 +549,14 @@ class StoreEngine {
     if (r) {
       if (newStatus) r.status = newStatus;
       if (observacao) r.observacao = observacao;
+
+      // ATUALIZAÇÃO DIRETA EM TEMPO REAL NO FIREBASE PARA CELULARES
+      if (window.firebase && window.firebase.firestore) {
+        try {
+          window.firebase.firestore().collection('reservas').doc(r.id).set(r, { merge: true }).catch(() => {});
+        } catch (e) {}
+      }
+
       this.saveData();
       return true;
     }
@@ -546,6 +566,12 @@ class StoreEngine {
   deleteReserva(id) {
     if (!this.data.agendaReservas) return false;
     this.data.agendaReservas = this.data.agendaReservas.filter(r => r.id !== id);
+
+    if (window.firebase && window.firebase.firestore && id) {
+      try {
+        window.firebase.firestore().collection('reservas').doc(id).delete().catch(() => {});
+      } catch (e) {}
+    }
 
     if (id) {
       fetch(`${FIRESTORE_RESERVAS_URL}/${id}`, { method: 'DELETE' }).catch(() => {});
