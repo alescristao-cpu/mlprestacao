@@ -1,8 +1,9 @@
 /* ----------------------------------------------------
    Modern Life Residence - Utilidades & Agendamento Automático (Piscina & Academia)
-   SIGILO E PRIVACIDADE RÍGIDA DE UNIDADE:
-   Cada morador, uma vez logado com seu e-mail, visualiza EXCLUSIVAMENTE
-   as informações e agendamentos referentes à sua própria unidade.
+   SIGILO E BLOQUEIO ABSOLUTO:
+   - Nenhum morador pode ver o agendamento de outro morador.
+   - Apenas o e-mail oficial do Síndico (condominio.modern.life@gmail.com)
+     e o e-mail da Portaria (portaria.modern.life@gmail.com) vêem todos os agendamentos.
    ---------------------------------------------------- */
 
 window.UtilidadesComponent = {
@@ -16,10 +17,10 @@ window.UtilidadesComponent = {
             <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
           </div>
           <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
-            Acesso Restrito às Reservas da Sua Unidade
+            Acesso Restrito às Reservas do Morador
           </h2>
           <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem; line-height: 1.6;">
-            O agendamento de áreas comuns é exclusivo para moradores autorizados. Faça login para visualizar as reservas da sua unidade.
+            O agendamento de áreas comuns é exclusivo para moradores autorizados. Faça login para visualizar as reservas do seu e-mail.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
             <span class="material-symbols-outlined">login</span> Entrar com Seu E-mail
@@ -29,31 +30,29 @@ window.UtilidadesComponent = {
       return;
     }
 
-    const isMasterAdmin = user && user.role === 'Administrador';
-    const isPortaria = user && user.role === 'Portaria';
+    const userEmailNorm = (user.email || '').toLowerCase().trim();
+
+    // CHECAGEM RIGOROSA BASEADA EM E-MAIL:
+    // Apenas os e-mails oficiais do Síndico e da Portaria enxergam a lista completa.
+    const isMasterAdmin = userEmailNorm === 'condominio.modern.life@gmail.com';
+    const isPortaria = userEmailNorm === 'portaria.modern.life@gmail.com';
+
     const hojeStr = new Date().toISOString().split('T')[0];
 
-    // PRIVACIDADE ESTREITA DA UNIDADE:
-    // Apenas o Síndico Master e a Portaria visualizam todas as reservas do condomínio.
-    // O morador comum enxerga APENAS os agendamentos pertencentes à sua própria unidade/e-mail.
+    // Filtra agendamentos dos últimos 30 dias
     const limite30Dias = new Date();
     limite30Dias.setDate(limite30Dias.getDate() - 30);
     const limiteStr = limite30Dias.toISOString().split('T')[0];
 
     const todasReservas = (data.agendaReservas || []).filter(r => r.data >= limiteStr);
 
-    const userEmailNorm = (user.email || '').toLowerCase().trim();
-    const userAptoNorm = (user.apartamento || '').toString().toLowerCase().trim();
-
+    // FILTRO ABSOLUTO DE SIGILO:
+    // Para moradores comuns, exibe APENAS agendamentos onde r.email seja exatamente igual ao user.email!
     const reservasExistentes = (isMasterAdmin || isPortaria)
       ? todasReservas
       : todasReservas.filter(r => {
           const resEmail = (r.email || '').toLowerCase().trim();
-          const resApto = (r.apartamento || '').toString().toLowerCase().trim();
-          
-          if (userEmailNorm && resEmail === userEmailNorm) return true;
-          if (userAptoNorm && resApto === userAptoNorm && userAptoNorm !== 'morador' && userAptoNorm !== 'guarita' && userAptoNorm !== 'administração') return true;
-          return false;
+          return resEmail !== '' && resEmail === userEmailNorm;
         });
 
     const hourlySlots = [
@@ -84,7 +83,7 @@ window.UtilidadesComponent = {
             <div class="card-header">
               <div>
                 <div class="card-title" style="color: var(--primary-dark);">
-                  <span class="material-symbols-outlined" style="font-size: 1.6rem;">receipt_long</span> 2ª Via do Boleto da Sua Unidade (Apto ${user.apartamento})
+                  <span class="material-symbols-outlined" style="font-size: 1.6rem;">receipt_long</span> 2ª Via do Boleto Condominial
                 </div>
                 <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">
                   Emita seu boleto atualizado diretamente no portal oficial da administradora.
@@ -117,7 +116,7 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined">pool</span> Agendamento (Piscina &amp; Academia)
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                🔒 <strong>Privacidade da Sua Unidade (Apto ${user.apartamento}):</strong> ${isMasterAdmin ? 'Visão Master do Síndico (Acesso Completo).' : isPortaria ? 'Visão Operacional da Portaria.' : 'As informações de agendamento exibidas nesta tela pertencem estritamente à sua unidade. Outros moradores não visualizam seus agendamentos.'}
+                🔒 <strong>Privacidade Absoluta (${user.email}):</strong> ${isMasterAdmin ? 'Visão Master do Síndico (Acesso Completo).' : isPortaria ? 'Visão Operacional da Portaria.' : 'Os seus agendamentos são estritamente privados. Nenhum outro morador consegue visualizar seus agendamentos.'}
               </p>
             </div>
           </div>
@@ -151,7 +150,7 @@ window.UtilidadesComponent = {
           </form>
 
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-            ${isMasterAdmin ? 'Quadro Master de Agendamentos (Síndico Master)' : isPortaria ? 'Quadro Operacional de Agendamentos (Portaria)' : `Meus Agendamentos Confirmados (Unidade Apto ${user.apartamento})`}
+            ${isMasterAdmin ? 'Quadro Master de Agendamentos (Síndico Master)' : isPortaria ? 'Quadro Operacional de Agendamentos (Portaria)' : `Meus Agendamentos Confirmados (${user.email})`}
           </h4>
           <div class="table-responsive">
             <table class="custom-table" id="tableReservas">
@@ -167,7 +166,7 @@ window.UtilidadesComponent = {
               </thead>
               <tbody>
                 ${reservasExistentes.length === 0 ? `
-                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento registrado para a sua unidade nos últimos 30 dias.</td></tr>
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento pessoal registrado no e-mail ${user.email} nos últimos 30 dias.</td></tr>
                 ` : reservasExistentes.map(r => `
                   <tr>
                     <td><strong>${r.data}</strong></td>
@@ -195,7 +194,7 @@ window.UtilidadesComponent = {
                   Reserva de Salão de Festas &amp; Churrasqueira
                 </h3>
                 <p style="font-size: 0.9rem; opacity: 0.95; line-height: 1.6; margin-bottom: 1.25rem;">
-                  Para solicitar a reserva do Salão de Festas ou da Churrasqueira da sua unidade, baixe o aplicativo oficial no link abaixo:
+                  Para solicitar a reserva do Salão de Festas ou da Churrasqueira, baixe o aplicativo oficial no link abaixo:
                 </p>
 
                 <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
@@ -247,7 +246,7 @@ window.UtilidadesComponent = {
       status: 'Confirmado'
     });
 
-    App.showToast(`Agendamento de ${area} (${horario}) para a unidade Apto ${user.apartamento} realizado com sucesso!`, 'success');
+    App.showToast(`Agendamento de ${area} (${horario}) realizado com sucesso!`, 'success');
     App.render();
   }
 };
