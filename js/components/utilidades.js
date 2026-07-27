@@ -1,7 +1,8 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Utilidades & Agendamento Automático (Piscina & Academia)
-   Privacidade Total: Cada morador visualiza apenas seus próprios agendamentos.
-   Síndico e Portaria possuem acesso a todos os agendamentos.
+   Modern Life Residence - Utilidades & Agendamento Automático
+   Controle Estrito de Permissões:
+   - APENAS o Síndico Master (Administrador) e a Portaria visualizam o quadro geral.
+   - Moradores visualizam EXCLUSIVAMENTE seus próprios agendamentos.
    ---------------------------------------------------- */
 
 window.UtilidadesComponent = {
@@ -33,7 +34,8 @@ window.UtilidadesComponent = {
     const hojeStr = new Date().toISOString().split('T')[0];
 
     // Filtra agendamentos dos últimos 30 dias com PRIVACIDADE RÍGIDA:
-    // Síndico e Portaria vêem todos. Moradores vêem APENAS SEUS PRÓPRIOS agendamentos.
+    // Síndico Master e Portaria (Operacional) vêem todas as reservas.
+    // Moradores comuns vêem APENAS SEUS PRÓPRIOS agendamentos.
     const limite30Dias = new Date();
     limite30Dias.setDate(limite30Dias.getDate() - 30);
     const limiteStr = limite30Dias.toISOString().split('T')[0];
@@ -109,7 +111,7 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined">pool</span> Agendamento (Piscina &amp; Academia)
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                🔒 <strong>Privacidade Garantida:</strong> ${isMasterAdmin || isPortaria ? 'Visão de Gerenciamento da Administração.' : 'Você visualiza exclusivamente os agendamentos da sua unidade.'}
+                🔒 <strong>Visibilidade Restrita:</strong> ${isMasterAdmin ? 'Visão Master do Síndico (Acesso Completo).' : isPortaria ? 'Visão Operacional da Portaria.' : 'Você visualiza exclusivamente os agendamentos da sua unidade.'}
               </p>
             </div>
           </div>
@@ -143,7 +145,7 @@ window.UtilidadesComponent = {
           </form>
 
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-            ${isMasterAdmin || isPortaria ? 'Quadro Geral de Agendamentos (Sincronizado em Tempo Real)' : 'Meus Agendamentos Confirmados (Caixa Pessoal)'}
+            ${isMasterAdmin ? 'Quadro Master de Agendamentos (Síndico Master)' : isPortaria ? 'Quadro de Agendamentos (Portaria)' : 'Meus Agendamentos Confirmados (Caixa Pessoal)'}
           </h4>
           <div class="table-responsive">
             <table class="custom-table" id="tableReservas">
@@ -159,7 +161,7 @@ window.UtilidadesComponent = {
               </thead>
               <tbody>
                 ${reservasExistentes.length === 0 ? `
-                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento pessoal registrado nos últimos 30 dias.</td></tr>
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento registrado nos últimos 30 dias.</td></tr>
                 ` : reservasExistentes.map(r => `
                   <tr>
                     <td><strong>${r.data}</strong></td>
