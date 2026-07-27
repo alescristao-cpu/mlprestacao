@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Autenticação & Cadastro com Senha
-   Notificação Instantânea de Novo Cadastro para o Síndico (Painel + E-mail + Nuvem)
+   Modern Life Residence - Autenticação & Cadastro de Morador
+   Cadastro de Novo Usuário: Criação de Senha Própria + Notificação ao Síndico
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -94,7 +94,7 @@ window.AuthComponent = {
               🔑 Esqueci minha senha
             </a>
           </div>
-          <input type="password" id="loginSenha" class="form-control" placeholder="Digite sua senha ou senha temporária" required autocomplete="current-password">
+          <input type="password" id="loginSenha" class="form-control" placeholder="Digite sua senha de acesso" required autocomplete="current-password">
         </div>
 
         <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
@@ -157,7 +157,7 @@ window.AuthComponent = {
         </div>
 
         <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem; font-weight: 700;">
-          <span class="material-symbols-outlined">how_to_reg</span> Cadastrar-se com Senha
+          <span class="material-symbols-outlined">how_to_reg</span> Enviar Cadastro para Aprovação do Síndico
         </button>
       </form>
     `;
@@ -232,13 +232,13 @@ window.AuthComponent = {
         <div class="modal-card" style="max-width: 480px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
             <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.05rem;">
-              🔑 Solicitar Recuperação / Senha Temporária
+              🔑 Solicitar Recuperação de Senha (Morador Já Cadastrado)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalEsqueciSenha').remove()">✕</button>
           </div>
           <div class="modal-body">
             <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5; margin-bottom: 1rem;">
-              Por razões de segurança do condomínio, a solicitação de redefinição de senha encaminha um pedido ao <strong>Painel do Síndico (Gestor)</strong>. O Síndico lhe fornecerá uma <strong>senha temporária</strong> para o primeiro acesso.
+              Esta opção é <strong>exclusiva para moradores já cadastrados que esqueceram a senha</strong>. A solicitação enviará um pedido ao Síndico para gerar uma senha temporária.
             </p>
 
             <form onsubmit="AuthComponent.submeterSolicitacaoEsqueciSenha(event)">
@@ -269,18 +269,17 @@ window.AuthComponent = {
     const email = document.getElementById('resetEmail').value.trim();
     const apto = document.getElementById('resetApto').value.trim();
 
-    // Registra a solicitação na central do gestor
     window.CondoStore.addOcorrencia({
       moradorId: 'usr_reset_' + Date.now(),
-      moradorNome: `Solicitação de Redefinição de Senha (${apto})`,
+      moradorNome: `Esqueci Minha Senha (${apto})`,
       moradorEmail: email,
       apartamento: apto,
       categoria: 'Recuperação de Senha',
       assunto: `[SOLICITAÇÃO DE SENHA TEMPORÁRIA] E-mail: ${email} (Apto ${apto})`,
-      descricao: `O morador com e-mail ${email} (Apto ${apto}) informou que esqueceu sua senha e solicitou a geração de uma senha temporária.`
+      descricao: `O morador já cadastrado com e-mail ${email} (Apto ${apto}) informou que esqueceu sua senha e solicitou a geração de uma senha temporária.`
     });
 
-    alert(`Solicitação enviada com sucesso!\n\nO Síndico Alessandro (condominio.modern.life@gmail.com) gerará uma senha temporária para seu primeiro acesso.`);
+    alert(`Solicitação de recuperação enviada ao Síndico com sucesso!\n\nO Síndico Alessandro gerará uma senha temporária para você.`);
     document.getElementById('modalEsqueciSenha').remove();
     App.render();
   },
@@ -473,7 +472,7 @@ window.AuthComponent = {
     const modal = document.getElementById('modalAuth');
     if (modal) modal.remove();
 
-    // VERIFICAÇÃO DE SENHA TEMPORÁRIA: Se entrou com senha temporária, exige cadastro de nova senha pessoal!
+    // Se entrou com senha temporária fornecida pela administração, exige troca de senha!
     if (user.senhaTemporaria) {
       this.openTrocaSenhaObrigatoriaModal(user);
       return;
@@ -507,11 +506,12 @@ window.AuthComponent = {
       return;
     }
 
-    // 1. Salva morador no estado local e dispara sincronização para Firebase Firestore em tempo real
+    // 1. O novo morador cria a sua PRÓPRIA SENHA no momento do cadastro (senhaTemporaria: false)
     const result = window.CondoStore.addMorador({
       nome,
       email,
-      senha,
+      senha, // Senha própria escolhida pelo novo usuário
+      senhaTemporaria: false,
       telefone,
       apartamento: unidade,
       cpf: 'Cadastrado com Senha no Portal'
@@ -522,38 +522,38 @@ window.AuthComponent = {
       return;
     }
 
-    // 2. Cria notificação interna no site para o Painel do Síndico
+    // 2. Registra a Notificação de Solicitação de Aprovação na Central do Síndico
     window.CondoStore.addOcorrencia({
       moradorId: result.morador.id,
       moradorNome: nome,
       moradorEmail: email,
       apartamento: unidade,
-      categoria: 'Novo Cadastro',
+      categoria: 'Solicitação de Cadastro',
       assunto: `[SOLICITAÇÃO DE NOVO CADASTRO] ${nome} (Apto ${unidade})`,
-      descricao: `O morador ${nome} (E-mail: ${email}, Tel: ${telefone || 'Não informado'}, Apto: ${unidade}) realizou o cadastro no portal e aguarda sua autorização de acesso.`
+      descricao: `O novo morador ${nome} (E-mail: ${email}, Tel: ${telefone || 'Não informado'}, Apto: ${unidade}) realizou o cadastro no portal criando sua própria senha e aguarda a sua autorização para liberar o acesso.`
     });
 
     window.CondoStore.setCurrentUser(result.morador);
 
-    // 3. Dispara e-mail automático via FormSubmit com _replyto
+    // 3. Dispara e-mail de notificação de novo cadastro para o Síndico (condominio.modern.life@gmail.com)
     try {
       fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          _subject: `[NOVO CADASTRO DE MORADOR] ${nome} (Apto ${unidade})`,
+          _subject: `[SOLICITAÇÃO DE APROVAÇÃO DE CADASTRO] ${nome} (Apto ${unidade})`,
           _replyto: email,
           "Nome do Morador": nome,
           "E-mail do Morador": email,
           "Telefone": telefone || 'Não informado',
           "Unidade": unidade,
-          "Status do Cadastro": "Pendente de Aprovação no Painel",
+          "Ação Necessária": "Acesse o Painel do Síndico e clique em [ ✅ Autorizar ] para liberar o acesso.",
           "Data do Cadastro": new Date().toLocaleString("pt-BR")
         })
       }).catch(function() {});
     } catch (e) {}
 
-    alert(`Cadastro de "${nome}" (Apto ${unidade}) registrado com sucesso!\n\nA sua solicitação foi encaminhada diretamente para o Painel do Síndico (Alessandro). O acesso será liberado assim que o Síndico aprovar no Painel.`);
+    alert(`Solicitação de Cadastro Registrada!\n\nSeus dados foram enviados para a aprovação do Síndico Alessandro (condominio.modern.life@gmail.com).\n\nAssim que o Síndico clicar em [ Autorizar ] no Painel, você já poderá entrar no portal utilizando o seu e-mail (${email}) e a senha que você acabou de criar.`);
 
     const modal = document.getElementById('modalAuth');
     if (modal) modal.remove();

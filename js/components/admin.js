@@ -1,10 +1,8 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Entrega Tripla Infalível de Senha Temporária:
-   1. Envio por E-mail (FormSubmit AJAX)
-   2. Envio Direto via WhatsApp (1-Clique)
-   3. Cópia Instantânea na Tela com Alerta de Confirmação
+   Novos Cadastros = Autorização Direta da Senha Criada pelo Usuário
+   Senha Temporária = Exclusiva para Moradores Já Cadastrados que Esqueceram a Senha
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -57,13 +55,13 @@ window.AdminComponent = {
             <!-- Botões Principais de Ação -->
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
               
-              <!-- BOTÃO DE DESTAQUE: GERAR SENHA TEMPORÁRIA -->
-              <button class="btn-primary" style="background: #FFF3E0; color: #E65100; font-weight: 700; border: 1px solid #FFE0B2; padding: 0.85rem 1.1rem; font-size: 0.92rem; display: flex; align-items: center; gap: 0.4rem;" onclick="AdminComponent.openSeletorSenhaTemporariaModal()">
-                <span class="material-symbols-outlined" style="color: #E65100; font-size: 1.2rem;">key</span> 🔑 Gerar Senha Temporária
+              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; padding: 0.85rem 1.1rem; font-size: 0.92rem;" onclick="AdminComponent.openQuickApproveModal()">
+                <span class="material-symbols-outlined" style="color: var(--primary);">person_add</span> ➕ Autorizar Morador Manualmente
               </button>
 
-              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; padding: 0.85rem 1.1rem; font-size: 0.92rem;" onclick="AdminComponent.openQuickApproveModal()">
-                <span class="material-symbols-outlined" style="color: var(--primary);">person_add</span> ➕ Autorizar Morador
+              <!-- GERAR SENHA TEMPORÁRIA: EXCLUSIVO PARA QUEM ESQUECEU A SENHA -->
+              <button class="btn-primary" style="background: #FFF3E0; color: #E65100; font-weight: 700; border: 1px solid #FFE0B2; padding: 0.85rem 1.1rem; font-size: 0.92rem; display: flex; align-items: center; gap: 0.4rem;" onclick="AdminComponent.openSeletorSenhaTemporariaModal()">
+                <span class="material-symbols-outlined" style="color: #E65100; font-size: 1.2rem;">key</span> 🔑 Senha Temporária (Esqueci Minha Senha)
               </button>
 
               <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.85rem;" onclick="AdminComponent.openAlterarSenhaSindicoModal()">
@@ -75,6 +73,56 @@ window.AdminComponent = {
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- Seção 1: SOLICITAÇÕES DE NOVOS CADASTROS AGUARDANDO SUA APROVAÇÃO -->
+        <div class="card-widget" style="border: 2px solid #E65100; padding: 1.25rem;">
+          <div style="background: #FFF3E0; padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <div style="font-weight: 700; color: #E65100; font-size: 1.05rem; display: flex; align-items: center; gap: 0.4rem;">
+              <span class="material-symbols-outlined" style="font-size: 1.5rem;">how_to_reg</span> Solicitacões de Novos Cadastros Aguardando Sua Aprovação (${pendentes.length})
+            </div>
+            <span class="badge badge-warning" style="font-size: 0.85rem;">${pendentes.length} Pendentes</span>
+          </div>
+
+          ${pendentes.length === 0 ? `
+            <div style="padding: 1.5rem 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+              <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.4; display: block; margin-bottom: 0.3rem;">check_circle</span>
+              Nenhuma solicitação de novo cadastro pendente no momento. Todos os moradores cadastrados estão em dia.
+            </div>
+          ` : `
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              ${pendentes.map(p => `
+                <div style="background: var(--bg-app); border: 1px solid #FFE0B2; border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                      <strong style="font-size: 1.1rem; color: var(--primary-dark);">${p.nome}</strong>
+                      <div style="font-size: 0.9rem; color: var(--text-main); font-weight: 700; margin-top: 2px;">Unidade / Apto: ${p.apartamento}</div>
+                    </div>
+                    <span class="badge badge-warning" style="font-size: 0.8rem;">Aguardando Sua Aprovação</span>
+                  </div>
+
+                  <div style="font-size: 0.85rem; color: var(--text-muted); background: white; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-light);">
+                    <div>📧 E-mail: <strong>${p.email}</strong></div>
+                    <div>📱 Telefone: <strong>${p.telefone || 'Não informado'}</strong></div>
+                    <div style="margin-top: 4px; font-size: 0.78rem; color: var(--primary-dark);">
+                      🔑 O morador criou sua própria senha durante o cadastro. Ao clicar em Autorizar, o acesso dele será liberado.
+                    </div>
+                  </div>
+
+                  <!-- Botões de Ação Exclusivos de Novo Cadastro -->
+                  <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.4rem;">
+                    <button class="btn-primary" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.75rem; font-weight: 700; min-width: 160px;" onclick="AdminComponent.aprovarMorador('${p.id}', '${p.nome}', '${p.email}', '${p.apartamento}')">
+                      <span class="material-symbols-outlined" style="font-size: 1.1rem;">check_circle</span> ✅ Autorizar Acesso do Morador
+                    </button>
+
+                    <button class="btn-secondary btn-danger" style="background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; padding: 0.75rem; font-weight: 700;" onclick="AdminComponent.recusarMorador('${p.id}', '${p.nome}')">
+                      <span class="material-symbols-outlined" style="font-size: 1.1rem;">block</span> 🚫 Não Autorizar / Recusar
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
         </div>
 
         <!-- Seção: CENTRAL DE MENSAGENS E SOLICITAÇÕES DOS MORADORES -->
@@ -139,67 +187,13 @@ window.AdminComponent = {
                       <span class="material-symbols-outlined" style="font-size: 0.95rem;">send</span> Responder
                     </button>
 
-                    ${o.moradorEmail ? `
-                      <button class="btn-secondary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; font-weight: 700;" onclick="AdminComponent.gerarSenhaTemporariaPorEmail('${o.moradorEmail}')" title="Gerar Senha Temporária para o Primeiro Acesso do Morador">
+                    ${o.categoria === 'Recuperação de Senha' && o.moradorEmail ? `
+                      <button class="btn-secondary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; font-weight: 700;" onclick="AdminComponent.gerarSenhaTemporariaPorEmail('${o.moradorEmail}')" title="Gerar Senha Temporária para o Morador que Esqueceu a Senha">
                         <span class="material-symbols-outlined" style="font-size: 0.95rem;">key</span> 🔑 Senha Temporária
                       </button>
                     ` : ''}
                   </div>
 
-                </div>
-              `).join('')}
-            </div>
-          `}
-        </div>
-
-        <!-- Seção 1: Solicitações de Cadastro Pendentes -->
-        <div class="card-widget" style="border: 2px solid #FFE0B2; padding: 1.25rem;">
-          <div style="background: #FFF8E1; padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-            <div style="font-weight: 700; color: #E65100; font-size: 1rem; display: flex; align-items: center; gap: 0.4rem;">
-              <span class="material-symbols-outlined" style="font-size: 1.4rem;">how_to_reg</span> Cadastros Aguardando Aprovação (${pendentes.length})
-            </div>
-            <span class="badge badge-warning">${pendentes.length} Pendentes</span>
-          </div>
-
-          ${pendentes.length === 0 ? `
-            <div style="padding: 1.5rem 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-              <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.4; display: block; margin-bottom: 0.3rem;">check_circle</span>
-              Nenhuma solicitação pendente no momento nesta tela.
-            </div>
-          ` : `
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-              ${pendentes.map(p => `
-                <div style="background: var(--bg-app); border: 1px solid #FFE0B2; border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                      <strong style="font-size: 1.05rem; color: var(--primary-dark);">${p.nome}</strong>
-                      <div style="font-size: 0.85rem; color: var(--text-main); font-weight: 600;">Unidade: Apto ${p.apartamento}</div>
-                    </div>
-                    <span class="badge badge-warning">Pendente</span>
-                  </div>
-
-                  <div style="font-size: 0.82rem; color: var(--text-muted);">
-                    <div>📧 E-mail: <strong>${p.email}</strong></div>
-                    <div>📱 Telefone: <strong>${p.telefone || 'Não informado'}</strong></div>
-                  </div>
-
-                  <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.4rem;">
-                    <button class="btn-primary btn-sm" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.65rem; font-weight: 700; min-width: 120px;" onclick="AdminComponent.aprovarMorador('${p.id}')">
-                      <span class="material-symbols-outlined" style="font-size: 1rem;">check_circle</span> Autorizar
-                    </button>
-
-                    <button class="btn-secondary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; padding: 0.65rem; font-weight: 700;" onclick="AdminComponent.gerarSenhaTemporariaModal('${p.id}')">
-                      <span class="material-symbols-outlined" style="font-size: 1rem;">key</span> 🔑 Senha Temporária
-                    </button>
-
-                    <button class="btn-secondary btn-sm btn-danger" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; padding: 0.65rem; font-weight: 700;" onclick="AdminComponent.recusarMorador('${p.id}', '${p.nome}')">
-                      <span class="material-symbols-outlined" style="font-size: 1rem;">block</span> 🚫 Não Autorizar
-                    </button>
-
-                    <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; padding: 0.65rem;" onclick="AdminComponent.excluirMorador('${p.id}', '${p.nome}', '${p.apartamento}')">
-                      <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span> Excluir
-                    </button>
-                  </div>
                 </div>
               `).join('')}
             </div>
@@ -226,7 +220,7 @@ window.AdminComponent = {
                       ${m.nome}
                       ${isAdmin ? '<span class="badge badge-info" style="font-size: 0.72rem;">Síndico Master</span>' : ''}
                       ${isConselheiro ? '<span class="badge badge-success" style="font-size: 0.72rem; background: #D1E7DD; color: #0F5132;">👑 Conselheiro</span>' : ''}
-                      ${m.senhaTemporaria ? '<span class="badge badge-warning" style="font-size: 0.72rem;">🔑 Senha Temporária</span>' : ''}
+                      ${m.senhaTemporaria ? '<span class="badge badge-warning" style="font-size: 0.72rem;">🔑 Senha Temporária Pendente</span>' : ''}
                     </div>
                     <div style="font-size: 0.85rem; color: var(--text-main); margin-top: 2px;">
                       <strong>Apto ${m.apartamento}</strong> &bull; 📧 ${m.email} &bull; 📱 ${m.telefone || 'Sem telefone'}
@@ -234,7 +228,7 @@ window.AdminComponent = {
                   </div>
 
                   <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-                    <button class="btn-primary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; font-weight: 700;" onclick="AdminComponent.gerarSenhaTemporariaModal('${m.id}')" title="Gerar Senha Temporária para o Primeiro Acesso do Morador">
+                    <button class="btn-primary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; font-weight: 700;" onclick="AdminComponent.gerarSenhaTemporariaModal('${m.id}')" title="Gerar Senha Temporária caso o Morador tenha esquecido a senha">
                       <span class="material-symbols-outlined" style="font-size: 0.95rem;">key</span> 🔑 Senha Temporária
                     </button>
 
@@ -279,7 +273,7 @@ window.AdminComponent = {
                     <div style="font-size: 0.78rem; color: #B71C1C; margin-top: 2px;">Status: Acesso Não Autorizado pelo Síndico</div>
                   </div>
                   <div style="display: flex; gap: 0.4rem;">
-                    <button class="btn-primary btn-sm" style="background: #2E6B42;" onclick="AdminComponent.aprovarMorador('${r.id}')">
+                    <button class="btn-primary btn-sm" style="background: #2E6B42;" onclick="AdminComponent.aprovarMorador('${r.id}', '${r.nome}', '${r.email}', '${r.apartamento}')">
                       <span class="material-symbols-outlined" style="font-size: 0.9rem;">check_circle</span> Re-Autorizar
                     </button>
                     <button class="btn-secondary btn-sm btn-danger" style="background: white; color: #C62828;" onclick="AdminComponent.excluirMorador('${r.id}', '${r.nome}', '${r.apartamento}')">
@@ -296,10 +290,35 @@ window.AdminComponent = {
     `;
   },
 
+  aprovarMorador(id, nome, email, apartamento) {
+    window.CondoStore.updateMoradorStatus(id, 'Aprovado');
+
+    // Notificação ao morador por e-mail informando que seu acesso foi liberado
+    if (email) {
+      try {
+        fetch(`https://formsubmit.co/ajax/${email}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            _subject: `[MODERN LIFE RESIDENCE] Seu Acesso ao Portal Foi Autorizado pelo Síndico!`,
+            "Nome do Morador": nome || 'Morador',
+            "Unidade / Apto": apartamento || '',
+            "E-mail de Acesso": email,
+            "Status": "AUTORIZADO",
+            "Instruções": "Seu acesso ao portal oficial foi aprovado pelo Síndico Alessandro. Você já pode entrar utilizando o seu e-mail e a senha cadastrada.",
+            "Link do Portal": "https://mlprestacao.vercel.app"
+          })
+        }).catch(() => {});
+      } catch (e) {}
+    }
+
+    App.showToast(`Acesso do morador "${nome}" AUTORIZADO com sucesso!`, 'success');
+    App.render();
+  },
+
   enviarEmailSenhaTemporaria(morador, senhaTemp) {
     if (!morador || !morador.email) return;
     
-    // Disparo 1: Para o e-mail do próprio morador
     try {
       fetch(`https://formsubmit.co/ajax/${morador.email}`, {
         method: 'POST',
@@ -317,7 +336,6 @@ window.AdminComponent = {
       }).catch(() => {});
     } catch (e) {}
 
-    // Disparo 2: Para o e-mail master do condomínio (condominio.modern.life@gmail.com) para registro oficial
     try {
       fetch(`https://formsubmit.co/ajax/condominio.modern.life@gmail.com`, {
         method: 'POST',
@@ -389,20 +407,20 @@ window.AdminComponent = {
     const existing = document.getElementById('modalSeletorSenhaTemp');
     if (existing) existing.remove();
 
-    const moradores = window.CondoStore.data.moradores || [];
+    const moradores = (window.CondoStore.data.moradores || []).filter(m => m.role !== 'Administrador');
 
     const modalHtml = `
       <div class="modal-overlay active" id="modalSeletorSenhaTemp">
         <div class="modal-card" style="max-width: 500px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
             <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem;">
-              🔑 Gerar Senha Temporária de Acesso
+              🔑 Gerar Senha Temporária (Para Quem Esquecera a Senha)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalSeletorSenhaTemp').remove()">✕</button>
           </div>
           <div class="modal-body">
             <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
-              Selecione o morador abaixo para gerar uma <strong>senha temporária</strong>. O sistema enviará a senha por e-mail, WhatsApp e exigirá a troca no primeiro acesso.
+              Selecione o <strong>morador já cadastrado que esqueceu a senha</strong> para gerar uma senha temporária.
             </p>
 
             <form onsubmit="AdminComponent.submeterSeletorSenhaTemp(event)">
@@ -416,7 +434,7 @@ window.AdminComponent = {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Senha Temporária (Sugestão gerada automaticamente)</label>
+                <label class="form-label">Senha Temporária</label>
                 <input type="text" id="inputSenhaTempManual" class="form-control" value="Temp${Math.floor(1000 + Math.random() * 9000)}" required style="font-weight: 700; color: #E65100; letter-spacing: 1px;">
               </div>
 
@@ -602,7 +620,7 @@ window.AdminComponent = {
               <div class="form-group" style="background: #F5F5F5; padding: 0.85rem; border-radius: 6px; border: 1px dashed #CCCCCC;">
                 <label class="form-label" style="color: var(--primary-dark); font-weight: 700; display: flex; align-items: center; gap: 4px;">
                   <span class="material-symbols-outlined" style="font-size: 1.1rem; color: var(--primary);">key</span>
-                  Entregar Senha Temporária para o Morador
+                  Entregar Senha Temporária (Se Esqueceu a Senha)
                 </label>
                 <input type="password" id="editSenha" class="form-control" value="" placeholder="Digite a senha temporária se desejar resetar" autocomplete="new-password">
                 <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px;">
@@ -711,8 +729,8 @@ window.AdminComponent = {
               </div>
 
               <div class="form-group">
-                <label class="form-label">Criar Senha Temporária Inicial</label>
-                <input type="password" id="quickSenha" class="form-control" placeholder="Digite a senha temporária para o primeiro acesso" required autocomplete="new-password">
+                <label class="form-label">Definir Senha Inicial de Acesso</label>
+                <input type="password" id="quickSenha" class="form-control" placeholder="Digite a senha para o morador" required autocomplete="new-password">
               </div>
 
               <div class="form-grid">
@@ -728,7 +746,7 @@ window.AdminComponent = {
               </div>
 
               <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
-                <span class="material-symbols-outlined">check_circle</span> Liberar e Gerar Senha Temporária
+                <span class="material-symbols-outlined">check_circle</span> Liberar Acesso do Morador
               </button>
             </form>
           </div>
@@ -753,7 +771,7 @@ window.AdminComponent = {
       role,
       email,
       senha: senha || '123456',
-      senhaTemporaria: true,
+      senhaTemporaria: false,
       telefone,
       apartamento,
       cpf: 'Autorizado Pelo Síndico'
@@ -765,15 +783,9 @@ window.AdminComponent = {
     }
 
     window.CondoStore.updateMoradorStatus(res.morador.id, 'Aprovado');
-    this.enviarEmailSenhaTemporaria(res.morador, senha || '123456');
 
+    alert(`✅ MORADOR AUTORIZADO COM SUCESSO!\n\nMorador: ${nome} (Apto ${apartamento})\nE-mail: ${email}\n\nO acesso do morador foi ativado.`);
     document.getElementById('modalQuickApprove').remove();
-    this.exibirSucessoSenhaTemporariaModal(res.morador, senha || '123456');
-  },
-
-  aprovarMorador(id) {
-    window.CondoStore.updateMoradorStatus(id, 'Aprovado');
-    App.showToast('Acesso do morador AUTORIZADO com sucesso!', 'success');
     App.render();
   },
 
