@@ -1,5 +1,5 @@
 -- ====================================================
--- MODERN LIFE RESIDENCE - SCRIPT DE CRIAÇÃO DO BANCO SUPABASE
+-- MODERN LIFE RESIDENCE - SCRIPT DE CRIAÇÃO & PERMISSÕES SUPABASE
 -- Copie e cole este código no SQL Editor do seu painel Supabase
 -- ====================================================
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.reservas (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. TABELA DE OCORRÊNCIAS E MENSAGENS (Canal Direto / Reclamações / Elogios / Respostas)
+-- 3. TABELA DE OCORRÊNCIAS E MENSAGENS
 CREATE TABLE IF NOT EXISTS public.ocorrencias (
     id TEXT PRIMARY KEY,
     morador_id TEXT,
@@ -48,32 +48,21 @@ CREATE TABLE IF NOT EXISTS public.ocorrencias (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. TABELA DE MURAL DE RECADOS
-CREATE TABLE IF NOT EXISTS public.recados (
-    id TEXT PRIMARY KEY,
-    titulo TEXT NOT NULL,
-    data DATE NOT NULL,
-    autor TEXT NOT NULL,
-    visibilidade TEXT DEFAULT 'Publico',
-    imagem TEXT,
-    resumo TEXT,
-    texto TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- HABILITAR SEGURANÇA E ACESSO PÚBLICO LEITURA/ESCRITA (RLS PERMISSIVO PARA ANONYMOUS KEY)
+-- HABILITAR SEGURANÇA E ACESSO PÚBLICO LEITURA/ESCRITA (RLS)
 ALTER TABLE public.moradores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ocorrencias ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.recados ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Permitir Acesso Total aos Moradores" ON public.moradores FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Permitir Acesso Total às Reservas" ON public.reservas FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Permitir Acesso Total às Ocorrências" ON public.ocorrencias FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Permitir Acesso Total aos Recados" ON public.recados FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Permitir Moradores" ON public.moradores;
+CREATE POLICY "Permitir Moradores" ON public.moradores FOR ALL USING (true) WITH CHECK (true);
 
--- HABILITAR PUBLICACAÇÃO REALTIME (TEMPO REAL)
-ALTER PUBLICATION supabase_realtime ADD TABLE public.moradores;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.reservas;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.ocorrencias;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.recados;
+DROP POLICY IF EXISTS "Permitir Reservas" ON public.reservas;
+CREATE POLICY "Permitir Reservas" ON public.reservas FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Permitir Ocorrencias" ON public.ocorrencias;
+CREATE POLICY "Permitir Ocorrencias" ON public.ocorrencias FOR ALL USING (true) WITH CHECK (true);
+
+-- CONCEDER PERMISSÕES DE LEITURA E ESCRITA PARA O CLIENTE ANON
+GRANT ALL ON public.moradores TO anon, authenticated, service_role;
+GRANT ALL ON public.reservas TO anon, authenticated, service_role;
+GRANT ALL ON public.ocorrencias TO anon, authenticated, service_role;
