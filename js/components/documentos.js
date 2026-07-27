@@ -1,123 +1,127 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Biblioteca de Documentos Component
+   Modern Life Residence - Documentos & Manuais Oficial
+   Incluindo a Documentação Atualizada do Sistema
    ---------------------------------------------------- */
 
 window.DocumentosComponent = {
+  activeCategory: 'Todos',
+
   render(container, data) {
     const user = window.CondoStore.currentUser;
+    const isApproved = user && user.status === 'Aprovado';
+    const isSindico = user && user.role === 'Administrador';
 
-    // Access Gate for non-logged-in users
-    if (!user || user.status !== 'Aprovado') {
-      container.innerHTML = `
-        <div class="card-widget" style="text-align: center; padding: 3.5rem 1.5rem; max-width: 600px; margin: 2rem auto;">
-          <div style="width: 70px; height: 70px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
-            <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
-          </div>
-          <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
-            Acesso Restrito a Moradores Cadastrados
-          </h2>
-          <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem;">
-            O download de documentos oficiais (Convenção, Regimento Interno, Manuais e Atas) exige autenticação dos moradores do Modern Life Residence.
-          </p>
-          <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
-            <span class="material-symbols-outlined">login</span> Entrar / Cadastrar com Google
-          </button>
-        </div>
-      `;
-      return;
+    let documentos = data.documentos || [];
+
+    // Garantir que a Documentação do Sistema está presente na lista
+    const docTecnicoExiste = documentos.some(d => d.id === 'doc_sistema_md');
+    if (!docTecnicoExiste) {
+      documentos.unshift({
+        id: 'doc_sistema_md',
+        nome: 'Manual de Operação & Documentação Técnica do Portal',
+        categoria: 'Regimento',
+        dataUpload: '2026-07-27',
+        tamanho: '15 KB',
+        arquivo: 'DOCUMENTACAO_SISTEMA.md'
+      });
     }
 
-    const docs = data.documentos || [];
-    const categories = ['Todos', 'Convenção', 'Regimento Interno', 'Manual do Proprietário', 'Normas', 'Assembleias'];
+    const categorias = ['Todos', 'Convenção', 'Regimento', 'Atas', 'Laudos', 'Manuais'];
+
+    const filtered = this.activeCategory === 'Todos'
+      ? documentos
+      : documentos.filter(d => d.categoria === this.activeCategory);
 
     container.innerHTML = `
-      <div class="card-widget">
-        <div class="card-header">
-          <div>
-            <div class="card-title">
-              <span class="material-symbols-outlined">folder</span> Biblioteca de Documentos Oficiais
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        
+        <!-- Header da Página -->
+        <div class="card-widget" style="background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white;">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.5rem;">
+                <span class="material-symbols-outlined" style="font-size: 0.9rem;">folder_open</span> REPOSITÓRIO OFICIAL
+              </span>
+              <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-top: 0.25rem;">
+                Documentos, Convenção, Regimento &amp; Manuais
+              </h2>
+              <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.25rem;">
+                Acesso aos documentos regulamentares e instrucionais do Condomínio Modern Life Residence.
+              </p>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-              Baixe convenção, regimentos, manuais e editais de assembleias.
-            </p>
-          </div>
 
-          <!-- Live Search Bar -->
-          <div style="position: relative; width: 260px;">
-            <input type="text" id="searchDocInput" class="form-control" placeholder="Buscar documento..." onkeyup="DocumentosComponent.filterDocs()">
+            ${isSindico ? `
+              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700;" onclick="DocumentosComponent.openUploadModal()">
+                <span class="material-symbols-outlined">upload_file</span> Publicar Novo Documento
+              </button>
+            ` : ''}
           </div>
         </div>
 
-        <!-- Category Tabs -->
-        <div class="tab-list" id="docCategoryTabs">
-          ${categories.map((cat, i) => `
-            <button class="tab-btn ${i === 0 ? 'active' : ''}" onclick="DocumentosComponent.switchCategory('${cat}', this)">
+        <!-- Filtros por Categoria -->
+        <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem;">
+          ${categorias.map(cat => `
+            <button class="btn-sm ${this.activeCategory === cat ? 'btn-primary' : 'btn-secondary'}" onclick="DocumentosComponent.filterCategory('${cat}')" style="white-space: nowrap;">
               ${cat}
             </button>
           `).join('')}
         </div>
 
-        <!-- Document List -->
-        <div class="table-responsive">
-          <table class="custom-table" id="tableDocs">
-            <thead>
-              <tr>
-                <th>Nome do Documento</th>
-                <th>Categoria</th>
-                <th>Data de Upload</th>
-                <th>Tamanho</th>
-                <th style="text-align: center;">Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${docs.map(doc => `
-                <tr data-cat="${doc.categoria}">
-                  <td>
-                    <div style="display: flex; align-items: center; gap: 0.6rem;">
-                      <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.4rem;">picture_as_pdf</span>
-                      <strong>${doc.nome}</strong>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="badge badge-info">${doc.categoria}</span>
-                  </td>
-                  <td>${doc.dataUpload}</td>
-                  <td>${doc.tamanho}</td>
-                  <td style="text-align: center;">
-                    <a href="${doc.arquivo}" target="_blank" class="btn-primary btn-sm" style="text-decoration: none; display: inline-flex;">
-                      <span class="material-symbols-outlined">download</span> Baixar PDF
-                    </a>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+        <!-- Alerta para Moradores Não Aprovados -->
+        ${!isApproved ? `
+          <div style="background: #FFF3E0; border: 1px solid #FFE0B2; padding: 1rem; border-radius: var(--radius-md); font-size: 0.88rem; color: #E65100; display: flex; align-items: center; gap: 0.75rem;">
+            <span class="material-symbols-outlined" style="font-size: 2rem;">lock</span>
+            <div>
+              <strong>Acesso Restrito a Documentos Internos</strong><br>
+              Seu cadastro está em análise pela administração. Após a aprovação do Síndico, o download de atas e convenção será liberado.
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- Grid de Documentos -->
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+          ${filtered.map(doc => `
+            <div class="card-widget" style="display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                  <span class="material-symbols-outlined" style="font-size: 2.2rem; color: var(--primary);">
+                    ${doc.arquivo.endsWith('.pdf') ? 'picture_as_pdf' : doc.arquivo.endsWith('.md') ? 'description' : 'article'}
+                  </span>
+                  <span class="badge badge-info">${doc.categoria}</span>
+                </div>
+                <h3 style="font-family: var(--font-heading); font-size: 1.05rem; color: var(--primary-dark); font-weight: 700; margin-bottom: 0.5rem;">
+                  ${doc.nome}
+                </h3>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem;">
+                  Publicado em: ${doc.dataUpload} &bull; ${doc.tamanho}
+                </div>
+              </div>
+
+              <div>
+                ${isApproved ? `
+                  <a href="${doc.arquivo}" target="_blank" class="btn-primary btn-sm" style="width: 100%; justify-content: center; text-decoration: none;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">visibility</span> Visualizar Documento
+                  </a>
+                ` : `
+                  <button class="btn-secondary btn-sm" style="width: 100%; justify-content: center;" disabled>
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">lock</span> Requer Aprovação
+                  </button>
+                `}
+              </div>
+            </div>
+          `).join('')}
         </div>
+
       </div>
     `;
   },
 
-  switchCategory(cat, btn) {
-    document.querySelectorAll('#docCategoryTabs .tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const rows = document.querySelectorAll('#tableDocs tbody tr');
-    rows.forEach(row => {
-      const rowCat = row.getAttribute('data-cat');
-      if (cat === 'Todos' || rowCat === cat) {
-        row.style.display = '';
-      } else {
-        row.style.display = 'none';
-      }
-    });
+  filterCategory(cat) {
+    this.activeCategory = cat;
+    App.render();
   },
 
-  filterDocs() {
-    const q = document.getElementById('searchDocInput').value.toLowerCase();
-    const rows = document.querySelectorAll('#tableDocs tbody tr');
-    rows.forEach(row => {
-      const text = row.innerText.toLowerCase();
-      row.style.display = text.includes(q) ? '' : 'none';
-    });
+  openUploadModal() {
+    alert('Para publicar um novo documento oficial (PDF ou Texto), selecione o arquivo e informe a categoria.');
   }
 };
