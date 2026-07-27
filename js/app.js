@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Main Application Orchestrator
-   Filtro de Menu Exclusivo para o Perfil "Portaria"
+   Exibição do Nome do Morador Logado no Cabeçalho Superior & Sidebar
    ---------------------------------------------------- */
 
 window.App = {
@@ -237,15 +237,34 @@ window.App = {
     const userNameEl = document.getElementById('sidebarUserName');
     const userRoleEl = document.getElementById('sidebarUserRole');
     const userAvatarEl = document.getElementById('sidebarUserAvatar');
+    const topHeaderUserText = document.getElementById('topHeaderUserText');
+    const topHeaderUserBtn = document.getElementById('topHeaderUserBtn');
 
     if (user) {
       if (userNameEl) userNameEl.innerText = user.nome;
       if (userRoleEl) userRoleEl.innerHTML = `<span class="material-symbols-outlined" style="font-size: 0.85rem;">shield</span> ${user.role} (${user.status})`;
       if (userAvatarEl) userAvatarEl.innerText = user.nome.charAt(0);
+      
+      // EXIBE O NOME DO MORADOR LOGADO NO BOTÃO DA PARTE SUPERIOR DA PÁGINA
+      if (topHeaderUserText) {
+        topHeaderUserText.innerText = user.nome;
+      }
+      if (topHeaderUserBtn) {
+        topHeaderUserBtn.title = `Conectado como: ${user.nome} (Apto ${user.apartamento})`;
+        topHeaderUserBtn.style.background = 'var(--primary-dark)';
+      }
     } else {
       if (userNameEl) userNameEl.innerText = 'Visitante';
       if (userRoleEl) userRoleEl.innerText = 'Clique para Entrar';
       if (userAvatarEl) userAvatarEl.innerText = '?';
+
+      if (topHeaderUserText) {
+        topHeaderUserText.innerText = 'Entrar';
+      }
+      if (topHeaderUserBtn) {
+        topHeaderUserBtn.title = 'Entrar / Cadastrar-se';
+        topHeaderUserBtn.style.background = 'var(--primary)';
+      }
     }
   },
 
