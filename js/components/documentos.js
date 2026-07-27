@@ -16,26 +16,12 @@ window.DocumentosComponent = {
     const isConselheiro = user && user.role === 'Conselheiro';
     const isPortaria = user && user.role === 'Portaria';
 
-    let rawDocs = data.documentos || [];
-
-    // Garantir que a Documentação do Sistema está presente com visibilidade 'Sindico'
-    const docTecnicoExiste = rawDocs.some(d => d.id === 'doc_sistema_md');
-    if (!docTecnicoExiste) {
-      rawDocs.unshift({
-        id: 'doc_sistema_md',
-        nome: 'Manual de Operação & Documentação Técnica do Portal',
-        categoria: 'Manuais',
-        visibilidade: 'Sindico',
-        dataUpload: '2026-07-27',
-        tamanho: '15 KB',
-        arquivo: 'DOCUMENTACAO_SISTEMA.md'
-      });
-    }
+    let rawDocs = (data.documentos || []).filter(d => d.id !== 'doc_sistema_md');
 
     // FILTRAGEM RIGOROSA DE VISIBILIDADE POR PERFIL DE USUÁRIO:
     let documentosVisiveis = rawDocs.filter(doc => {
       const vis = doc.visibilidade || 'Moradores';
-      if (isSindico) return true; // O Síndico enxerga TODOS os documentos
+      if (isSindico) return true; // O Síndico enxerga TODOS os documentos publicados
       if (vis === 'Sindico') return false; // Ninguém além do Síndico enxerga visibilidade 'Sindico'
       if (vis === 'Conselho') return isConselheiro;
       if (vis === 'Portaria') return isPortaria;
@@ -140,7 +126,7 @@ window.DocumentosComponent = {
                     </button>
                   `}
 
-                  ${isSindico && doc.id !== 'doc_sistema_md' ? `
+                  ${isSindico ? `
                     <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2;" onclick="DocumentosComponent.excluirDocumento('${doc.id}', '${doc.nome}')" title="Excluir Documento">
                       <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span>
                     </button>
@@ -246,7 +232,6 @@ window.DocumentosComponent = {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Calcular Tamanho Formatado
     let sizeStr = '';
     if (file.size < 1024 * 1024) {
       sizeStr = (file.size / 1024).toFixed(1) + ' KB';
@@ -257,13 +242,11 @@ window.DocumentosComponent = {
     this.uploadedFileName = file.name;
     this.uploadedFileSize = sizeStr;
 
-    // Preencher automaticamente o nome do documento se estiver vazio
     const inputNome = document.getElementById('docNomeInput');
     if (inputNome && !inputNome.value) {
       inputNome.value = file.name.replace(/\.[^/.]+$/, "");
     }
 
-    // Ler arquivo via FileReader
     const reader = new FileReader();
     reader.onload = (e) => {
       this.uploadedFileDataUrl = e.target.result;

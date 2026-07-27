@@ -3,8 +3,8 @@
    Suporte Completo a Gestão e Visibilidade por Perfil de Documentos
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V33';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V33';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V34';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V34';
 
 const INITIAL_DATA = {
   moradores: [
@@ -103,15 +103,6 @@ const INITIAL_DATA = {
 
   documentos: [
     {
-      id: 'doc_sistema_md',
-      nome: 'Manual de Operação & Documentação Técnica do Portal',
-      categoria: 'Manuais',
-      visibilidade: 'Sindico',
-      dataUpload: '2026-07-27',
-      tamanho: '15 KB',
-      arquivo: 'DOCUMENTACAO_SISTEMA.md'
-    },
-    {
       id: 'doc_01',
       nome: 'Convenção do Condomínio Modern Life Residence',
       categoria: 'Convenção',
@@ -194,21 +185,9 @@ class StoreEngine {
       if (!sindico.senha) sindico.senha = 'ModernLife2026';
     }
 
-    // Garantir que a documentação técnica tem visibilidade restrita ao Síndico
-    if (!this.data.documentos) this.data.documentos = [];
-    let docTecnico = this.data.documentos.find(d => d.id === 'doc_sistema_md');
-    if (!docTecnico) {
-      this.data.documentos.unshift({
-        id: 'doc_sistema_md',
-        nome: 'Manual de Operação & Documentação Técnica do Portal',
-        categoria: 'Manuais',
-        visibilidade: 'Sindico',
-        dataUpload: '2026-07-27',
-        tamanho: '15 KB',
-        arquivo: 'DOCUMENTACAO_SISTEMA.md'
-      });
-    } else {
-      docTecnico.visibilidade = 'Sindico';
+    // Remover doc_sistema_md de qualquer cache se existir
+    if (this.data.documentos) {
+      this.data.documentos = this.data.documentos.filter(d => d.id !== 'doc_sistema_md');
     }
 
     this.saveData();
@@ -358,7 +337,6 @@ class StoreEngine {
 
   deleteDocumento(id) {
     if (!this.data.documentos) return false;
-    if (id === 'doc_sistema_md') return false; // Impede exclusão da documentação do sistema
     this.data.documentos = this.data.documentos.filter(d => d.id !== id);
     this.saveData();
     return true;
