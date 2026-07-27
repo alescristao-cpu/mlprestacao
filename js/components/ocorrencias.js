@@ -1,12 +1,12 @@
 /* ----------------------------------------------------
    Modern Life Residence - Reclamações, Elogios & Sugestões (Caixa Privada)
+   Postagem Direta no Site e Encaminhamento ao Painel do Gestor
    ---------------------------------------------------- */
 
 window.OcorrenciasComponent = {
   render(container, data) {
     const user = window.CondoStore.currentUser;
 
-    // Access Gate for non-logged-in users
     if (!user || user.status !== 'Aprovado') {
       container.innerHTML = `
         <div class="card-widget" style="text-align: center; padding: 3.5rem 1.5rem; max-width: 600px; margin: 2rem auto;">
@@ -20,7 +20,7 @@ window.OcorrenciasComponent = {
             Para abrir ou visualizar o histórico de suas Reclamações, Elogios e Sugestões e acessar a caixa de respostas do Síndico, faça login no portal.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
-            <span class="material-symbols-outlined">login</span> Entrar / Cadastrar com Google
+            <span class="material-symbols-outlined">login</span> Entrar / Cadastrar com E-mail
           </button>
         </div>
       `;
@@ -28,13 +28,13 @@ window.OcorrenciasComponent = {
     }
 
     const isMasterAdmin = user.role === 'Administrador';
-    const allOcorrencias = data.ocorrencias || [];
+    // Ocorrências excluem as mensagens puras do Canal Direto nesta aba
+    const allOcorrencias = (data.ocorrencias || []).filter(o => o.categoria !== 'Canal Direto');
 
-    // PRIVACY ENFORCEMENT:
-    // Master Admin sees ALL occurrences. Regular residents see ONLY their OWN occurrences.
+    // PRIVACIDADE ESTREITA: Síndico vê todas. Morador comum vê APENAS as suas.
     const userOcorrencias = isMasterAdmin 
       ? allOcorrencias 
-      : allOcorrencias.filter(o => o.moradorEmail.toLowerCase() === user.email.toLowerCase() || o.moradorId === user.id);
+      : allOcorrencias.filter(o => (o.moradorEmail && o.moradorEmail.toLowerCase() === user.email.toLowerCase()) || o.moradorId === user.id);
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -49,7 +49,7 @@ window.OcorrenciasComponent = {
                   ${isMasterAdmin ? 'Painel Master de Reclamações, Elogios &amp; Sugestões (Síndico)' : 'Minhas Reclamações, Elogios &amp; Sugestões'}
                 </h2>
                 <p style="font-size: 0.9rem; opacity: 0.9;">
-                  ${isMasterAdmin ? 'Gerenciamento privado e envio de respostas a todas as mensagens dos moradores.' : 'Comunicação pessoal e sigilosa com a administração. Suas mensagens são estritamente privadas.'}
+                  ${isMasterAdmin ? 'Gerenciamento privado e envio de respostas a todas as mensagens dos moradores.' : 'Comunicação pessoal e sigilosa com a administração. Suas mensagens são registradas diretamente no portal.'}
                 </p>
               </div>
             </div>
@@ -73,7 +73,7 @@ window.OcorrenciasComponent = {
           ${userOcorrencias.length === 0 ? `
             <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted);">
               <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.5; display: block; margin-bottom: 0.5rem;">mail_lock</span>
-              <p style="font-size: 0.95rem;">Nenhuma mensagem encontrada na sua caixa privada.</p>
+              <p style="font-size: 0.95rem;">Nenhuma mensagem registrada na sua caixa privada.</p>
               ${!isMasterAdmin ? `
                 <button class="btn-outline-primary" style="margin-top: 1rem;" onclick="OcorrenciasComponent.openNewFormModal()">
                   Abrir Primeira Reclamação, Elogio ou Sugestão
@@ -98,7 +98,7 @@ window.OcorrenciasComponent = {
                     </div>
 
                     <span class="badge ${item.status.includes('Respondido') ? 'badge-success' : 'badge-warning'}">
-                      <span class="material-symbols-outlined" style="font-size: 0.85rem;">mark_email_read</span> ${item.status}
+                      ${item.status}
                     </span>
                   </div>
 
@@ -127,7 +127,7 @@ window.OcorrenciasComponent = {
                       </div>
                     ` : `
                       <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; margin-bottom: 0.5rem;">
-                        Aguardando resposta do Síndico. Uma cópia da resposta será enviada ao seu e-mail (${item.moradorEmail}).
+                        ⏳ Ocorrência encaminhada ao Painel do Gestor. Aguardando resposta do Síndico.
                       </p>
                     `}
 
@@ -167,7 +167,7 @@ window.OcorrenciasComponent = {
           </div>
           <div class="modal-body">
             <div style="background: var(--primary-light); padding: 0.75rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--primary-dark); margin-bottom: 1rem; border-left: 3px solid var(--primary);">
-              🔒 <strong>Garantia de Privacidade:</strong> Sua mensagem será enviada exclusivamente ao e-mail do condomínio (<code>condominio.modern.life@gmail.com</code>). Nenhum outro morador terá acesso às suas informações.
+              🔒 <strong>Garantia de Privacidade:</strong> Sua mensagem é gravada diretamente no portal e encaminhada ao Painel do Síndico. Nenhum outro morador terá acesso às suas informações.
             </div>
 
             <form onsubmit="OcorrenciasComponent.submeterForm(event)">
@@ -192,7 +192,7 @@ window.OcorrenciasComponent = {
               </div>
 
               <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-                <span class="material-symbols-outlined">send</span> Registrar e Enviar ao E-mail do Condomínio
+                <span class="material-symbols-outlined">send</span> Registrar e Encaminhar ao Painel do Gestor
               </button>
             </form>
           </div>
@@ -210,8 +210,8 @@ window.OcorrenciasComponent = {
     const assunto = document.getElementById('ocoAssunto').value;
     const descricao = document.getElementById('ocoDescricao').value;
 
-    // 1. Cadastra localmente na caixa de entrada do morador
-    const newOco = window.CondoStore.addOcorrencia({
+    // Registra a ocorrência no banco de dados e envia ao Painel do Gestor
+    window.CondoStore.addOcorrencia({
       moradorId: user.id,
       moradorNome: user.nome,
       moradorEmail: user.email,
@@ -221,14 +221,7 @@ window.OcorrenciasComponent = {
       descricao
     });
 
-    // 2. Dispara abertura do e-mail direto para condominio.modern.life@gmail.com
-    const emailSubject = encodeURIComponent(`[${categoria.toUpperCase()}] ${assunto} - Apto ${user.apartamento}`);
-    const emailBody = encodeURIComponent(`Morador: ${user.nome}\nUnidade: Apto ${user.apartamento}\nE-mail: ${user.email}\nTelefone: ${user.telefone || 'Não informado'}\n\nDetalhamento da Ocorrência:\n${descricao}`);
-    const mailtoUrl = `mailto:condominio.modern.life@gmail.com?subject=${emailSubject}&body=${emailBody}`;
-
-    window.open(mailtoUrl, '_blank');
-
-    App.showToast(`Sua ${categoria.toLowerCase()} foi registrada com sucesso e enviada ao e-mail do condomínio!`, 'success');
+    App.showToast(`Sua ${categoria.toLowerCase()} foi registrada com sucesso e encaminhada ao Painel do Gestor!`, 'success');
     document.getElementById('modalNewOcorrencia').remove();
     App.render();
   },

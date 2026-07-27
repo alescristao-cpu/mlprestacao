@@ -1,10 +1,9 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Segurança & Privacidade de Senhas:
-   - A senha existente dos moradores NUNCA é exibida em tela.
-   - O Síndico pode redefinir/resetar a senha do morador caso este esqueça,
-     digitando uma nova senha no campo de redefinição.
+   Central de Mensagens do Gestor:
+   - Respostas do Síndico diretamente no site para Canal Direto,
+     Reclamações, Elogios e Sugestões.
    ---------------------------------------------------- */
 
 window.AdminComponent = {
@@ -19,7 +18,7 @@ window.AdminComponent = {
             Acesso Restrito à Administração
           </h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0; line-height: 1.5;">
-            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para autorização, recusa, edição e exclusão de moradores.
+            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para autorização, recusa, edição e resposta às mensagens dos moradores.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="width: 100%; justify-content: center; padding: 0.85rem;">
             <span class="material-symbols-outlined">login</span> Entrar como Síndico / Administrador
@@ -33,6 +32,8 @@ window.AdminComponent = {
     const pendentes = moradores.filter(m => m.status === 'Pendente');
     const aprovados = moradores.filter(m => m.status === 'Aprovado');
     const recusados = moradores.filter(m => m.status === 'Recusado' || m.status === 'Não Autorizado');
+
+    const ocorrencias = data.ocorrencias || [];
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
@@ -66,6 +67,74 @@ window.AdminComponent = {
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- Seção: CENTRAL DE MENSAGENS E SOLICITAÇÕES DOS MORADORES (CANAL DIRETO, RECLAMAÇÕES E ELOGIOS) -->
+        <div class="card-widget" style="border: 2px solid var(--primary); padding: 1.25rem;">
+          <div class="card-header" style="margin-bottom: 1rem;">
+            <div class="card-title" style="color: var(--primary-dark); font-size: 1.15rem;">
+              <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.5rem;">inbox</span>
+              Central de Mensagens do Gestor (Canal Direto, Reclamações &amp; Elogios)
+            </div>
+            <span class="badge badge-info">${ocorrencias.length} Mensagens Recebidas</span>
+          </div>
+
+          ${ocorrencias.length === 0 ? `
+            <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+              <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.4; display: block; margin-bottom: 0.3rem;">chat_bubble_outline</span>
+              Nenhuma mensagem registrada pelos moradores até o momento.
+            </div>
+          ` : `
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              ${ocorrencias.map(o => `
+                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                      <span class="badge ${o.categoria === 'Reclamação' ? 'badge-danger' : o.categoria === 'Elogio' ? 'badge-success' : 'badge-info'}" style="margin-bottom: 4px;">
+                        ${o.categoria || 'Canal Direto'}
+                      </span>
+                      <h4 style="font-family: var(--font-heading); font-weight: 700; color: var(--primary-dark); font-size: 1.05rem;">
+                        ${o.assunto}
+                      </h4>
+                      <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        De: <strong>${o.moradorNome} (Apto ${o.apartamento})</strong> &bull; Enviado em: ${o.data}
+                      </div>
+                    </div>
+
+                    <span class="badge ${o.status.includes('Respondido') ? 'badge-success' : 'badge-warning'}">
+                      ${o.status}
+                    </span>
+                  </div>
+
+                  <p style="font-size: 0.9rem; color: var(--text-main); background: white; padding: 0.75rem 0.85rem; border-radius: 6px; border: 1px solid var(--border-light); white-space: pre-line;">
+                    ${o.descricao}
+                  </p>
+
+                  <!-- Histórico de Respostas -->
+                  ${(o.respostas && o.respostas.length > 0) ? `
+                    <div style="display: flex; flex-direction: column; gap: 0.4rem; background: #E8F5E9; padding: 0.75rem; border-radius: 6px; border-left: 3px solid #2E6B42;">
+                      <strong style="font-size: 0.8rem; color: #1F4D30;">💬 Sua Resposta Enviada:</strong>
+                      ${o.respostas.map(r => `
+                        <div style="font-size: 0.85rem; color: var(--text-main);">
+                          <div style="font-weight: 700; font-size: 0.78rem; color: #2E6B42;">${r.autor} (${r.data}):</div>
+                          <div>${r.texto}</div>
+                        </div>
+                      `).join('')}
+                    </div>
+                  ` : ''}
+
+                  <!-- Form para o Síndico Responder Diretamente no Site -->
+                  <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem;">
+                    <input type="text" id="adminResp_${o.id}" class="form-control" placeholder="Escreva aqui a resposta para o morador ${o.moradorNome}..." style="font-size: 0.85rem;">
+                    <button class="btn-primary btn-sm" style="background: #2E6B42; font-weight: 700; min-width: 140px;" onclick="AdminComponent.responderMensagemMorador('${o.id}')">
+                      <span class="material-symbols-outlined" style="font-size: 0.95rem;">send</span> Responder
+                    </button>
+                  </div>
+
+                </div>
+              `).join('')}
+            </div>
+          `}
         </div>
 
         <!-- Seção 1: Solicitações de Cadastro Pendentes -->
@@ -207,6 +276,22 @@ window.AdminComponent = {
     `;
   },
 
+  responderMensagemMorador(ocoId) {
+    const input = document.getElementById('adminResp_' + ocoId);
+    const text = input ? input.value.trim() : '';
+
+    if (!text) {
+      alert('Por favor, digite a resposta para o morador.');
+      return;
+    }
+
+    const success = window.CondoStore.addRespostaOcorrencia(ocoId, text, 'Síndico Alessandro Cristiano da Silva');
+    if (success) {
+      App.showToast('Resposta publicada e disponibilizada para o morador!', 'success');
+      App.render();
+    }
+  },
+
   async forcarSincronizacaoNuvem() {
     await window.CondoStore.pullFromCloudSilently();
     await window.CondoStore.broadcastToCloud();
@@ -312,7 +397,6 @@ window.AdminComponent = {
                 <input type="email" id="editEmail" class="form-control" value="${morador.email}" required>
               </div>
 
-              <!-- REDEFINIÇÃO DE SENHA PROTEGIDA: Campo em branco por padrão para manter a senha atual oculta -->
               <div class="form-group" style="background: #F5F5F5; padding: 0.85rem; border-radius: 6px; border: 1px dashed #CCCCCC;">
                 <label class="form-label" style="color: var(--primary-dark); font-weight: 700; display: flex; align-items: center; gap: 4px;">
                   <span class="material-symbols-outlined" style="font-size: 1.1rem; color: var(--primary);">key</span>
@@ -368,7 +452,6 @@ window.AdminComponent = {
       telefone
     };
 
-    // Apenas atualiza a senha se o Síndico tiver digitado uma nova senha no campo de redefinição
     if (novaSenha) {
       payload.senha = novaSenha;
     }

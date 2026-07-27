@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Sincronização Nativa Instantânea de Agendamentos (Piscina, Academia e Salão)
-   Garantia Total de Autorização de Uso da Piscina no Celular e PC
+   Mensagens Diretas, Reclamações e Elogios Integrados no Próprio Site
+   Sincronização Nativa Instantânea com o Painel do Gestor
    ---------------------------------------------------- */
 
 const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V31';
@@ -352,6 +352,11 @@ class StoreEngine {
           const resDocId = r.id || 'res_' + Date.now();
           db.collection('reservas').doc(resDocId).set(r, { merge: true }).catch(() => {});
         }
+
+        for (const o of (this.data.ocorrencias || [])) {
+          const ocoDocId = o.id || 'oco_' + Date.now();
+          db.collection('ocorrencias').doc(ocoDocId).set(o, { merge: true }).catch(() => {});
+        }
       } catch (e) {}
     }
 
@@ -379,37 +384,6 @@ class StoreEngine {
           body: JSON.stringify(payload)
         }).catch(() => {
           fetch(`${FIRESTORE_REST_URL}?documentId=${docId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          }).catch(() => {});
-        });
-      }
-    } catch (e) {}
-
-    try {
-      for (const r of (this.data.agendaReservas || [])) {
-        const resDocId = r.id || 'res_' + Date.now();
-        const payload = {
-          fields: {
-            id: { stringValue: resDocId },
-            area: { stringValue: r.area || 'Piscina' },
-            data: { stringValue: r.data || '' },
-            horario: { stringValue: r.horario || '' },
-            moradorNome: { stringValue: r.moradorNome || '' },
-            apartamento: { stringValue: `${r.apartamento || ''}` },
-            email: { stringValue: r.email || '' },
-            observacao: { stringValue: r.observacao || '' },
-            status: { stringValue: r.status || 'Confirmado' }
-          }
-        };
-
-        fetch(`${FIRESTORE_RESERVAS_URL}/${resDocId}?updateMask.fieldPaths=status&updateMask.fieldPaths=observacao`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }).catch(() => {
-          fetch(`${FIRESTORE_RESERVAS_URL}?documentId=${resDocId}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -477,7 +451,6 @@ class StoreEngine {
     if (item) {
       item.status = newStatus;
       
-      // Atualização em tempo real no SDK do Firebase para dispositivos móveis
       if (window.firebase && window.firebase.firestore) {
         try {
           window.firebase.firestore().collection('moradores').doc(item.id).set({ status: newStatus }, { merge: true }).catch(() => {});
@@ -550,7 +523,6 @@ class StoreEngine {
       if (newStatus) r.status = newStatus;
       if (observacao) r.observacao = observacao;
 
-      // ATUALIZAÇÃO DIRETA EM TEMPO REAL NO FIREBASE PARA CELULARES
       if (window.firebase && window.firebase.firestore) {
         try {
           window.firebase.firestore().collection('reservas').doc(r.id).set(r, { merge: true }).catch(() => {});
@@ -585,12 +557,19 @@ class StoreEngine {
     if (!this.data.ocorrencias) this.data.ocorrencias = [];
     const newOco = {
       id: 'oco_' + Date.now(),
-      data: new Date().toISOString().split('T')[0],
+      data: new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
       status: 'Enviado ao Síndico',
       respostas: [],
       ...oco
     };
     this.data.ocorrencias.unshift(newOco);
+
+    if (window.firebase && window.firebase.firestore) {
+      try {
+        window.firebase.firestore().collection('ocorrencias').doc(newOco.id).set(newOco, { merge: true }).catch(() => {});
+      } catch (e) {}
+    }
+
     this.saveData();
     return newOco;
   }
@@ -605,6 +584,13 @@ class StoreEngine {
         texto: respostaTexto
       });
       oco.status = 'Respondido pelo Síndico';
+
+      if (window.firebase && window.firebase.firestore) {
+        try {
+          window.firebase.firestore().collection('ocorrencias').doc(oco.id).set(oco, { merge: true }).catch(() => {});
+        } catch (e) {}
+      }
+
       this.saveData();
       return true;
     }
