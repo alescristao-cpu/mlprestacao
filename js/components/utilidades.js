@@ -1,6 +1,7 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Utilidades, Reservas & Integração Google Drive
-   Exportação e Alimenta piscina.xls e academia.xls no Drive de condominio.modern.life@gmail.com
+   Modern Life Residence - Utilidades, Reservas & Planilhas Diárias
+   Alimenta planilhas por dia (piscina_YYYY-MM-DD.xls e academia_YYYY-MM-DD.xls)
+   Retenção Automática de 30 Dias no Google Drive
    ---------------------------------------------------- */
 
 const GOOGLE_SHEETS_URL_KEY = 'MODERN_LIFE_SHEETS_SCRIPT_URL';
@@ -44,7 +45,14 @@ window.UtilidadesComponent = {
     }
 
     const isSindico = user && user.role === 'Administrador';
-    const reservasExistentes = data.agendaReservas || [];
+    const hojeStr = new Date().toISOString().split('T')[0];
+
+    // Filtra apenas agendamentos dos últimos 30 dias (Retenção de 30 Dias)
+    const limite30Dias = new Date();
+    limite30Dias.setDate(limite30Dias.getDate() - 30);
+    const limiteStr = limite30Dias.toISOString().split('T')[0];
+
+    const reservasExistentes = (data.agendaReservas || []).filter(r => r.data >= limiteStr);
 
     const hourlySlots = [
       '06:00 às 07:00',
@@ -97,24 +105,24 @@ window.UtilidadesComponent = {
           </div>
         </div>
 
-        <!-- Section 2: Agendamento de Piscina & Academia -->
+        <!-- Section 2: Agendamento de Piscina & Academia com Planilhas Diárias -->
         <div class="card-widget">
           <div class="card-header">
             <div>
               <div class="card-title">
-                <span class="material-symbols-outlined">pool</span> Agendamento de Piscina &amp; Academia
+                <span class="material-symbols-outlined">pool</span> Agendamento Diário (Piscina &amp; Academia)
               </div>
               <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                Os agendamentos são salvos no banco de dados e sincronizados em tempo real entre todos os dispositivos.
+                📅 <strong>Regra de Retenção de 30 Dias:</strong> As planilhas e agendamentos são mantidos por 30 dias e excluídos automaticamente após esse período.
               </p>
             </div>
 
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.exportarPlanilha('Piscina')">
-                <span class="material-symbols-outlined">download</span> 📥 Exportar piscina.xls
+              <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.exportarPlanilhaDiaria('Piscina')">
+                <span class="material-symbols-outlined">download</span> 📥 Baixar Planilha do Dia (Piscina)
               </button>
-              <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.exportarPlanilha('Academia')">
-                <span class="material-symbols-outlined">download</span> 📥 Exportar academia.xls
+              <button class="btn-outline-primary btn-sm" onclick="UtilidadesComponent.exportarPlanilhaDiaria('Academia')">
+                <span class="material-symbols-outlined">download</span> 📥 Baixar Planilha do Dia (Academia)
               </button>
 
               ${isSindico ? `
@@ -137,7 +145,7 @@ window.UtilidadesComponent = {
 
               <div class="form-group">
                 <label class="form-label">Data do Uso</label>
-                <input type="date" id="resData" class="form-control" value="${new Date().toISOString().split('T')[0]}" required>
+                <input type="date" id="resData" class="form-control" value="${hojeStr}" min="${hojeStr}" required>
               </div>
 
               <div class="form-group">
@@ -149,28 +157,28 @@ window.UtilidadesComponent = {
             </div>
 
             <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem;">
-              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento (Enviar para Banco de Dados &amp; Google Drive)
+              <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento (Criar/Alimentar Planilha Diária)
             </button>
           </form>
 
           <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-            Quadro de Agendamentos Confirmados (Banco de Dados em Tempo Real)
+            Quadro de Agendamentos Ativos (Últimos 30 Dias)
           </h4>
           <div class="table-responsive">
             <table class="custom-table" id="tableReservas">
               <thead>
                 <tr>
-                  <th>Data</th>
+                  <th>Data do Uso</th>
                   <th>Horário</th>
                   <th>Nome do Morador</th>
                   <th>Unidade / Apto</th>
                   <th>Área Reservada</th>
-                  <th>E-mail</th>
+                  <th>Planilha Diária</th>
                 </tr>
               </thead>
               <tbody>
                 ${reservasExistentes.length === 0 ? `
-                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento registrado ainda.</td></tr>
+                  <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Nenhum agendamento ativo nos últimos 30 dias.</td></tr>
                 ` : reservasExistentes.map(r => `
                   <tr>
                     <td><strong>${r.data}</strong></td>
@@ -178,7 +186,9 @@ window.UtilidadesComponent = {
                     <td>${r.moradorNome}</td>
                     <td>Apto ${r.apartamento || 'Morador'}</td>
                     <td><span class="badge badge-success">${r.area}</span></td>
-                    <td style="font-size: 0.8rem; color: var(--text-muted);">${r.email || '-'}</td>
+                    <td style="font-size: 0.78rem; color: var(--primary); font-family: monospace;">
+                      ${r.area.toLowerCase().includes('piscina') ? 'piscina' : 'academia'}_${r.data}.xls
+                    </td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -226,17 +236,23 @@ window.UtilidadesComponent = {
     `;
   },
 
-  exportarPlanilha(areaFiltro) {
-    const reservas = (window.CondoStore.data.agendaReservas || []).filter(r => r.area.toLowerCase().includes(areaFiltro.toLowerCase()));
+  exportarPlanilhaDiaria(areaFiltro) {
+    const dataInput = document.getElementById('resData');
+    const dataSelecionada = dataInput ? dataInput.value : new Date().toISOString().split('T')[0];
+
+    const reservas = (window.CondoStore.data.agendaReservas || []).filter(r => 
+      r.area.toLowerCase().includes(areaFiltro.toLowerCase()) && r.data === dataSelecionada
+    );
     
     if (reservas.length === 0) {
-      alert(`Nenhum agendamento de ${areaFiltro} encontrado para exportação.`);
+      alert(`Nenhum agendamento de ${areaFiltro} encontrado para a data ${dataSelecionada}.`);
       return;
     }
 
-    const fileName = areaFiltro.toLowerCase().includes('piscina') ? 'piscina.xls' : 'academia.xls';
+    const prefixo = areaFiltro.toLowerCase().includes('piscina') ? 'piscina' : 'academia';
+    const fileName = `${prefixo}_${dataSelecionada}.xls`;
 
-    let csvContent = "Data\tHorario\tNome do Morador\tUnidade / Apto\tArea Comum\tEmail\tStatus\n";
+    let csvContent = "Data do Uso\tHorario\tNome do Morador\tUnidade / Apto\tArea Comum\tEmail\tStatus\n";
 
     reservas.forEach(r => {
       csvContent += `${r.data}\t${r.horario}\t${r.moradorNome}\tApto ${r.apartamento}\t${r.area}\t${r.email || ''}\t${r.status || 'Confirmado'}\n`;
@@ -251,7 +267,7 @@ window.UtilidadesComponent = {
     link.click();
     document.body.removeChild(link);
 
-    App.showToast(`Planilha ${fileName} exportada com sucesso!`, 'success');
+    App.showToast(`Planilha diária ${fileName} baixada com sucesso!`, 'success');
   },
 
   openGoogleSheetsConfig() {
@@ -265,13 +281,13 @@ window.UtilidadesComponent = {
         <div class="modal-card" style="max-width: 580px;">
           <div class="modal-header" style="background: var(--primary-dark); color: white;">
             <div class="modal-title" style="color: white; font-weight: 700;">
-              🔗 Configuração de Conexão Google Drive (Exclusivo Síndico)
+              🔗 Conexão Google Drive (Planilhas Diárias com Retenção de 30 Dias)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalSheetsConfig').remove()">✕</button>
           </div>
           <div class="modal-body">
             <p style="font-size: 0.88rem; color: var(--text-main); margin-bottom: 1rem;">
-              Cole abaixo o link do Web App do Google Apps Script configurado na conta <code>condominio.modern.life@gmail.com</code> para atualizar automaticamente as planilhas <code>piscina.xls</code> e <code>academia.xls</code> no Google Drive.
+              Cole o link do Web App do Apps Script para gerar automaticamente planilhas por dia (<code>piscina_YYYY-MM-DD.xls</code> e <code>academia_YYYY-MM-DD.xls</code>) e excluí-las após 30 dias no Google Drive.
             </p>
 
             <div class="form-group">
@@ -310,7 +326,8 @@ window.UtilidadesComponent = {
     const data = document.getElementById('resData').value;
     const horario = document.getElementById('resHorario').value;
 
-    const targetFile = area.toLowerCase().includes('piscina') ? 'piscina.xls' : 'academia.xls';
+    const prefixo = area.toLowerCase().includes('piscina') ? 'piscina' : 'academia';
+    const dailyFileName = `${prefixo}_${data}.xls`;
 
     const payload = {
       data,
@@ -319,7 +336,7 @@ window.UtilidadesComponent = {
       apartamento: `${user.apartamento}`,
       area,
       email: user.email,
-      targetFile
+      targetFile: dailyFileName
     };
 
     window.CondoStore.addAgendamento({
@@ -344,7 +361,7 @@ window.UtilidadesComponent = {
       } catch (err) {}
     }
 
-    App.showToast(`Agendamento de ${area} (${horario}) gravado no Banco de Dados!`, 'success');
+    App.showToast(`Agendamento em ${dailyFileName} gravado! (Planilha mantida por 30 dias)`, 'success');
     App.render();
   }
 };

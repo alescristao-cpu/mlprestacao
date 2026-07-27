@@ -2,21 +2,22 @@
  * Google Apps Script - Condomínio Modern Life Residence
  * Conta oficial: condominio.modern.life@gmail.com
  * 
- * Envio automático de agendamentos para as planilhas do Google Drive:
- * 🏊 piscina.xls (para reservas de Piscina)
- * 🏋️ academia.xls (para reservas de Academia)
+ * 📌 GERAÇÃO DE PLANILHAS DIÁRIAS (piscina_YYYY-MM-DD.xls e academia_YYYY-MM-DD.xls)
+ * 📌 RETENÇÃO AUTOMÁTICA DE 30 DIAS: Planilhas com mais de 30 dias são excluídas automaticamente do Google Drive.
  */
 
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var area = (data.area || "").toString().toLowerCase();
+    var dataUso = data.data || new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     
-    // Define o nome da planilha de destino no Google Drive
-    var fileName = area.indexOf("piscina") !== -1 ? "piscina.xls" : "academia.xls";
-    var sheetName = area.indexOf("piscina") !== -1 ? "Piscina" : "Academia";
+    // Define o prefixo e nome da planilha diária
+    var prefixo = area.indexOf("piscina") !== -1 ? "piscina" : "academia";
+    var fileName = prefixo + "_" + dataUso + ".xls";
 
-    var spreadsheet = getOrCreateSpreadsheet(fileName);
+    // Cria ou recupera a planilha do dia no Google Drive
+    var spreadsheet = getOrCreateDailySpreadsheet(fileName, dataUso, area);
     var sheet = spreadsheet.getActiveSheet();
 
     // Se a planilha estiver vazia, adiciona os cabeçalhos formatados
@@ -34,9 +35,9 @@ function doPost(e) {
       sheet.setFrozenRows(1);
     }
 
-    // Registra a reserva na planilha
+    // Registra a linha do agendamento
     sheet.appendRow([
-      data.data,
+      dataUso,
       data.horario,
       data.moradorNome,
       data.apartamento,
@@ -45,35 +46,72 @@ function doPost(e) {
       new Date().toLocaleString("pt-BR")
     ]);
 
-    return ContentService.createTextOutput(JSON.stringify({ "result": "success", "file": fileName }))
-      .setMimeType(ContentService.MimeType.JSON);
+    // Executa a limpeza automática de planilhas com mais de 30 dias
+    cleanupOldSpreadsheets(30);
+
+    return ContentService.createTextOutput(JSON.stringify({ 
+      "result": "success", 
+      "file": fileName,
+      "message": "Agendamento registrado na planilha diária " + fileName
+    })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({ "result": "error", "message": error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ 
+      "result": "error", 
+      "message": error.toString() 
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
 /**
- * Localiza a planilha no Google Drive ou cria uma nova se não existir
+ * Cria ou busca a planilha diária específica da data
  */
-function getOrCreateSpreadsheet(fileName) {
+function getOrCreateDailySpreadsheet(fileName, dateStr, area) {
   var files = DriveApp.getFilesByName(fileName);
   if (files.hasNext()) {
-    var file = files.next();
-    return SpreadsheetApp.open(file);
+    return SpreadsheetApp.open(files.next());
   } else {
     var cleanName = fileName.replace(".xls", "");
     var cleanFiles = DriveApp.getFilesByName(cleanName);
     if (cleanFiles.hasNext()) {
       return SpreadsheetApp.open(cleanFiles.next());
     }
-    // Cria a nova planilha no Google Drive se não existir
+    // Cria a nova planilha diária no Google Drive
     var newSs = SpreadsheetApp.create(fileName);
     return newSs;
   }
 }
 
+/**
+ * Limpa e apaga do Google Drive planilhas diárias (piscina_* e academia_*) com mais de 30 dias
+ */
+function cleanupOldSpreadsheets(diasRetencao) {
+  try {
+    var hoje = new Date();
+    var limiteMs = (diasRetencao || 30) * 24 * 60 * 60 * 1000;
+    
+    // Procura planilhas de piscina e academia no Drive
+    var padroes = ["piscina_", "academia_"];
+    
+    for (var p = 0; p < padroes.length; p++) {
+      var files = DriveApp.searchFiles("name contains '" + padroes[p] + "' and trashed = false");
+      
+      while (files.hasNext()) {
+        var file = files.next();
+        var dataCriacao = file.getDateCreated();
+        var idadeMs = hoje.getTime() - dataCriacao.getTime();
+        
+        // Se a planilha tiver mais de 30 dias de criada, move para a lixeira (apaga)
+        if (idadeMs > limiteMs) {
+          file.setTrashed(true);
+        }
+      }
+    }
+  } catch (e) {
+    Logger.log("Erro na limpeza de 30 dias: " + e.toString());
+  }
+}
+
 function doGet(e) {
-  return ContentService.createTextOutput("API de Agendamentos (piscina.xls / academia.xls) Ativa no Google Drive de condominio.modern.life@gmail.com!");
+  return ContentService.createTextOutput("API de Planilhas Diárias (Retenção 30 Dias) Ativa no Google Drive de condominio.modern.life@gmail.com!");
 }
