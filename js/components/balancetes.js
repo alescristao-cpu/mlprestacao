@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Balancetes & Dashboard Financeiro
    Importador Inteligente 100% Automático de Planilhas (CSV, XLS, XLSX, PDF, DOC, TXT)
-   Integração Direta: Importa a planilha -> Atualiza Balancetes -> Atualiza Prestação de Contas -> Atualiza Dashboard
+   Sem Exibição de Banner Redundante de Confirmação no Modal
    ---------------------------------------------------- */
 
 window.BalancetesComponent = {
@@ -371,7 +371,7 @@ window.BalancetesComponent = {
                 <span class="material-symbols-outlined" style="font-size: 3rem; color: #059669; display: block; margin-bottom: 0.3rem;">table_chart</span>
                 <strong style="color: #0F172A; font-size: 1.05rem;">Clique aqui para selecionar sua Planilha ou Arquivo</strong>
                 <span style="display: block; font-size: 0.8rem; color: #64748B; margin-top: 4px;">
-                  Leitura e Preenchimento 100% Automático a partir do arquivo (.xls, .xlsx, .csv, .pdf, .txt)
+                  Leitura e Preenchimento Automático a partir do arquivo (.xls, .xlsx, .csv, .pdf, .txt)
                 </span>
               </label>
 
@@ -379,10 +379,6 @@ window.BalancetesComponent = {
 
               <div id="balFileInfo" style="margin-top: 0.85rem; font-weight: 700; font-size: 0.88rem; color: #065F46; display: none; background: white; padding: 0.6rem; border-radius: 6px; border: 1px solid #A7F3D0;">
               </div>
-            </div>
-
-            <!-- Banner de Confirmação de Preenchimento Automático -->
-            <div id="balAutoFillBanner" style="display: none; background: #ECFDF5; border: 1px solid #6EE7B7; border-radius: 8px; padding: 0.85rem; margin-bottom: 1rem; color: #065F46; font-size: 0.88rem; font-weight: 600;">
             </div>
 
             <!-- Formulário de Confirmação & Ajuste Fino dos Dados Extraídos -->
@@ -415,12 +411,12 @@ window.BalancetesComponent = {
               <div class="form-grid">
                 <div class="form-group">
                   <label class="form-label" style="font-weight: 700; color: #059669;">Receita Bruta Total (R$)</label>
-                  <input type="number" step="0.01" id="importReceita" class="form-control" placeholder="Preenchido da planilha" value="92500.00" required style="font-weight: 700; color: #059669;">
+                  <input type="number" step="0.01" id="importReceita" class="form-control" placeholder="Ex: 90351.01" value="92500.00" required style="font-weight: 700; color: #059669;">
                 </div>
 
                 <div class="form-group">
                   <label class="form-label" style="font-weight: 700; color: #E11D48;">Despesa Bruta Total (R$)</label>
-                  <input type="number" step="0.01" id="importDespesa" class="form-control" placeholder="Preenchido da planilha" value="71200.00" required style="font-weight: 700; color: #E11D48;">
+                  <input type="number" step="0.01" id="importDespesa" class="form-control" placeholder="Ex: 69866.77" value="71200.00" required style="font-weight: 700; color: #E11D48;">
                 </div>
               </div>
 
@@ -499,27 +495,37 @@ window.BalancetesComponent = {
         anoDetectado = parseInt(matchAno[1], 10);
       }
 
+      // Evita confundir anos de 4 dígitos (ex: 2025, 2026) com valores monetários
       if (clean.includes('receita') || clean.includes('arrecadacao') || clean.includes('taxa de condominio') || clean.includes('total receitas') || clean.includes('entradas')) {
         const matches = line.match(/\d+[\.,]?\d*/g);
         if (matches && matches.length > 0) {
-          const val = parseFloat(matches[matches.length - 1].replace('.', '').replace(',', '.'));
-          if (!isNaN(val) && val > receitaEncontrada) receitaEncontrada = val;
+          const rawVal = matches[matches.length - 1].replace('.', '').replace(',', '.');
+          const val = parseFloat(rawVal);
+          if (!isNaN(val) && val !== 2024 && val !== 2025 && val !== 2026 && val !== 2027 && val > receitaEncontrada) {
+            receitaEncontrada = val;
+          }
         }
       }
 
       if (clean.includes('despesa') || clean.includes('gasto') || clean.includes('total despesas') || clean.includes('saidas') || clean.includes('custos')) {
         const matches = line.match(/\d+[\.,]?\d*/g);
         if (matches && matches.length > 0) {
-          const val = parseFloat(matches[matches.length - 1].replace('.', '').replace(',', '.'));
-          if (!isNaN(val) && val > despesaEncontrada) despesaEncontrada = val;
+          const rawVal = matches[matches.length - 1].replace('.', '').replace(',', '.');
+          const val = parseFloat(rawVal);
+          if (!isNaN(val) && val !== 2024 && val !== 2025 && val !== 2026 && val !== 2027 && val > despesaEncontrada) {
+            despesaEncontrada = val;
+          }
         }
       }
 
       if (clean.includes('saldo anterior') || clean.includes('saldo inicial') || clean.includes('caixa anterior')) {
         const matches = line.match(/\d+[\.,]?\d*/g);
         if (matches && matches.length > 0) {
-          const val = parseFloat(matches[matches.length - 1].replace('.', '').replace(',', '.'));
-          if (!isNaN(val) && val > saldoAnteriorEncontrado) saldoAnteriorEncontrado = val;
+          const rawVal = matches[matches.length - 1].replace('.', '').replace(',', '.');
+          const val = parseFloat(rawVal);
+          if (!isNaN(val) && val !== 2024 && val !== 2025 && val !== 2026 && val !== 2027 && val > saldoAnteriorEncontrado) {
+            saldoAnteriorEncontrado = val;
+          }
         }
       }
 
@@ -529,7 +535,7 @@ window.BalancetesComponent = {
         const numPart = parts[parts.length - 1].trim();
         const numVal = parseFloat(numPart.replace('.', '').replace(',', '.'));
 
-        if (catNome.length > 3 && !isNaN(numVal) && numVal > 50 && !clean.includes('total') && !clean.includes('saldo')) {
+        if (catNome.length > 3 && !isNaN(numVal) && numVal > 50 && numVal !== 2024 && numVal !== 2025 && numVal !== 2026 && numVal !== 2027 && !clean.includes('total') && !clean.includes('saldo')) {
           categoriasExtraidas.push({
             nome: catNome,
             valor: numVal
@@ -573,22 +579,6 @@ window.BalancetesComponent = {
         categoriasDespesa: categoriasExtraidas
       };
     }
-
-    const banner = document.getElementById('balAutoFillBanner');
-    if (banner) {
-      banner.style.display = 'block';
-      banner.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span class="material-symbols-outlined" style="color: #059669; font-size: 1.4rem;">auto_awesome</span>
-          <div>
-            <strong>✨ Planilha processada! Dados preenchidos automaticamente.</strong>
-            <div style="font-size: 0.8rem; margin-top: 2px;">
-              Mês: <strong>${mesDetectado || 'Junho'}</strong> | Receita: <strong>R$ ${(receitaEncontrada || 92500).toLocaleString('pt-BR')}</strong> | Despesa: <strong>R$ ${(despesaEncontrada || 71200).toLocaleString('pt-BR')}</strong>
-            </div>
-          </div>
-        </div>
-      `;
-    }
   },
 
   submeterImportacao(e) {
@@ -616,7 +606,6 @@ window.BalancetesComponent = {
           { nome: 'Manutenção Predial & Conservação', valor: Math.round(despesaBruta * 0.15 * 100) / 100, corGradiente: 'linear-gradient(90deg, #10B981 0%, #34D399 100%)', corSolida: '#10B981' }
         ];
 
-    // Adiciona ao StoreEngine (que atualiza automaticamente Balancetes, Prestação de Contas e Dashboard em tempo real)
     const newBal = window.CondoStore.addBalancete({
       mes,
       ano,
