@@ -1,10 +1,12 @@
 /* ----------------------------------------------------
    Modern Life Residence - Painel Administrativo do Síndico
    Síndico: Alessandro Cristiano da Silva
-   Interface Limpa e Sem Exibição de Detalhes Técnicos de Infraestrutura
+   Ações da Administração Organizadas por Abas (Prioridade aos Pedidos de Autorização)
    ---------------------------------------------------- */
 
 window.AdminComponent = {
+  activeTab: 'autorizacao', // 'autorizacao' é a aba padrão priorizada
+
   render(container, data) {
     const user = window.CondoStore.currentUser;
 
@@ -30,227 +32,292 @@ window.AdminComponent = {
     const pendentes = moradores.filter(m => m.status === 'Pendente');
     const aprovados = moradores.filter(m => m.status === 'Aprovado');
     const recusados = moradores.filter(m => m.status === 'Recusado' || m.status === 'Não Autorizado');
-
     const ocorrencias = data.ocorrencias || [];
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
         
-        <!-- 1. Banner Principal do Painel Administrativo (Limpo e Institucional) -->
+        <!-- Banner Principal da Gestão -->
         <div class="card-widget" style="background: linear-gradient(135deg, #1F4D30 0%, #2E6B42 100%); color: white; padding: 1.35rem;">
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
-              <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.4rem;">
-                <span class="badge" style="background: rgba(255,255,255,0.2); color: white;">
-                  <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL ADMINISTRATIVO MASTER
-                </span>
-              </div>
-
+              <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.4rem;">
+                <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL ADMINISTRATIVO MASTER
+              </span>
               <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700;">
                 Gestão do Síndico Alessandro Cristiano da Silva
               </h2>
-              <p style="font-size: 0.85rem; opacity: 0.9;">
+              <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 2px;">
                 E-mail oficial: <code>condominio.modern.life@gmail.com</code>
               </p>
             </div>
 
-            <!-- Botões Principais de Ação -->
-            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-              
-              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; padding: 0.85rem 1.1rem; font-size: 0.92rem;" onclick="AdminComponent.openQuickApproveModal()">
-                <span class="material-symbols-outlined" style="color: var(--primary);">person_add</span> ➕ Autorizar Morador Manualmente
-              </button>
-
-              <button class="btn-primary" style="background: #FFF3E0; color: #E65100; font-weight: 700; border: 1px solid #FFE0B2; padding: 0.85rem 1.1rem; font-size: 0.92rem; display: flex; align-items: center; gap: 0.4rem;" onclick="AdminComponent.openSeletorSenhaTemporariaModal()">
-                <span class="material-symbols-outlined" style="color: #E65100; font-size: 1.2rem;">key</span> 🔑 Senha Temporária
-              </button>
-
-              <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.85rem;" onclick="AdminComponent.openAlterarSenhaSindicoModal()">
-                <span class="material-symbols-outlined">key</span> Alterar Minha Senha
-              </button>
-            </div>
+            <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.65rem 1rem;" onclick="AdminComponent.openAlterarSenhaSindicoModal()">
+              <span class="material-symbols-outlined">key</span> Alterar Minha Senha
+            </button>
           </div>
         </div>
 
-        <!-- 2. PAINEL DE PEDIDOS DE AUTORIZAÇÃO (POSICIONADO LOGO ABAIXO DO PAINEL ADMINISTRATIVO) -->
-        <div class="card-widget" style="border: 2px solid #E65100; padding: 1.25rem;">
-          <div style="background: #FFF3E0; padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-            <div style="font-weight: 700; color: #E65100; font-size: 1.05rem; display: flex; align-items: center; gap: 0.4rem;">
-              <span class="material-symbols-outlined" style="font-size: 1.5rem;">how_to_reg</span> Pedidos de Autorização de Novos Cadastros (${pendentes.length})
-            </div>
-            <span class="badge badge-warning" style="font-size: 0.85rem;">${pendentes.length} Aguardando Aprovação</span>
-          </div>
+        <!-- BARRA DE ABAS DA ADMINISTRAÇÃO (COM PRIORIDADE PARA PEDIDOS DE AUTORIZAÇÃO) -->
+        <div style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.25rem; border-bottom: 2px solid var(--border-color);">
+          
+          <!-- Aba 1: Pedidos de Autorização (Prioritária) -->
+          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; ${this.activeTab === 'autorizacao' ? 'background: #E65100; color: white; border: none; box-shadow: 0 4px 12px rgba(230,81,0,0.3);' : 'background: white; color: #E65100; border: 1px solid #FFE0B2;'}" onclick="AdminComponent.setTab('autorizacao')">
+            <span class="material-symbols-outlined" style="font-size: 1.1rem;">how_to_reg</span> 
+            📝 Pedidos de Autorização (${pendentes.length})
+            ${pendentes.length > 0 ? `<span class="badge" style="background: #FFD54F; color: #000; font-weight: 800; font-size: 0.72rem; margin-left: 4px;">Pendente</span>` : ''}
+          </button>
 
-          ${pendentes.length === 0 ? `
-            <div style="padding: 1.5rem 0.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-              <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.4; display: block; margin-bottom: 0.3rem;">check_circle</span>
-              Nenhum pedido de autorização pendente no momento. Todos os moradores cadastrados estão autorizados.
-            </div>
-          ` : `
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-              ${pendentes.map(p => `
-                <div style="background: var(--bg-app); border: 1px solid #FFE0B2; border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
-                    <div>
-                      <strong style="font-size: 1.1rem; color: var(--primary-dark);">${p.nome}</strong>
-                      <div style="font-size: 0.9rem; color: var(--text-main); font-weight: 700; margin-top: 2px;">Unidade / Apto: ${p.apartamento}</div>
-                    </div>
-                    <span class="badge badge-warning" style="font-size: 0.8rem;">Aguardando Sua Aprovação</span>
-                  </div>
+          <!-- Aba 2: Central de Mensagens -->
+          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; ${this.activeTab === 'mensagens' ? 'background: var(--primary); color: white; border: none;' : 'background: white; color: var(--primary-dark); border: 1px solid var(--border-color);'}" onclick="AdminComponent.setTab('mensagens')">
+            <span class="material-symbols-outlined" style="font-size: 1.1rem;">inbox</span> 
+            💬 Mensagens dos Moradores (${ocorrencias.length})
+          </button>
 
-                  <div style="font-size: 0.85rem; color: var(--text-muted); background: white; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-light);">
-                    <div>📧 E-mail: <strong>${p.email}</strong></div>
-                    <div>📱 Telefone: <strong>${p.telefone || 'Não informado'}</strong></div>
-                  </div>
+          <!-- Aba 3: Senha Temporária -->
+          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; ${this.activeTab === 'senhatemp' ? 'background: #D84315; color: white; border: none;' : 'background: white; color: #D84315; border: 1px solid #FFCCBC;'}" onclick="AdminComponent.setTab('senhatemp')">
+            <span class="material-symbols-outlined" style="font-size: 1.1rem;">key</span> 
+            🔑 Senha Temporária
+          </button>
 
-                  <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.4rem;">
-                    <button class="btn-primary" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.75rem; font-weight: 700; min-width: 160px;" onclick="AdminComponent.aprovarMorador('${p.id}', '${p.nome}', '${p.email}', '${p.apartamento}')">
-                      <span class="material-symbols-outlined" style="font-size: 1.1rem;">check_circle</span> ✅ Autorizar Acesso do Morador
-                    </button>
+          <!-- Aba 4: Gestão de Moradores Autorizados -->
+          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; ${this.activeTab === 'moradores' ? 'background: var(--primary-dark); color: white; border: none;' : 'background: white; color: var(--primary-dark); border: 1px solid var(--border-color);'}" onclick="AdminComponent.setTab('moradores')">
+            <span class="material-symbols-outlined" style="font-size: 1.1rem;">groups</span> 
+            👥 Moradores Autorizados (${aprovados.length})
+          </button>
 
-                    <button class="btn-secondary btn-danger" style="background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; padding: 0.75rem; font-weight: 700;" onclick="AdminComponent.recusarMorador('${p.id}', '${p.nome}')">
-                      <span class="material-symbols-outlined" style="font-size: 1.1rem;">block</span> 🚫 Não Autorizar / Recusar
-                    </button>
-                  </div>
+          <!-- Aba 5: Cadastros Bloqueados (Se houver) -->
+          ${recusados.length > 0 ? `
+            <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; ${this.activeTab === 'bloqueados' ? 'background: #C62828; color: white; border: none;' : 'background: white; color: #C62828; border: 1px solid #FFCDD2;'}" onclick="AdminComponent.setTab('bloqueados')">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem;">block</span> 
+              🚫 Bloqueados (${recusados.length})
+            </button>
+          ` : ''}
+
+        </div>
+
+        <!-- CONTEÚDO DAS ABAS -->
+
+        <!-- CONTEÚDO DA ABA 1: PEDIDOS DE AUTORIZAÇÃO (PRIORITÁRIA) -->
+        ${this.activeTab === 'autorizacao' ? `
+          <div class="card-widget" style="border: 2px solid #E65100; padding: 1.35rem;">
+            <div style="background: #FFF3E0; padding: 0.85rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <div style="font-weight: 800; color: #E65100; font-size: 1.1rem; display: flex; align-items: center; gap: 0.4rem;">
+                  <span class="material-symbols-outlined" style="font-size: 1.5rem;">how_to_reg</span> Pedidos de Autorização de Novos Cadastros (${pendentes.length})
                 </div>
-              `).join('')}
-            </div>
-          `}
-        </div>
+                <div style="font-size: 0.82rem; color: #D84315; margin-top: 2px;">
+                  Estes moradores se cadastraram criando sua própria senha e aguardam sua aprovação para acessar o portal.
+                </div>
+              </div>
 
-        <!-- 3. Central de Mensagens e Comunicação dos Moradores -->
-        <div class="card-widget" style="border: 2px solid var(--primary); padding: 1.25rem;">
-          <div class="card-header" style="margin-bottom: 1rem;">
-            <div class="card-title" style="color: var(--primary-dark); font-size: 1.15rem;">
-              <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.5rem;">inbox</span>
-              Central de Mensagens do Gestor (Canal Direto, Reclamações &amp; Elogios)
+              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; padding: 0.65rem 1rem; font-size: 0.85rem;" onclick="AdminComponent.openQuickApproveModal()">
+                <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.1rem;">person_add</span> ➕ Cadastrar / Autorizar Morador Manualmente
+              </button>
             </div>
-            <span class="badge badge-info">${ocorrencias.length} Mensagens Recebidas</span>
+
+            ${pendentes.length === 0 ? `
+              <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.95rem; background: var(--bg-app); border-radius: 8px;">
+                <span class="material-symbols-outlined" style="font-size: 3rem; color: #2E6B42; display: block; margin-bottom: 0.5rem;">check_circle</span>
+                <strong>Nenhum pedido de autorização pendente no momento!</strong><br>
+                <span style="font-size: 0.85rem;">Todos os moradores que solicitaram acesso foram analisados e autorizados.</span>
+              </div>
+            ` : `
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${pendentes.map(p => `
+                  <div style="background: var(--bg-app); border: 1px solid #FFE0B2; border-radius: 8px; padding: 1.1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                      <div>
+                        <strong style="font-size: 1.15rem; color: var(--primary-dark);">${p.nome}</strong>
+                        <div style="font-size: 0.92rem; color: var(--text-main); font-weight: 700; margin-top: 2px;">Unidade / Apto: ${p.apartamento}</div>
+                      </div>
+                      <span class="badge badge-warning" style="font-size: 0.8rem; background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2;">Aguardando Sua Aprovação</span>
+                    </div>
+
+                    <div style="font-size: 0.85rem; color: var(--text-muted); background: white; padding: 0.85rem; border-radius: 6px; border: 1px solid var(--border-light);">
+                      <div>📧 E-mail: <strong>${p.email}</strong></div>
+                      <div>📱 Telefone: <strong>${p.telefone || 'Não informado'}</strong></div>
+                      <div>📅 Data do Cadastro: <strong>${p.dataCadastro || 'Hoje'}</strong></div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                      <button class="btn-primary" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.85rem; font-weight: 700; min-width: 170px;" onclick="AdminComponent.aprovarMorador('${p.id}', '${p.nome}', '${p.email}', '${p.apartamento}')">
+                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">check_circle</span> ✅ Autorizar Acesso do Morador
+                      </button>
+
+                      <button class="btn-secondary btn-danger" style="background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; padding: 0.85rem; font-weight: 700;" onclick="AdminComponent.recusarMorador('${p.id}', '${p.nome}')">
+                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">block</span> 🚫 Não Autorizar / Recusar
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
           </div>
+        ` : ''}
 
-          ${ocorrencias.length === 0 ? `
-            <div style="padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
-              <span class="material-symbols-outlined" style="font-size: 2.5rem; opacity: 0.4; display: block; margin-bottom: 0.3rem;">chat_bubble_outline</span>
-              Nenhuma mensagem registrada pelos moradores até o momento.
+        <!-- CONTEÚDO DA ABA 2: CENTRAL DE MENSAGENS -->
+        ${this.activeTab === 'mensagens' ? `
+          <div class="card-widget" style="border: 2px solid var(--primary); padding: 1.25rem;">
+            <div class="card-header" style="margin-bottom: 1rem;">
+              <div class="card-title" style="color: var(--primary-dark); font-size: 1.15rem;">
+                <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.5rem;">inbox</span>
+                Central de Mensagens do Gestor (Canal Direto, Reclamações &amp; Elogios)
+              </div>
+              <span class="badge badge-info">${ocorrencias.length} Mensagens Recebidas</span>
             </div>
-          ` : `
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-              ${ocorrencias.map(o => `
-                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
-                    <div>
-                      <span class="badge ${o.categoria === 'Reclamação' ? 'badge-danger' : o.categoria === 'Elogio' ? 'badge-success' : o.categoria === 'Recuperação de Senha' ? 'badge-warning' : 'badge-info'}" style="margin-bottom: 4px;">
-                        ${o.categoria || 'Canal Direto'}
+
+            ${ocorrencias.length === 0 ? `
+              <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.9rem; background: var(--bg-app); border-radius: 8px;">
+                <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.4; display: block; margin-bottom: 0.3rem;">chat_bubble_outline</span>
+                Nenhuma mensagem ou reclamação registrada pelos moradores até o momento.
+              </div>
+            ` : `
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${ocorrencias.map(o => `
+                  <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem;">
+                      <div>
+                        <span class="badge ${o.categoria === 'Reclamação' ? 'badge-danger' : o.categoria === 'Elogio' ? 'badge-success' : o.categoria === 'Recuperação de Senha' ? 'badge-warning' : 'badge-info'}" style="margin-bottom: 4px;">
+                          ${o.categoria || 'Canal Direto'}
+                        </span>
+                        <h4 style="font-family: var(--font-heading); font-weight: 700; color: var(--primary-dark); font-size: 1.05rem;">
+                          ${o.assunto}
+                        </h4>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                          De: <strong>${o.moradorNome} (Apto ${o.apartamento})</strong> &bull; Enviado em: ${o.data}
+                        </div>
+                      </div>
+
+                      <span class="badge ${o.status.includes('Respondido') ? 'badge-success' : 'badge-warning'}">
+                        ${o.status}
                       </span>
-                      <h4 style="font-family: var(--font-heading); font-weight: 700; color: var(--primary-dark); font-size: 1.05rem;">
-                        ${o.assunto}
-                      </h4>
-                      <div style="font-size: 0.8rem; color: var(--text-muted);">
-                        De: <strong>${o.moradorNome} (Apto ${o.apartamento})</strong> &bull; Enviado em: ${o.data}
+                    </div>
+
+                    <p style="font-size: 0.9rem; color: var(--text-main); background: white; padding: 0.75rem 0.85rem; border-radius: 6px; border: 1px solid var(--border-light); white-space: pre-line;">
+                      ${o.descricao}
+                    </p>
+
+                    <!-- Histórico de Respostas -->
+                    ${(o.respostas && o.respostas.length > 0) ? `
+                      <div style="display: flex; flex-direction: column; gap: 0.4rem; background: #E8F5E9; padding: 0.75rem; border-radius: 6px; border-left: 3px solid #2E6B42;">
+                        <strong style="font-size: 0.8rem; color: #1F4D30;">💬 Sua Resposta Enviada:</strong>
+                        ${o.respostas.map(r => `
+                          <div style="font-size: 0.85rem; color: var(--text-main);">
+                            <div style="font-weight: 700; font-size: 0.78rem; color: #2E6B42;">${r.autor} (${r.data}):</div>
+                            <div>${r.texto}</div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : ''}
+
+                    <!-- Botões de Ação para o Síndico -->
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap;">
+                      <input type="text" id="adminResp_${o.id}" class="form-control" placeholder="Escreva a resposta para o morador..." style="font-size: 0.85rem; flex: 1; min-width: 200px;">
+                      
+                      <button class="btn-primary btn-sm" style="background: #2E6B42; font-weight: 700;" onclick="AdminComponent.responderMensagemMorador('${o.id}')">
+                        <span class="material-symbols-outlined" style="font-size: 0.95rem;">send</span> Responder
+                      </button>
+
+                      ${o.categoria === 'Recuperação de Senha' && o.moradorEmail ? `
+                        <button class="btn-secondary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; font-weight: 700;" onclick="AdminComponent.gerarSenhaTemporariaPorEmail('${o.moradorEmail}')" title="Gerar Senha Temporária para quem esqueceu a senha">
+                          <span class="material-symbols-outlined" style="font-size: 0.95rem;">key</span> 🔑 Senha Temporária
+                        </button>
+                      ` : ''}
+                    </div>
+
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        ` : ''}
+
+        <!-- CONTEÚDO DA ABA 3: SENHA TEMPORÁRIA -->
+        ${this.activeTab === 'senhatemp' ? `
+          <div class="card-widget" style="border: 2px solid #D84315; padding: 1.35rem;">
+            <div style="background: #FBE9E7; padding: 1rem; border-radius: 8px; margin-bottom: 1.25rem;">
+              <h3 style="color: #D84315; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.4rem;">
+                <span class="material-symbols-outlined">key</span> Gerador de Senhas Temporárias
+              </h3>
+              <p style="font-size: 0.85rem; color: #BF360C; margin-top: 4px; line-height: 1.5;">
+                A senha temporária é exclusiva para <strong>moradores já cadastrados que esqueceram a senha</strong>. No primeiro acesso com essa senha temporária, o morador será obrigado a cadastrar sua nova senha pessoal.
+              </p>
+
+              <button class="btn-primary" style="background: #D84315; color: white; font-weight: 700; margin-top: 0.85rem; padding: 0.8rem 1.2rem; font-size: 0.92rem;" onclick="AdminComponent.openSeletorSenhaTemporariaModal()">
+                <span class="material-symbols-outlined">key</span> 🔑 Selecionar Morador e Gerar Senha Temporária
+              </button>
+            </div>
+
+            <div style="font-size: 0.85rem; color: var(--text-muted); background: var(--bg-app); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+              <strong style="color: var(--primary-dark); display: block; margin-bottom: 4px;">📱 Canais de Entrega Instantânea:</strong>
+              1. Envio automático de notificação por e-mail.<br>
+              2. Botão de 1-clique para encaminhar a senha direto no **WhatsApp do Morador**.<br>
+              3. Opção de copiar para a área de transferência.
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- CONTEÚDO DA ABA 4: MORADORES AUTORIZADOS -->
+        ${this.activeTab === 'moradores' ? `
+          <div class="card-widget" style="padding: 1.25rem;">
+            <div class="card-header" style="margin-bottom: 1rem;">
+              <div class="card-title" style="font-size: 1.15rem; color: var(--primary-dark);">
+                <span class="material-symbols-outlined">groups</span> Moradores Com Acesso Autorizado (${aprovados.length})
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+              ${aprovados.map(m => {
+                const isAdmin = m.role === 'Administrador' || m.id === 'usr_sindico' || m.email.toLowerCase() === 'condominio.modern.life@gmail.com';
+                const isConselheiro = m.role === 'Conselheiro';
+
+                return `
+                  <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                      <div style="font-weight: 700; font-size: 1rem; color: var(--primary-dark); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                        ${m.nome}
+                        ${isAdmin ? '<span class="badge badge-info" style="font-size: 0.72rem;">Síndico Master</span>' : ''}
+                        ${isConselheiro ? '<span class="badge badge-success" style="font-size: 0.72rem; background: #D1E7DD; color: #0F5132;">👑 Conselheiro</span>' : ''}
+                        ${m.senhaTemporaria ? '<span class="badge badge-warning" style="font-size: 0.72rem;">🔑 Senha Temporária Pendente</span>' : ''}
+                      </div>
+                      <div style="font-size: 0.85rem; color: var(--text-main); margin-top: 2px;">
+                        <strong>Apto ${m.apartamento}</strong> &bull; 📧 ${m.email} &bull; 📱 ${m.telefone || 'Sem telefone'}
                       </div>
                     </div>
 
-                    <span class="badge ${o.status.includes('Respondido') ? 'badge-success' : 'badge-warning'}">
-                      ${o.status}
-                    </span>
-                  </div>
-
-                  <p style="font-size: 0.9rem; color: var(--text-main); background: white; padding: 0.75rem 0.85rem; border-radius: 6px; border: 1px solid var(--border-light); white-space: pre-line;">
-                    ${o.descricao}
-                  </p>
-
-                  <!-- Histórico de Respostas -->
-                  ${(o.respostas && o.respostas.length > 0) ? `
-                    <div style="display: flex; flex-direction: column; gap: 0.4rem; background: #E8F5E9; padding: 0.75rem; border-radius: 6px; border-left: 3px solid #2E6B42;">
-                      <strong style="font-size: 0.8rem; color: #1F4D30;">💬 Sua Resposta Enviada:</strong>
-                      ${o.respostas.map(r => `
-                        <div style="font-size: 0.85rem; color: var(--text-main);">
-                          <div style="font-weight: 700; font-size: 0.78rem; color: #2E6B42;">${r.autor} (${r.data}):</div>
-                          <div>${r.texto}</div>
-                        </div>
-                      `).join('')}
-                    </div>
-                  ` : ''}
-
-                  <!-- Botões de Ação para o Síndico -->
-                  <div style="display: flex; gap: 0.5rem; margin-top: 0.4rem; flex-wrap: wrap;">
-                    <input type="text" id="adminResp_${o.id}" class="form-control" placeholder="Escreva a resposta para o morador..." style="font-size: 0.85rem; flex: 1; min-width: 200px;">
-                    
-                    <button class="btn-primary btn-sm" style="background: #2E6B42; font-weight: 700;" onclick="AdminComponent.responderMensagemMorador('${o.id}')">
-                      <span class="material-symbols-outlined" style="font-size: 0.95rem;">send</span> Responder
-                    </button>
-
-                    ${o.categoria === 'Recuperação de Senha' && o.moradorEmail ? `
-                      <button class="btn-secondary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; font-weight: 700;" onclick="AdminComponent.gerarSenhaTemporariaPorEmail('${o.moradorEmail}')" title="Gerar Senha Temporária para o Morador que Esqueceu a Senha">
+                    <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+                      <button class="btn-primary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; font-weight: 700;" onclick="AdminComponent.gerarSenhaTemporariaModal('${m.id}')" title="Gerar Senha Temporária caso o Morador tenha esquecido a senha">
                         <span class="material-symbols-outlined" style="font-size: 0.95rem;">key</span> 🔑 Senha Temporária
                       </button>
-                    ` : ''}
-                  </div>
 
-                </div>
-              `).join('')}
-            </div>
-          `}
-        </div>
-
-        <!-- 4. Lista de Moradores Com Acesso Autorizado -->
-        <div class="card-widget" style="padding: 1.25rem;">
-          <div class="card-header" style="margin-bottom: 0.85rem;">
-            <div class="card-title">
-              <span class="material-symbols-outlined">groups</span> Moradores Com Acesso Autorizado (${aprovados.length})
-            </div>
-          </div>
-
-          <div style="display: flex; flex-direction: column; gap: 0.85rem;">
-            ${aprovados.map(m => {
-              const isAdmin = m.role === 'Administrador' || m.id === 'usr_sindico' || m.email.toLowerCase() === 'condominio.modern.life@gmail.com';
-              const isConselheiro = m.role === 'Conselheiro';
-
-              return `
-                <div style="background: var(--bg-app); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                  <div>
-                    <div style="font-weight: 700; font-size: 1rem; color: var(--primary-dark); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
-                      ${m.nome}
-                      ${isAdmin ? '<span class="badge badge-info" style="font-size: 0.72rem;">Síndico Master</span>' : ''}
-                      ${isConselheiro ? '<span class="badge badge-success" style="font-size: 0.72rem; background: #D1E7DD; color: #0F5132;">👑 Conselheiro</span>' : ''}
-                      ${m.senhaTemporaria ? '<span class="badge badge-warning" style="font-size: 0.72rem;">🔑 Senha Temporária Pendente</span>' : ''}
-                    </div>
-                    <div style="font-size: 0.85rem; color: var(--text-main); margin-top: 2px;">
-                      <strong>Apto ${m.apartamento}</strong> &bull; 📧 ${m.email} &bull; 📱 ${m.telefone || 'Sem telefone'}
-                    </div>
-                  </div>
-
-                  <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
-                    <button class="btn-primary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; font-weight: 700;" onclick="AdminComponent.gerarSenhaTemporariaModal('${m.id}')" title="Gerar Senha Temporária caso o Morador tenha esquecido a senha">
-                      <span class="material-symbols-outlined" style="font-size: 0.95rem;">key</span> 🔑 Senha Temporária
-                    </button>
-
-                    <button class="btn-outline-primary btn-sm" onclick="AdminComponent.openEditMoradorModal('${m.id}')" title="Editar dados do morador">
-                      <span class="material-symbols-outlined" style="font-size: 0.95rem;">edit</span> Editar
-                    </button>
-
-                    ${isAdmin ? `
-                      <span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-left: 4px;">
-                        🔒 Administrador
-                      </span>
-                    ` : `
-                      <button class="btn-secondary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2;" onclick="AdminComponent.recusarMorador('${m.id}', '${m.nome}')" title="Bloquear / Revogar acesso">
-                        <span class="material-symbols-outlined" style="font-size: 0.95rem;">block</span> Bloquear
+                      <button class="btn-outline-primary btn-sm" onclick="AdminComponent.openEditMoradorModal('${m.id}')" title="Editar dados do morador">
+                        <span class="material-symbols-outlined" style="font-size: 0.95rem;">edit</span> Editar
                       </button>
 
-                      <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.excluirMorador('${m.id}', '${m.nome}', '${m.apartamento}')" title="Excluir cadastro">
-                        <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir
-                      </button>
-                    `}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>
+                      ${isAdmin ? `
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-left: 4px;">
+                          🔒 Administrador Master
+                        </span>
+                      ` : `
+                        <button class="btn-secondary btn-sm" style="background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2;" onclick="AdminComponent.recusarMorador('${m.id}', '${m.nome}')" title="Bloquear / Revogar acesso">
+                          <span class="material-symbols-outlined" style="font-size: 0.95rem;">block</span> Bloquear
+                        </button>
 
-        <!-- 5. Cadastros Não Autorizados / Recusados -->
-        ${recusados.length > 0 ? `
+                        <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828;" onclick="AdminComponent.excluirMorador('${m.id}', '${m.nome}', '${m.apartamento}')" title="Excluir cadastro">
+                          <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir
+                        </button>
+                      `}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- CONTEÚDO DA ABA 5: CADASTROS BLOQUEADOS -->
+        ${this.activeTab === 'bloqueados' && recusados.length > 0 ? `
           <div class="card-widget" style="border: 1px solid #FFCDD2; padding: 1.25rem;">
             <div class="card-header" style="margin-bottom: 0.85rem;">
               <div class="card-title" style="color: #C62828;">
@@ -281,6 +348,11 @@ window.AdminComponent = {
 
       </div>
     `;
+  },
+
+  setTab(tabName) {
+    this.activeTab = tabName;
+    App.render();
   },
 
   aprovarMorador(id, nome, email, apartamento) {
