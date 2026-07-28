@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Suporte a Balancetes & Importação de Planilhas CSV/XLS/PDF com Atualização Automática da Prestação de Contas e Dashboard
+   Suporte a Balancetes, Prestação de Contas e Módulo de Gestão de Contratos com Leitor de PDF e Dashboard
    ---------------------------------------------------- */
 
 const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V35';
@@ -102,12 +102,55 @@ const INITIAL_DATA = {
   contratos: [
     {
       id: 'ctr_01',
-      empresa: 'Manutenção de Elevadores',
-      objeto: 'Manutenção Preventiva e Corretiva dos Elevadores da Torre',
+      empresa: 'OTIS Elevadores S/A',
+      categoria: 'Elevadores',
+      objeto: 'Manutenção Preventiva e Corretiva dos Elevadores Sociais e de Serviço da Torre',
       valorMensal: 1050.00,
+      valorTotalAnual: 12600.00,
       vigenciaInicio: '2025-01-01',
       vigenciaFim: '2027-01-01',
-      status: 'Ativo'
+      obrigacoes: 'Atendimento de emergência 24h em até 30 minutos, substituição de peças originais, vistoria preventiva mensal com laudo técnico e manutenção do sistema de resgate de passageiros.',
+      status: 'Ativo',
+      arquivoNome: 'CONTRATO_OTIS_ELEVADORES_2025.pdf'
+    },
+    {
+      id: 'ctr_02',
+      empresa: 'Grupo Servis Portaria & Segurança',
+      categoria: 'Portaria & Limpeza',
+      objeto: 'Prestação de Serviços Terceirizados de Portaria 24h, Ronda e Limpeza Predial',
+      valorMensal: 28933.49,
+      valorTotalAnual: 347201.88,
+      vigenciaInicio: '2024-09-01',
+      vigenciaFim: '2026-09-01',
+      obrigacoes: 'Escala 12x36, cobertura imediata de faltas em até 2h, auditoria mensal de crachás de visitantes, fornecimento de uniformes, EPIs e treinamento contínuo de segurança.',
+      status: 'A Vencer',
+      arquivoNome: 'CONTRATO_GRUPO_SERVIS_PORTARIA_2024.pdf'
+    },
+    {
+      id: 'ctr_03',
+      empresa: 'Aquaclean Piscinas & Conservação',
+      categoria: 'Piscina & Verde',
+      objeto: 'Manutenção Química e Física da Piscina e Conservação dos Jardins Comuns',
+      valorMensal: 800.00,
+      valorTotalAnual: 9600.00,
+      vigenciaInicio: '2025-03-01',
+      vigenciaFim: '2027-03-01',
+      obrigacoes: 'Tratamento de água com cloro 3x por semana, verificação de parâmetros de pH e alcalinidade, podas mensais de paisagismo e controle fitossanitário das plantas.',
+      status: 'Ativo',
+      arquivoNome: 'CONTRATO_AQUACLEAN_PISCINAS.pdf'
+    },
+    {
+      id: 'ctr_04',
+      empresa: 'Garantia Contábil & Gestão Condominial',
+      categoria: 'Administração & Contábil',
+      objeto: 'Assessoria Contábil, Jurídica, Cobrança de Inadimplência e Folha de Pagamento',
+      valorMensal: 2450.03,
+      valorTotalAnual: 29400.36,
+      vigenciaInicio: '2025-01-01',
+      vigenciaFim: '2027-01-01',
+      obrigacoes: 'Emissão de boletos bancários com código PIX, balancete mensal auditável, certidões negativas tributárias e representação jurídica em assembleias de moradores.',
+      status: 'Ativo',
+      arquivoNome: 'CONTRATO_GARANTIA_CONTABIL.pdf'
     }
   ],
 
@@ -329,6 +372,26 @@ class StoreEngine {
     }
   }
 
+  addContrato(contrato) {
+    if (!this.data.contratos) this.data.contratos = [];
+    const newCtr = {
+      id: 'ctr_' + Date.now(),
+      status: contrato.status || 'Ativo',
+      valorTotalAnual: (contrato.valorMensal || 0) * 12,
+      ...contrato
+    };
+    this.data.contratos.unshift(newCtr);
+    this.saveData();
+    return newCtr;
+  }
+
+  deleteContrato(id) {
+    if (!this.data.contratos) return false;
+    this.data.contratos = this.data.contratos.filter(c => c.id !== id);
+    this.saveData();
+    return true;
+  }
+
   addBalancete(balancete) {
     if (!this.data.balancetes) this.data.balancetes = [];
     const newBal = {
@@ -337,7 +400,6 @@ class StoreEngine {
       ...balancete
     };
 
-    // 1. Atualizar ou adicionar em Balancetes (sempre em 1º lugar)
     const existingIdx = this.data.balancetes.findIndex(b => b.mes === newBal.mes && b.ano === newBal.ano);
     if (existingIdx !== -1) {
       this.data.balancetes[existingIdx] = newBal;
@@ -345,7 +407,6 @@ class StoreEngine {
       this.data.balancetes.unshift(newBal);
     }
 
-    // 2. ATUALIZAR AUTOMATICAMENTE A PRESTAÇÃO DE CONTAS COM OS VALORES DA PLANILHA IMPORTADA
     if (!this.data.prestacaoContas) this.data.prestacaoContas = [];
     const pcIdx = this.data.prestacaoContas.findIndex(p => p.mes === newBal.mes && p.ano === newBal.ano);
     
@@ -376,7 +437,6 @@ class StoreEngine {
       this.data.prestacaoContas.unshift(newPc);
     }
 
-    // 3. Atualizar o ponteiro de exibição da Prestação de Contas para selecionar este novo mês automaticamente
     if (window.PrestacaoComponent) {
       window.PrestacaoComponent.selectedPeriodIndex = 0;
     }
