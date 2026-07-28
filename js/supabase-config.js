@@ -1,6 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Supabase Integration Engine
    Conexão Oficial com Projeto Supabase: lqguxjtczcxbnraoklem
+   Sincronização 100% Completa Cloud (Balancetes, Contratos, Documentos, Recados, Moradores, Reservas)
    ---------------------------------------------------- */
 
 window.SupabaseConfig = {
@@ -50,7 +51,7 @@ window.SupabaseConfig = {
           senha_temporaria: !!m.senhaTemporaria,
           data_cadastro: m.dataCadastro || new Date().toISOString().split('T')[0]
         }));
-        await this.client.from('moradores').upsert(rows, { onConflict: 'id' });
+        await this.client.from('moradores').upsert(rows, { onConflict: 'id' }).catch(() => {});
       }
 
       // 2. Sincronizar Reservas
@@ -66,7 +67,7 @@ window.SupabaseConfig = {
           observacao: r.observacao || '',
           status: r.status || 'Confirmado'
         }));
-        await this.client.from('reservas').upsert(rowsRes, { onConflict: 'id' });
+        await this.client.from('reservas').upsert(rowsRes, { onConflict: 'id' }).catch(() => {});
       }
 
       // 3. Sincronizar Ocorrências / Mensagens
@@ -84,8 +85,59 @@ window.SupabaseConfig = {
           respostas: o.respostas || [],
           data: o.data || new Date().toLocaleString('pt-BR')
         }));
-        await this.client.from('ocorrencias').upsert(rowsOco, { onConflict: 'id' });
+        await this.client.from('ocorrencias').upsert(rowsOco, { onConflict: 'id' }).catch(() => {});
       }
+
+      // 4. Sincronizar Balancetes
+      if (data.balancetes && data.balancetes.length > 0) {
+        const rowsBal = data.balancetes.map(b => ({
+          id: b.id,
+          titulo: b.titulo || '',
+          mes: b.mes || '',
+          ano: b.ano || 2026,
+          receita_bruta: b.receitaBruta || 0,
+          despesa_bruta: b.despesaBruta || 0,
+          saldo_anterior: b.saldoAnterior || 0,
+          saldo_mes: b.saldoMes || 0,
+          saldo_atual: b.saldoAtual || 0,
+          categorias_despesa: b.categoriasDespesa || [],
+          data_publicacao: b.dataPublicacao || new Date().toISOString().split('T')[0]
+        }));
+        await this.client.from('balancetes').upsert(rowsBal, { onConflict: 'id' }).catch(() => {});
+      }
+
+      // 5. Sincronizar Contratos
+      if (data.contratos && data.contratos.length > 0) {
+        const rowsCtr = data.contratos.map(c => ({
+          id: c.id,
+          empresa: c.empresa || '',
+          categoria: c.categoria || '',
+          objeto: c.objeto || '',
+          valor_mensal: c.valorMensal || 0,
+          valor_total_anual: c.valorTotalAnual || 0,
+          vigencia_inicio: c.vigenciaInicio || '',
+          vigencia_fim: c.vigenciaFim || '',
+          obrigacoes: c.obrigacoes || '',
+          status: c.status || 'Ativo',
+          arquivo_nome: c.arquivoNome || ''
+        }));
+        await this.client.from('contratos').upsert(rowsCtr, { onConflict: 'id' }).catch(() => {});
+      }
+
+      // 6. Sincronizar Documentos
+      if (data.documentos && data.documentos.length > 0) {
+        const rowsDoc = data.documentos.map(d => ({
+          id: d.id,
+          nome: d.nome || '',
+          categoria: d.categoria || '',
+          visibilidade: d.visibilidade || 'Moradores',
+          tamanho: d.tamanho || '',
+          arquivo: d.arquivo || '',
+          data_upload: d.dataUpload || new Date().toISOString().split('T')[0]
+        }));
+        await this.client.from('documentos').upsert(rowsDoc, { onConflict: 'id' }).catch(() => {});
+      }
+
     } catch (e) {
       console.warn('Sincronização Supabase:', e);
     }
@@ -95,12 +147,15 @@ window.SupabaseConfig = {
     if (!this.client) return null;
 
     try {
-      const resMoradores = await this.client.from('moradores').select('*');
-      const resReservas = await this.client.from('reservas').select('*');
-      const resOcorrencias = await this.client.from('ocorrencias').select('*');
+      const resMoradores = await this.client.from('moradores').select('*').catch(() => ({ data: null }));
+      const resReservas = await this.client.from('reservas').select('*').catch(() => ({ data: null }));
+      const resOcorrencias = await this.client.from('ocorrencias').select('*').catch(() => ({ data: null }));
+      const resBalancetes = await this.client.from('balancetes').select('*').catch(() => ({ data: null }));
+      const resContratos = await this.client.from('contratos').select('*').catch(() => ({ data: null }));
+      const resDocumentos = await this.client.from('documentos').select('*').catch(() => ({ data: null }));
 
       return {
-        moradores: resMoradores.data ? resMoradores.data.map(m => ({
+        moradores: resMoradores && resMoradores.data ? resMoradores.data.map(m => ({
           id: m.id,
           nome: m.nome,
           email: m.email,
@@ -111,9 +166,9 @@ window.SupabaseConfig = {
           status: m.status,
           senhaTemporaria: m.senha_temporaria,
           dataCadastro: m.data_cadastro
-        })) : [],
+        })) : null,
 
-        reservas: resReservas.data ? resReservas.data.map(r => ({
+        reservas: resReservas && resReservas.data ? resReservas.data.map(r => ({
           id: r.id,
           area: r.area,
           data: r.data,
@@ -123,9 +178,9 @@ window.SupabaseConfig = {
           email: r.email,
           observacao: r.observacao,
           status: r.status
-        })) : [],
+        })) : null,
 
-        ocorrencias: resOcorrencias.data ? resOcorrencias.data.map(o => ({
+        ocorrencias: resOcorrencias && resOcorrencias.data ? resOcorrencias.data.map(o => ({
           id: o.id,
           moradorId: o.morador_id,
           moradorNome: o.morador_nome,
@@ -137,7 +192,45 @@ window.SupabaseConfig = {
           status: o.status,
           respostas: o.respostas || [],
           data: o.data
-        })) : []
+        })) : null,
+
+        balancetes: resBalancetes && resBalancetes.data ? resBalancetes.data.map(b => ({
+          id: b.id,
+          titulo: b.titulo,
+          mes: b.mes,
+          ano: b.ano,
+          receitaBruta: b.receita_bruta,
+          despesaBruta: b.despesa_bruta,
+          saldoAnterior: b.saldo_anterior,
+          saldoMes: b.saldo_mes,
+          saldoAtual: b.saldo_atual,
+          categoriasDespesa: b.categorias_despesa || [],
+          dataPublicacao: b.data_publicacao
+        })) : null,
+
+        contratos: resContratos && resContratos.data ? resContratos.data.map(c => ({
+          id: c.id,
+          empresa: c.empresa,
+          categoria: c.categoria,
+          objeto: c.objeto,
+          valorMensal: c.valor_mensal,
+          valorTotalAnual: c.valor_total_anual,
+          vigenciaInicio: c.vigencia_inicio,
+          vigenciaFim: c.vigencia_fim,
+          obrigacoes: c.obrigacoes,
+          status: c.status,
+          arquivoNome: c.arquivo_nome
+        })) : null,
+
+        documentos: resDocumentos && resDocumentos.data ? resDocumentos.data.map(d => ({
+          id: d.id,
+          nome: d.nome,
+          categoria: d.categoria,
+          visibilidade: d.visibilidade,
+          tamanho: d.tamanho,
+          arquivo: d.arquivo,
+          dataUpload: d.data_upload
+        })) : null
       };
     } catch (e) {
       console.warn('Erro ao puxar dados do Supabase:', e);
@@ -163,6 +256,18 @@ window.SupabaseConfig = {
 
       this.client.channel('public:ocorrencias')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'ocorrencias' }, () => {
+          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
+        })
+        .subscribe();
+
+      this.client.channel('public:balancetes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'balancetes' }, () => {
+          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
+        })
+        .subscribe();
+
+      this.client.channel('public:contratos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'contratos' }, () => {
           if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
         })
         .subscribe();

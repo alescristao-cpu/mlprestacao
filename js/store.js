@@ -1,6 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
    Suporte a Balancetes, Prestação de Contas e Módulo de Gestão de Contratos com Leitor de PDF e Dashboard
+   Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos e Documentos)
    ---------------------------------------------------- */
 
 const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V35';
@@ -313,6 +314,7 @@ class StoreEngine {
         if (supaData) {
           let updatedSupa = false;
 
+          // 1. Moradores
           if (supaData.moradores && supaData.moradores.length > 0) {
             supaData.moradores.forEach(m => {
               const idx = this.data.moradores.findIndex(item => item.id === m.id || item.email.toLowerCase().trim() === m.email.toLowerCase().trim());
@@ -326,6 +328,7 @@ class StoreEngine {
             });
           }
 
+          // 2. Reservas
           if (supaData.reservas && supaData.reservas.length > 0) {
             if (!this.data.agendaReservas) this.data.agendaReservas = [];
             supaData.reservas.forEach(r => {
@@ -340,6 +343,7 @@ class StoreEngine {
             });
           }
 
+          // 3. Ocorrências
           if (supaData.ocorrencias && supaData.ocorrencias.length > 0) {
             if (!this.data.ocorrencias) this.data.ocorrencias = [];
             supaData.ocorrencias.forEach(o => {
@@ -349,6 +353,42 @@ class StoreEngine {
                 updatedSupa = true;
               } else if (this.data.ocorrencias[idx].status !== o.status || (o.respostas && o.respostas.length !== (this.data.ocorrencias[idx].respostas || []).length)) {
                 this.data.ocorrencias[idx] = o;
+                updatedSupa = true;
+              }
+            });
+          }
+
+          // 4. Balancetes
+          if (supaData.balancetes && supaData.balancetes.length > 0) {
+            if (!this.data.balancetes) this.data.balancetes = [];
+            supaData.balancetes.forEach(b => {
+              const idx = this.data.balancetes.findIndex(item => item.id === b.id || (item.mes === b.mes && item.ano === b.ano));
+              if (idx === -1) {
+                this.data.balancetes.unshift(b);
+                updatedSupa = true;
+              }
+            });
+          }
+
+          // 5. Contratos
+          if (supaData.contratos && supaData.contratos.length > 0) {
+            if (!this.data.contratos) this.data.contratos = [];
+            supaData.contratos.forEach(c => {
+              const idx = this.data.contratos.findIndex(item => item.id === c.id || item.empresa === c.empresa);
+              if (idx === -1) {
+                this.data.contratos.unshift(c);
+                updatedSupa = true;
+              }
+            });
+          }
+
+          // 6. Documentos
+          if (supaData.documentos && supaData.documentos.length > 0) {
+            if (!this.data.documentos) this.data.documentos = [];
+            supaData.documentos.forEach(d => {
+              const idx = this.data.documentos.findIndex(item => item.id === d.id);
+              if (idx === -1) {
+                this.data.documentos.unshift(d);
                 updatedSupa = true;
               }
             });
