@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Balancetes & Dashboard Financeiro
    Importador Inteligente 100% Automático de Planilhas (CSV, XLS, XLSX, PDF, DOC, TXT)
-   Preenchimento Automático dos Valores, Mês, Receita, Despesa e Categorias
+   Integração Direta: Importa a planilha -> Atualiza Balancetes -> Atualiza Prestação de Contas -> Atualiza Dashboard
    ---------------------------------------------------- */
 
 window.BalancetesComponent = {
@@ -78,7 +78,7 @@ window.BalancetesComponent = {
                 Balancetes &amp; Dashboard Financeiro
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.2rem; color: #94A3B8;">
-                Importação 100% automática de planilhas com gráficos clean e explicativos.
+                Importação 100% automática de planilhas com geração instantânea dos gráficos e da prestação de contas.
               </p>
             </div>
 
@@ -437,7 +437,7 @@ window.BalancetesComponent = {
               </div>
 
               <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 800; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; margin-top: 0.5rem; border: none; border-radius: 8px;">
-                <span class="material-symbols-outlined">rocket_launch</span> 🚀 Transformar em Dashboard Colorido
+                <span class="material-symbols-outlined">rocket_launch</span> 🚀 Importar Planilha e Atualizar Prestação &amp; Dashboards
               </button>
             </form>
 
@@ -488,20 +488,17 @@ window.BalancetesComponent = {
       const clean = line.toLowerCase().trim();
       if (!clean) return;
 
-      // 1. Detecção Automática do Mês
       mesesLista.forEach(m => {
         if (clean.includes(m.toLowerCase()) && !mesDetectado) {
           mesDetectado = m;
         }
       });
 
-      // 2. Detecção Automática do Ano (ex: 2025, 2026, 2027)
       const matchAno = line.match(/\b(202[4-9])\b/);
       if (matchAno && !anoDetectado) {
         anoDetectado = parseInt(matchAno[1], 10);
       }
 
-      // 3. Extração Numérica de Receita Bruta
       if (clean.includes('receita') || clean.includes('arrecadacao') || clean.includes('taxa de condominio') || clean.includes('total receitas') || clean.includes('entradas')) {
         const matches = line.match(/\d+[\.,]?\d*/g);
         if (matches && matches.length > 0) {
@@ -510,7 +507,6 @@ window.BalancetesComponent = {
         }
       }
 
-      // 4. Extração Numérica de Despesa Bruta
       if (clean.includes('despesa') || clean.includes('gasto') || clean.includes('total despesas') || clean.includes('saidas') || clean.includes('custos')) {
         const matches = line.match(/\d+[\.,]?\d*/g);
         if (matches && matches.length > 0) {
@@ -519,7 +515,6 @@ window.BalancetesComponent = {
         }
       }
 
-      // 5. Extração Numérica de Saldo Anterior
       if (clean.includes('saldo anterior') || clean.includes('saldo inicial') || clean.includes('caixa anterior')) {
         const matches = line.match(/\d+[\.,]?\d*/g);
         if (matches && matches.length > 0) {
@@ -528,7 +523,6 @@ window.BalancetesComponent = {
         }
       }
 
-      // 6. Extração Automática de Linhas de Categorias de Gastos
       const parts = line.split(/[,;\t]/);
       if (parts.length >= 2) {
         const catNome = parts[0].trim();
@@ -544,7 +538,6 @@ window.BalancetesComponent = {
       }
     });
 
-    // AUTO-PREENCHIMENTO AUTOMÁTICO DOS CAMPOS DO FORMULÁRIO DO MODAL
     if (mesDetectado) {
       const elMes = document.getElementById('importMes');
       if (elMes) elMes.value = mesDetectado;
@@ -575,14 +568,12 @@ window.BalancetesComponent = {
       if (elTit) elTit.value = `Balancete Extraído - ${fileName.replace(/\.[^/.]+$/, "")}`;
     }
 
-    // Guarda categorias extraídas para a submissão
     if (categoriasExtraidas.length > 0) {
       this.parsedImportData = {
         categoriasDespesa: categoriasExtraidas
       };
     }
 
-    // EXIBE BANNER VISUAL DE PREENCHIMENTO AUTOMÁTICO
     const banner = document.getElementById('balAutoFillBanner');
     if (banner) {
       banner.style.display = 'block';
@@ -590,7 +581,7 @@ window.BalancetesComponent = {
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <span class="material-symbols-outlined" style="color: #059669; font-size: 1.4rem;">auto_awesome</span>
           <div>
-            <strong>✨ Dados preenchidos automaticamente da planilha!</strong>
+            <strong>✨ Planilha processada! Dados preenchidos automaticamente.</strong>
             <div style="font-size: 0.8rem; margin-top: 2px;">
               Mês: <strong>${mesDetectado || 'Junho'}</strong> | Receita: <strong>R$ ${(receitaEncontrada || 92500).toLocaleString('pt-BR')}</strong> | Despesa: <strong>R$ ${(despesaEncontrada || 71200).toLocaleString('pt-BR')}</strong>
             </div>
@@ -612,7 +603,6 @@ window.BalancetesComponent = {
     const saldoMes = receitaBruta - despesaBruta;
     const saldoAtual = saldoAnterior + saldoMes;
 
-    // Utiliza categorias dinâmicas da planilha extraída se existirem, ou distribui automaticamente
     let categoriasDespesa = (this.parsedImportData && this.parsedImportData.categoriasDespesa && this.parsedImportData.categoriasDespesa.length > 0)
       ? this.parsedImportData.categoriasDespesa
       : [
@@ -626,6 +616,7 @@ window.BalancetesComponent = {
           { nome: 'Manutenção Predial & Conservação', valor: Math.round(despesaBruta * 0.15 * 100) / 100, corGradiente: 'linear-gradient(90deg, #10B981 0%, #34D399 100%)', corSolida: '#10B981' }
         ];
 
+    // Adiciona ao StoreEngine (que atualiza automaticamente Balancetes, Prestação de Contas e Dashboard em tempo real)
     const newBal = window.CondoStore.addBalancete({
       mes,
       ano,
@@ -639,7 +630,8 @@ window.BalancetesComponent = {
     });
 
     this.selectedBalanceteId = newBal.id;
-    App.showToast(`Balancete de ${mes}/${ano} preenchido e transformado em Dashboard Clean com sucesso!`, 'success');
+    App.showToast(`📊 Planilha importada com sucesso! Balancete, Prestação de Contas e Dashboard atualizados com os novos valores de ${mes}/${ano}.`, 'success');
+    
     document.getElementById('modalImportBalancete').remove();
     App.render();
   },

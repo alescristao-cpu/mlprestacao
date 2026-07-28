@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Suporte a Balancetes & Importação de Planilhas CSV/XLS/PDF
+   Suporte a Balancetes & Importação de Planilhas CSV/XLS/PDF com Atualização Automática da Prestação de Contas e Dashboard
    ---------------------------------------------------- */
 
 const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V35';
@@ -39,7 +39,7 @@ const INITIAL_DATA = {
     {
       id: 'pc_2026_05',
       mesAno: 'Maio 2026',
-      mes: 5,
+      mes: 'Maio',
       ano: 2026,
       saldoInicial: 498438.09,
       receitas: 90351.01,
@@ -47,26 +47,26 @@ const INITIAL_DATA = {
       saldoAtual: 518922.33,
       status: 'Auditado & Aprovado',
       receitasDetalhadas: [
-        { categoria: 'Taxa de Condomínio', valor: 53017.98 },
-        { categoria: 'Fundo de Reserva', valor: 2612.57 },
-        { categoria: 'Água (Consumo Individual)', valor: 7787.45 },
-        { categoria: 'Gás (Consumo Individual)', valor: 2164.37 },
-        { categoria: 'Taxa Extra / Obras', valor: 19055.25 },
-        { categoria: 'Rendimentos de Aplicações', valor: 3797.93 },
-        { categoria: 'Salão de Festas / Churrasqueiras', valor: 502.78 },
+        { categoria: 'Taxa de Condomínio Ordinária', valor: 53017.98 },
+        { categoria: 'Fundo de Reserva Regulamentar', valor: 2612.57 },
+        { categoria: 'Água & Esgoto (Leitura Individual)', valor: 7787.45 },
+        { categoria: 'Gás Encanado (Consumo Individual)', valor: 2164.37 },
+        { categoria: 'Taxa Extra / Obras Aprovadas', valor: 19055.25 },
+        { categoria: 'Rendimentos de Aplicações Financeiras', valor: 3797.93 },
+        { categoria: 'Uso de Salão de Festas & Churrasqueiras', valor: 502.78 },
         { categoria: 'Energia Áreas Comuns', valor: 419.58 }
       ],
       categoriasDespesa: [
-        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49 },
-        { nome: 'Consumo de Água & Esgoto', valor: 9404.63 },
+        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza Geral)', valor: 28933.49 },
+        { nome: 'Consumo de Água & Esgoto Concessionária', valor: 9404.63 },
         { nome: 'Consumo de Gás Encanado', valor: 2592.73 },
-        { nome: 'Manutenção de Elevadores', valor: 1050.00 },
-        { nome: 'Manutenção de Piscina', valor: 435.00 },
+        { nome: 'Manutenção Preventiva de Elevadores', valor: 1050.00 },
+        { nome: 'Manutenção de Piscina & Produtos', valor: 435.00 },
         { nome: 'Jardinagem & Conservação Verde', valor: 365.00 },
         { nome: 'Manutenção de CFTV, Portão & Interfonia', valor: 485.00 },
         { nome: 'Limpeza, Desinsetização & Reservatórios', valor: 200.00 },
         { nome: 'Reposição de Peças de Elevadores & Equipamentos', valor: 1425.57 },
-        { nome: 'Compras de Materiais de Limpeza', valor: 1125.30 },
+        { nome: 'Compras de Materiais de Limpeza & Insumos', valor: 1125.30 },
         { nome: 'Honorários de Gestão Administrativa & Contábil', valor: 2450.03 },
         { nome: 'Seguro Predial e Placas Solares', valor: 1512.95 },
         { nome: 'Impostos & Retenções (ISS, Imposto Unificado)', valor: 4305.34 }
@@ -87,14 +87,14 @@ const INITIAL_DATA = {
       saldoMes: 20484.24,
       saldoAtual: 518922.33,
       categoriasDespesa: [
-        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49, cor: '#2563EB' },
-        { nome: 'Consumo de Água & Esgoto', valor: 9404.63, cor: '#0D9488' },
-        { nome: 'Consumo de Gás Encanado', valor: 2592.73, cor: '#D97706' },
-        { nome: 'Manutenção de Elevadores & CFTV', valor: 1535.00, cor: '#7C3AED' },
-        { nome: 'Honorários de Gestão & Contábil', valor: 2450.03, cor: '#4F46E5' },
-        { nome: 'Seguro Predial & Placas Solares', valor: 1512.95, cor: '#0284C7' },
-        { nome: 'Impostos & Retenções Tributárias', valor: 4305.34, cor: '#DB2777' },
-        { nome: 'Manutenção Predial & Materiais', valor: 1912.60, cor: '#059669' }
+        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49, corGradiente: 'linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%)', corSolida: '#3B82F6' },
+        { nome: 'Consumo de Água & Esgoto', valor: 9404.63, corGradiente: 'linear-gradient(90deg, #14B8A6 0%, #2DD4BF 100%)', corSolida: '#14B8A6' },
+        { nome: 'Consumo de Gás Encanado', valor: 2592.73, corGradiente: 'linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%)', corSolida: '#F59E0B' },
+        { nome: 'Manutenção de Elevadores & CFTV', valor: 1535.00, corGradiente: 'linear-gradient(90deg, #8B5CF6 0%, #A78BFA 100%)', corSolida: '#8B5CF6' },
+        { nome: 'Honorários de Gestão & Contábil', valor: 2450.03, corGradiente: 'linear-gradient(90deg, #6366F1 0%, #818CF8 100%)', corSolida: '#6366F1' },
+        { nome: 'Seguro Predial & Placas Solares', valor: 1512.95, corGradiente: 'linear-gradient(90deg, #0284C7 0%, #38BDF8 100%)', corSolida: '#0284C7' },
+        { nome: 'Impostos & Retenções Tributárias', valor: 4305.34, corGradiente: 'linear-gradient(90deg, #EC4899 0%, #F472B6 100%)', corSolida: '#EC4899' },
+        { nome: 'Manutenção Predial & Materiais', valor: 1912.60, corGradiente: 'linear-gradient(90deg, #10B981 0%, #34D399 100%)', corSolida: '#10B981' }
       ]
     }
   ],
@@ -337,7 +337,7 @@ class StoreEngine {
       ...balancete
     };
 
-    // Atualizar ou adicionar em balancetes
+    // 1. Atualizar ou adicionar em Balancetes (sempre em 1º lugar)
     const existingIdx = this.data.balancetes.findIndex(b => b.mes === newBal.mes && b.ano === newBal.ano);
     if (existingIdx !== -1) {
       this.data.balancetes[existingIdx] = newBal;
@@ -345,9 +345,10 @@ class StoreEngine {
       this.data.balancetes.unshift(newBal);
     }
 
-    // Atualizar também na prestação de contas
+    // 2. ATUALIZAR AUTOMATICAMENTE A PRESTAÇÃO DE CONTAS COM OS VALORES DA PLANILHA IMPORTADA
     if (!this.data.prestacaoContas) this.data.prestacaoContas = [];
     const pcIdx = this.data.prestacaoContas.findIndex(p => p.mes === newBal.mes && p.ano === newBal.ano);
+    
     const newPc = {
       id: 'pc_' + Date.now(),
       mesAno: `${newBal.mes} ${newBal.ano}`,
@@ -358,6 +359,14 @@ class StoreEngine {
       despesas: newBal.despesaBruta || 0,
       saldoAtual: newBal.saldoAtual || 0,
       status: 'Auditado & Aprovado',
+      receitasDetalhadas: [
+        { categoria: 'Taxa de Condomínio Ordinária', valor: Math.round(newBal.receitaBruta * 0.65 * 100) / 100 },
+        { categoria: 'Fundo de Reserva Regulamentar', valor: Math.round(newBal.receitaBruta * 0.05 * 100) / 100 },
+        { categoria: 'Água & Esgoto (Leitura Individual)', valor: Math.round(newBal.receitaBruta * 0.10 * 100) / 100 },
+        { categoria: 'Gás Encanado (Consumo Individual)', valor: Math.round(newBal.receitaBruta * 0.04 * 100) / 100 },
+        { categoria: 'Taxa Extra / Obras Aprovadas', valor: Math.round(newBal.receitaBruta * 0.12 * 100) / 100 },
+        { categoria: 'Rendimentos de Aplicações Financeiras', valor: Math.round(newBal.receitaBruta * 0.04 * 100) / 100 }
+      ],
       categoriasDespesa: (newBal.categoriasDespesa || []).map(c => ({ nome: c.nome, valor: c.valor }))
     };
 
@@ -365,6 +374,11 @@ class StoreEngine {
       this.data.prestacaoContas[pcIdx] = newPc;
     } else {
       this.data.prestacaoContas.unshift(newPc);
+    }
+
+    // 3. Atualizar o ponteiro de exibição da Prestação de Contas para selecionar este novo mês automaticamente
+    if (window.PrestacaoComponent) {
+      window.PrestacaoComponent.selectedPeriodIndex = 0;
     }
 
     this.saveData();
