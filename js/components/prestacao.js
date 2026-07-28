@@ -1,5 +1,5 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Prestação de Contas & Dashboard Auditado
+   Modern Life Residence - Prestação de Contas & Dashboard
    Cores de Credibilidade & Confiança Institucional (Deep Navy, Emerald & Sapphire)
    Gráficos Financeiros com Alta Visibilidade & Nomes Genéricos Protegidos
    ---------------------------------------------------- */
@@ -75,14 +75,11 @@ window.PrestacaoComponent = {
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.35rem;">
         
-        <!-- Header de Alta Credibilidade (Navy & Emerald Gradient) -->
+        <!-- Header de Alta Credibilidade (Navy Gradient) -->
         <div class="card-widget" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
               <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.4rem;">
-                <span class="badge" style="background: #10B981; color: #000000; font-weight: 800; padding: 4px 10px; border-radius: 20px;">
-                  <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> AUDITADO &amp; APROVADO
-                </span>
                 <span class="badge" style="background: rgba(255,255,255,0.12); color: #94A3B8; font-weight: 600;">
                   GESTOR: SÍNDICO ALESSANDRO
                 </span>
@@ -233,7 +230,7 @@ window.PrestacaoComponent = {
                   <div style="font-size: 1.1rem; font-weight: 800; color: #059669;">R$ ${superavitMes.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
                   <div style="font-size: 0.8rem; font-weight: 700; color: #1E293B; margin-top: 2px;">Saldo Positivo Incorporado</div>
                   <div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">
-                    Contas rigorosamente em dia e aprovadas.
+                    Contas rigorosamente em dia.
                   </div>
                 </div>
 
@@ -375,7 +372,7 @@ window.PrestacaoComponent = {
                   <th style="color: #059669; font-weight: 700;">Receitas Total</th>
                   <th style="color: #E11D48; font-weight: 700;">Despesas Total</th>
                   <th style="color: #2563EB; font-weight: 700;">Saldo Acumulado Final</th>
-                  <th style="color: #475569; font-weight: 700;">Status da Auditoria</th>
+                  <th style="color: #475569; font-weight: 700;">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -386,7 +383,7 @@ window.PrestacaoComponent = {
                     <td style="color: #059669; font-weight: 700;">R$ ${p.receitas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td style="color: #E11D48; font-weight: 700;">R$ ${p.despesas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td><strong style="color: #2563EB;">R$ ${p.saldoAtual.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></td>
-                    <td><span class="badge badge-success" style="background: #DCFCE7; color: #166534; font-weight: 700;">${p.status}</span></td>
+                    <td><span class="badge badge-success" style="background: #DCFCE7; color: #166534; font-weight: 700;">${p.status || 'Concluído'}</span></td>
                   </tr>
                 `).join('')}
               </tbody>

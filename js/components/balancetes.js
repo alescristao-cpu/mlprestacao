@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Balancetes & Dashboard Financeiro
    Importador Inteligente 100% Automático de Planilhas (CSV, XLS, XLSX, PDF, DOC, TXT)
-   Sem Exibição de Banner Redundante de Confirmação no Modal
+   Integração Direta: Importa a planilha -> Atualiza Balancetes -> Atualiza Prestação de Contas -> Atualiza Dashboard
    ---------------------------------------------------- */
 
 window.BalancetesComponent = {
@@ -72,7 +72,7 @@ window.BalancetesComponent = {
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
               <span class="badge" style="background: rgba(255,255,255,0.12); color: #38BDF8; font-weight: 600; margin-bottom: 0.4rem; padding: 4px 10px; border-radius: 20px;">
-                <span class="material-symbols-outlined" style="font-size: 0.85rem;">bar_chart</span> DEMONSTRATIVO FINANCEIRO AUDITADO
+                <span class="material-symbols-outlined" style="font-size: 0.85rem;">bar_chart</span> DEMONSTRATIVO FINANCEIRO CONSOLIDADO
               </span>
               <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-top: 0.2rem; color: #F8FAFC;">
                 Balancetes &amp; Dashboard Financeiro
@@ -115,7 +115,7 @@ window.BalancetesComponent = {
               R$ ${receita.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
             </div>
             <div style="font-size: 0.75rem; color: #059669; margin-top: 4px; font-weight: 600;">
-              🟢 100% Arrecadação Aprovada
+              🟢 100% Arrecadação
             </div>
           </div>
 
@@ -289,7 +289,7 @@ window.BalancetesComponent = {
         <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
           <div class="card-header" style="margin-bottom: 1rem;">
             <div class="card-title" style="font-size: 1.15rem; color: #0F172A; font-weight: 700;">
-              <span class="material-symbols-outlined" style="color: var(--primary);">table_chart</span> Tabela Consolidada de Balancetes Auditados
+              <span class="material-symbols-outlined" style="color: var(--primary);">table_chart</span> Tabela Consolidada de Balancetes
             </div>
           </div>
 
@@ -298,7 +298,7 @@ window.BalancetesComponent = {
               <thead>
                 <tr style="background: #F8FAFC;">
                   <th style="color: #475569; font-weight: 700;">Competência / Mês</th>
-                  <th style="color: #475569; font-weight: 700;">Data da Auditoria</th>
+                  <th style="color: #475569; font-weight: 700;">Data da Publicação</th>
                   <th style="text-align: right; color: #059669; font-weight: 700;">Receita Bruta (R$)</th>
                   <th style="text-align: right; color: #E11D48; font-weight: 700;">Despesa Bruta (R$)</th>
                   <th style="text-align: right; color: #2563EB; font-weight: 700;">Resultado do Mês (R$)</th>
@@ -311,7 +311,7 @@ window.BalancetesComponent = {
                   <tr style="background: ${activeBal && activeBal.id === bal.id ? '#F0FDF4' : 'transparent'}; cursor: pointer; transition: background 0.2s ease;" onclick="BalancetesComponent.trocarCompetencia('${bal.id}')">
                     <td>
                       <strong style="color: #0F172A;">📅 ${bal.mes} ${bal.ano}</strong>
-                      <div style="font-size: 0.75rem; color: #64748B;">${bal.titulo || 'Balancete Aprovado pelo Conselho'}</div>
+                      <div style="font-size: 0.75rem; color: #64748B;">${bal.titulo || 'Balancete Consolidado'}</div>
                     </td>
                     <td style="color: #475569; font-weight: 500;">${bal.dataPublicacao || '31/05/2026'}</td>
                     <td style="text-align: right; color: #059669; font-weight: 700;">
@@ -428,7 +428,7 @@ window.BalancetesComponent = {
 
                 <div class="form-group">
                   <label class="form-label" style="font-weight: 700;">Título do Balancete</label>
-                  <input type="text" id="importTitulo" class="form-control" value="Demonstrativo Consolidado Auditado" required style="font-weight: 600;">
+                  <input type="text" id="importTitulo" class="form-control" value="Demonstrativo Consolidado" required style="font-weight: 600;">
                 </div>
               </div>
 
@@ -495,7 +495,6 @@ window.BalancetesComponent = {
         anoDetectado = parseInt(matchAno[1], 10);
       }
 
-      // Evita confundir anos de 4 dígitos (ex: 2025, 2026) com valores monetários
       if (clean.includes('receita') || clean.includes('arrecadacao') || clean.includes('taxa de condominio') || clean.includes('total receitas') || clean.includes('entradas')) {
         const matches = line.match(/\d+[\.,]?\d*/g);
         if (matches && matches.length > 0) {

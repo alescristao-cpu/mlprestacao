@@ -45,7 +45,7 @@ const INITIAL_DATA = {
       receitas: 90351.01,
       despesas: 69866.77,
       saldoAtual: 518922.33,
-      status: 'Auditado & Aprovado',
+      status: 'Aprovado',
       receitasDetalhadas: [
         { categoria: 'Taxa de Condomínio Ordinária', valor: 53017.98 },
         { categoria: 'Fundo de Reserva Regulamentar', valor: 2612.57 },
@@ -358,7 +358,7 @@ class StoreEngine {
       receitas: newBal.receitaBruta || 0,
       despesas: newBal.despesaBruta || 0,
       saldoAtual: newBal.saldoAtual || 0,
-      status: 'Auditado & Aprovado',
+      status: 'Aprovado',
       receitasDetalhadas: [
         { categoria: 'Taxa de Condomínio Ordinária', valor: Math.round(newBal.receitaBruta * 0.65 * 100) / 100 },
         { categoria: 'Fundo de Reserva Regulamentar', valor: Math.round(newBal.receitaBruta * 0.05 * 100) / 100 },
