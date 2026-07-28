@@ -240,9 +240,9 @@ window.App = {
 
     const titleMap = {
       dashboard: 'Página Inicial',
-      prestacao: 'Prestação de Contas, Balancetes & Contratos',
-      balancetes: 'Prestação de Contas, Balancetes & Contratos',
-      contratos: 'Prestação de Contas, Balancetes & Contratos',
+      prestacao: 'Contas',
+      balancetes: 'Contas',
+      contratos: 'Contas',
       transparencia: 'Portal de Transparência',
       documentos: 'Documentos & Manuais',
       recados: 'Mural de Recados',
