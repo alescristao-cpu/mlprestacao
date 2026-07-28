@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Supabase Integration Engine
    Conexão Oficial com Projeto Supabase: lqguxjtczcxbnraoklem
-   Sincronização 100% Completa Cloud (Balancetes, Contratos, Documentos, Recados, Moradores, Reservas)
+   Sincronização 100% Completa Cloud de Todos os Materiais e Arquivos do Site
    ---------------------------------------------------- */
 
 window.SupabaseConfig = {
@@ -138,6 +138,21 @@ window.SupabaseConfig = {
         await this.client.from('documentos').upsert(rowsDoc, { onConflict: 'id' }).catch(() => {});
       }
 
+      // 7. Sincronizar Recados
+      if (data.recados && data.recados.length > 0) {
+        const rowsRec = data.recados.map(r => ({
+          id: r.id,
+          titulo: r.titulo || '',
+          data: r.data || new Date().toISOString().split('T')[0],
+          autor: r.autor || 'Síndico',
+          visibilidade: r.visibilidade || 'Publico',
+          imagem: r.imagem || '',
+          resumo: r.resumo || '',
+          texto: r.texto || ''
+        }));
+        await this.client.from('recados').upsert(rowsRec, { onConflict: 'id' }).catch(() => {});
+      }
+
     } catch (e) {
       console.warn('Sincronização Supabase:', e);
     }
@@ -153,6 +168,7 @@ window.SupabaseConfig = {
       const resBalancetes = await this.client.from('balancetes').select('*').catch(() => ({ data: null }));
       const resContratos = await this.client.from('contratos').select('*').catch(() => ({ data: null }));
       const resDocumentos = await this.client.from('documentos').select('*').catch(() => ({ data: null }));
+      const resRecados = await this.client.from('recados').select('*').catch(() => ({ data: null }));
 
       return {
         moradores: resMoradores && resMoradores.data ? resMoradores.data.map(m => ({
@@ -230,6 +246,17 @@ window.SupabaseConfig = {
           tamanho: d.tamanho,
           arquivo: d.arquivo,
           dataUpload: d.data_upload
+        })) : null,
+
+        recados: resRecados && resRecados.data ? resRecados.data.map(r => ({
+          id: r.id,
+          titulo: r.titulo,
+          data: r.data,
+          autor: r.autor,
+          visibilidade: r.visibilidade,
+          imagem: r.imagem,
+          resumo: r.resumo,
+          texto: r.texto
         })) : null
       };
     } catch (e) {
@@ -268,6 +295,18 @@ window.SupabaseConfig = {
 
       this.client.channel('public:contratos')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'contratos' }, () => {
+          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
+        })
+        .subscribe();
+
+      this.client.channel('public:documentos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'documentos' }, () => {
+          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
+        })
+        .subscribe();
+
+      this.client.channel('public:recados')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'recados' }, () => {
           if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
         })
         .subscribe();
