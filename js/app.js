@@ -1,6 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Main Application Orchestrator
-   Exibição Exclusiva do Nome do Morador Logado no Cabeçalho Superior
+   Inicialização Instantânea sem Necessidade de Dupla Atualização
    ---------------------------------------------------- */
 
 window.App = {
@@ -11,7 +11,7 @@ window.App = {
       this.initTheme();
       this.checkEmailApprovalParams();
       this.bindEvents();
-      this.registerServiceWorker();
+      this.cleanStaleServiceWorkers();
       
       const user = window.CondoStore.currentUser;
       if (user && user.role === 'Portaria') {
@@ -81,6 +81,13 @@ window.App = {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         this.openGlobalSearchModal();
+      }
+    });
+
+    window.addEventListener('hashchange', () => {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && this.isValidRoute(hash) && hash !== this.currentRoute) {
+        this.navigateTo(hash);
       }
     });
 
@@ -189,7 +196,6 @@ window.App = {
     const user = window.CondoStore.currentUser;
     const isPortaria = user && user.role === 'Portaria';
 
-    // Oculta menus financeiros e administrativos para o Perfil da Portaria
     const portariaAllowedRoutes = ['portaria', 'utilidades', 'agenda'];
 
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -353,9 +359,13 @@ window.App = {
     setTimeout(() => toast.remove(), 4000);
   },
 
-  registerServiceWorker() {
+  cleanStaleServiceWorkers() {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.unregister();
+        }
+      }).catch(() => {});
     }
   }
 };
