@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
    Suporte a Balancetes, Prestação de Contas e Módulo de Gestão de Contratos com Leitor de PDF e Dashboard
-   Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos e Documentos)
+   Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos, Documentos e Recados com Imagens)
    ---------------------------------------------------- */
 
 const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V35';
@@ -389,6 +389,21 @@ class StoreEngine {
               const idx = this.data.documentos.findIndex(item => item.id === d.id);
               if (idx === -1) {
                 this.data.documentos.unshift(d);
+                updatedSupa = true;
+              }
+            });
+          }
+
+          // 7. Recados (Com imagens enviadas pelo celular/computador)
+          if (supaData.recados && supaData.recados.length > 0) {
+            if (!this.data.recados) this.data.recados = [];
+            supaData.recados.forEach(r => {
+              const idx = this.data.recados.findIndex(item => item.id === r.id);
+              if (idx === -1) {
+                this.data.recados.unshift(r);
+                updatedSupa = true;
+              } else if (this.data.recados[idx].titulo !== r.titulo || this.data.recados[idx].imagem !== r.imagem) {
+                this.data.recados[idx] = r;
                 updatedSupa = true;
               }
             });
