@@ -1,12 +1,12 @@
 /* ----------------------------------------------------
    Modern Life Residence - Utilidades, Reservas & 2ª Via de Boletos
-   Interface Organizada por Abas Dedicadas:
-   - Aba 1: 💳 2ª Via do Boleto & App Salão de Festas / Churrasqueira
-   - Aba 2: 🏊 Agendamento Automático de Piscina & Academia
+   Interface Organizada por Abas Dedicadas (Agendamento de Piscina & Academia em Destaque Principal):
+   - Aba 1 (PRINCIPAL): 🏊 Agendamento Automático de Piscina & Academia
+   - Aba 2: 💳 2ª Via do Boleto & App Salão de Festas / Churrasqueira
    ---------------------------------------------------- */
 
 window.UtilidadesComponent = {
-  activeTab: 'boleto_espacos', // 'boleto_espacos' ou 'piscina_academia'
+  activeTab: 'piscina_academia', // 'piscina_academia' é a aba principal padrão selecionada
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
@@ -86,33 +86,111 @@ window.UtilidadesComponent = {
                 <span class="material-symbols-outlined" style="font-size: 0.85rem;">build</span> UTILIDADES &amp; RESERVAS
               </span>
               <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700;">
-                Serviços, Boletos e Reservas do Condomínio
+                Serviços, Agendamentos e Boletos
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 2px;">
-                Emissão de 2ª via de boletos, reservas de salão de festas, churrasqueira, piscina e academia.
+                Agendamento de Piscina &amp; Academia, 2ª via de boletos e reserva de Salão de Festas e Churrasqueira.
               </p>
             </div>
           </div>
         </div>
 
-        <!-- SELETOR DE ABAS DEDICADAS -->
+        <!-- SELETOR DE ABAS DEDICADAS (AGENDAMENTO DE PISCINA & ACADEMIA EM 1º LUGAR COMO PRINCIPAL) -->
         <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; border-bottom: 2px solid var(--border-color); padding-bottom: 0.25rem;">
           
-          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.2rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; ${this.activeTab === 'boleto_espacos' ? 'background: #2E6B42; color: white; border: none; box-shadow: 0 4px 12px rgba(46,107,66,0.25);' : 'background: white; color: var(--primary-dark); border: 1px solid var(--border-color);'}" onclick="UtilidadesComponent.setTab('boleto_espacos')">
-            <span class="material-symbols-outlined" style="font-size: 1.15rem;">receipt_long</span> 
-            💳 2ª Via do Boleto &amp; App Salão de Festas / Churrasqueira
-          </button>
-
+          <!-- Aba Principal 1: Agendamento de Piscina & Academia -->
           <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.2rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; ${this.activeTab === 'piscina_academia' ? 'background: #2E6B42; color: white; border: none; box-shadow: 0 4px 12px rgba(46,107,66,0.25);' : 'background: white; color: var(--primary-dark); border: 1px solid var(--border-color);'}" onclick="UtilidadesComponent.setTab('piscina_academia')">
             <span class="material-symbols-outlined" style="font-size: 1.15rem;">pool</span> 
             🏊 Agendamento (Piscina &amp; Academia)
+          </button>
+
+          <!-- Aba 2: 2ª Via do Boleto & App Salão de Festas / Churrasqueira -->
+          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.2rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; ${this.activeTab === 'boleto_espacos' ? 'background: #2E6B42; color: white; border: none; box-shadow: 0 4px 12px rgba(46,107,66,0.25);' : 'background: white; color: var(--primary-dark); border: 1px solid var(--border-color);'}" onclick="UtilidadesComponent.setTab('boleto_espacos')">
+            <span class="material-symbols-outlined" style="font-size: 1.15rem;">receipt_long</span> 
+            💳 2ª Via do Boleto &amp; App Salão de Festas / Churrasqueira
           </button>
 
         </div>
 
         <!-- CONTEÚDO DAS ABAS -->
 
-        <!-- ABA 1: 2ª VIA DO BOLETO & APP SALÃO DE FESTAS E CHURRASQUEIRA -->
+        <!-- ABA PRINCIPAL 1: AGENDAMENTO AUTOMÁTICO DE PISCINA & ACADEMIA -->
+        ${this.activeTab === 'piscina_academia' ? `
+          <div class="card-widget" style="padding: 1.35rem;">
+            <div class="card-header" style="margin-bottom: 1rem;">
+              <div>
+                <div class="card-title" style="font-size: 1.15rem; color: var(--primary-dark);">
+                  <span class="material-symbols-outlined" style="color: var(--primary);">pool</span> Agendamento Principal (Piscina &amp; Academia)
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+                  🔒 <strong>Privacidade Individual Pessoal:</strong> ${isMasterAdmin ? 'Visão Master do Síndico (Acesso Completo).' : isPortaria ? 'Visão Operacional da Portaria.' : `Sua conta (${user.nome}) enxerga exclusivamente os seus próprios agendamentos. Os agendamentos de outros moradores estão ocultos.`}
+                </p>
+              </div>
+            </div>
+
+            <form onsubmit="UtilidadesComponent.submeterAgendamento(event)" style="margin-bottom: 1.5rem;">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">Selecione a Área Comum</label>
+                  <select id="resArea" class="form-control" required style="font-weight: 600;">
+                    <option value="Piscina">🏊 Piscina</option>
+                    <option value="Academia">🏋️ Academia</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">Data do Uso</label>
+                  <input type="date" id="resData" class="form-control" value="${hojeStr}" min="${hojeStr}" required style="font-weight: 600;">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">Horário Desejado (Slot de 1 Hora)</label>
+                  <select id="resHorario" class="form-control" required style="font-weight: 600;">
+                    ${hourlySlots.map(h => `<option value="${h}">${h}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem; font-weight: 700; background: #2E6B42;">
+                <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento
+              </button>
+            </form>
+
+            <h4 style="font-size: 0.98rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
+              ${isMasterAdmin ? 'Quadro Master de Agendamentos (Síndico Master)' : isPortaria ? 'Quadro Operacional de Agendamentos (Portaria)' : `Meus Agendamentos Pessoais (${user.nome})`}
+            </h4>
+            <div class="table-responsive">
+              <table class="custom-table" id="tableReservas">
+                <thead>
+                  <tr style="background: #F8FAFC;">
+                    <th style="color: #475569; font-weight: 700;">Data do Uso</th>
+                    <th style="color: #475569; font-weight: 700;">Horário</th>
+                    <th style="color: #475569; font-weight: 700;">Nome do Morador</th>
+                    <th style="color: #475569; font-weight: 700;">Unidade / Apto</th>
+                    <th style="color: #475569; font-weight: 700;">Área Reservada</th>
+                    <th style="color: #475569; font-weight: 700;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${reservasExistentes.length === 0 ? `
+                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum agendamento pessoal registrado para ${user.nome} nos últimos 30 dias.</td></tr>
+                  ` : reservasExistentes.map(r => `
+                    <tr>
+                      <td><strong>${r.data}</strong></td>
+                      <td><span class="badge badge-info">${r.horario}</span></td>
+                      <td>${r.moradorNome}</td>
+                      <td>Apto ${r.apartamento || 'Morador'}</td>
+                      <td><span class="badge badge-success">${r.area}</span></td>
+                      <td><span class="badge badge-success">✓ ${r.status || 'Confirmado'}</span></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ` : ''}
+
+        <!-- ABA 2: 2ª VIA DO BOLETO & APP SALÃO DE FESTAS E CHURRASQUEIRA -->
         ${this.activeTab === 'boleto_espacos' ? `
           <div style="display: flex; flex-direction: column; gap: 1.25rem;">
             
@@ -181,82 +259,6 @@ window.UtilidadesComponent = {
               </div>
             </div>
 
-          </div>
-        ` : ''}
-
-        <!-- ABA 2: AGENDAMENTO AUTOMÁTICO DE PISCINA & ACADEMIA -->
-        ${this.activeTab === 'piscina_academia' ? `
-          <div class="card-widget" style="padding: 1.35rem;">
-            <div class="card-header" style="margin-bottom: 1rem;">
-              <div>
-                <div class="card-title" style="font-size: 1.15rem; color: var(--primary-dark);">
-                  <span class="material-symbols-outlined" style="color: var(--primary);">pool</span> Agendamento (Piscina &amp; Academia)
-                </div>
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
-                  🔒 <strong>Privacidade Individual Pessoal:</strong> ${isMasterAdmin ? 'Visão Master do Síndico (Acesso Completo).' : isPortaria ? 'Visão Operacional da Portaria.' : `Sua conta (${user.nome}) enxerga exclusivamente os seus próprios agendamentos. Os agendamentos de outros moradores estão ocultos.`}
-                </p>
-              </div>
-            </div>
-
-            <form onsubmit="UtilidadesComponent.submeterAgendamento(event)" style="margin-bottom: 1.5rem;">
-              <div class="form-grid">
-                <div class="form-group">
-                  <label class="form-label" style="font-weight: 700;">Selecione a Área Comum</label>
-                  <select id="resArea" class="form-control" required style="font-weight: 600;">
-                    <option value="Piscina">🏊 Piscina</option>
-                    <option value="Academia">🏋️ Academia</option>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label" style="font-weight: 700;">Data do Uso</label>
-                  <input type="date" id="resData" class="form-control" value="${hojeStr}" min="${hojeStr}" required style="font-weight: 600;">
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label" style="font-weight: 700;">Horário Desejado (Slot de 1 Hora)</label>
-                  <select id="resHorario" class="form-control" required style="font-weight: 600;">
-                    ${hourlySlots.map(h => `<option value="${h}">${h}</option>`).join('')}
-                  </select>
-                </div>
-              </div>
-
-              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem; font-weight: 700; background: #2E6B42;">
-                <span class="material-symbols-outlined">event_available</span> Confirmar Agendamento
-              </button>
-            </form>
-
-            <h4 style="font-size: 0.98rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 0.75rem;">
-              ${isMasterAdmin ? 'Quadro Master de Agendamentos (Síndico Master)' : isPortaria ? 'Quadro Operacional de Agendamentos (Portaria)' : `Meus Agendamentos Pessoais (${user.nome})`}
-            </h4>
-            <div class="table-responsive">
-              <table class="custom-table" id="tableReservas">
-                <thead>
-                  <tr style="background: #F8FAFC;">
-                    <th style="color: #475569; font-weight: 700;">Data do Uso</th>
-                    <th style="color: #475569; font-weight: 700;">Horário</th>
-                    <th style="color: #475569; font-weight: 700;">Nome do Morador</th>
-                    <th style="color: #475569; font-weight: 700;">Unidade / Apto</th>
-                    <th style="color: #475569; font-weight: 700;">Área Reservada</th>
-                    <th style="color: #475569; font-weight: 700;">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${reservasExistentes.length === 0 ? `
-                    <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum agendamento pessoal registrado para ${user.nome} nos últimos 30 dias.</td></tr>
-                  ` : reservasExistentes.map(r => `
-                    <tr>
-                      <td><strong>${r.data}</strong></td>
-                      <td><span class="badge badge-info">${r.horario}</span></td>
-                      <td>${r.moradorNome}</td>
-                      <td>Apto ${r.apartamento || 'Morador'}</td>
-                      <td><span class="badge badge-success">${r.area}</span></td>
-                      <td><span class="badge badge-success">✓ ${r.status || 'Confirmado'}</span></td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
           </div>
         ` : ''}
 
