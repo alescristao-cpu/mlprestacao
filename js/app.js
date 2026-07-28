@@ -19,7 +19,15 @@ window.App = {
       } else {
         const hash = window.location.hash.replace('#', '');
         if (hash && this.isValidRoute(hash)) {
-          this.currentRoute = hash;
+          if (hash === 'balancetes' && window.PrestacaoComponent) {
+            window.PrestacaoComponent.activeTab = 'balancetes';
+            this.currentRoute = 'prestacao';
+          } else if (hash === 'contratos' && window.PrestacaoComponent) {
+            window.PrestacaoComponent.activeTab = 'contratos';
+            this.currentRoute = 'prestacao';
+          } else {
+            this.currentRoute = hash;
+          }
         }
       }
 
@@ -86,8 +94,16 @@ window.App = {
 
     window.addEventListener('hashchange', () => {
       const hash = window.location.hash.replace('#', '');
-      if (hash && this.isValidRoute(hash) && hash !== this.currentRoute) {
-        this.navigateTo(hash);
+      if (hash && this.isValidRoute(hash)) {
+        if (hash === 'balancetes' && window.PrestacaoComponent) {
+          window.PrestacaoComponent.activeTab = 'balancetes';
+          this.navigateTo('prestacao');
+        } else if (hash === 'contratos' && window.PrestacaoComponent) {
+          window.PrestacaoComponent.activeTab = 'contratos';
+          this.navigateTo('prestacao');
+        } else if (hash !== this.currentRoute) {
+          this.navigateTo(hash);
+        }
       }
     });
 
@@ -121,6 +137,14 @@ window.App = {
       route = 'dashboard';
     }
 
+    if (route === 'balancetes' && window.PrestacaoComponent) {
+      window.PrestacaoComponent.activeTab = 'balancetes';
+      route = 'prestacao';
+    } else if (route === 'contratos' && window.PrestacaoComponent) {
+      window.PrestacaoComponent.activeTab = 'contratos';
+      route = 'prestacao';
+    }
+
     this.currentRoute = route;
     window.location.hash = route;
 
@@ -149,13 +173,9 @@ window.App = {
         if (window.DashboardComponent) window.DashboardComponent.render(pageContainer, data);
         break;
       case 'prestacao':
-        if (window.PrestacaoComponent) window.PrestacaoComponent.render(pageContainer, data);
-        break;
       case 'balancetes':
-        if (window.BalancetesComponent) window.BalancetesComponent.render(pageContainer, data);
-        break;
       case 'contratos':
-        if (window.ContratosComponent) window.ContratosComponent.render(pageContainer, data);
+        if (window.PrestacaoComponent) window.PrestacaoComponent.render(pageContainer, data);
         break;
       case 'transparencia':
         if (window.TransparenciaComponent) window.TransparenciaComponent.render(pageContainer, data);
@@ -220,9 +240,9 @@ window.App = {
 
     const titleMap = {
       dashboard: 'Página Inicial',
-      prestacao: 'Prestação de Contas',
-      balancetes: 'Balancetes Consolidados',
-      contratos: 'Contratos Vigentes',
+      prestacao: 'Prestação de Contas, Balancetes & Contratos',
+      balancetes: 'Prestação de Contas, Balancetes & Contratos',
+      contratos: 'Prestação de Contas, Balancetes & Contratos',
       transparencia: 'Portal de Transparência',
       documentos: 'Documentos & Manuais',
       recados: 'Mural de Recados',

@@ -1,10 +1,10 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Prestação de Contas & Dashboard
-   Cores de Credibilidade & Confiança Institucional (Deep Navy, Emerald & Sapphire)
-   Gráficos Financeiros com Alta Visibilidade & Nomes Genéricos Protegidos
+   Modern Life Residence - Hub Unificado de Prestação de Contas, Balancetes & Contratos
+   Junção dos Menus: Prestação de Contas, Balancetes & Contratos com Navegação por Abas Limpas
    ---------------------------------------------------- */
 
 window.PrestacaoComponent = {
+  activeTab: 'prestacao', // 'prestacao', 'balancetes', 'contratos'
   selectedPeriodIndex: 0,
 
   render(container, data) {
@@ -18,10 +18,10 @@ window.PrestacaoComponent = {
             <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
           </div>
           <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
-            Acesso Restrito: Prestação de Contas Condominial
+            Acesso Restrito: Portal Financeiro &amp; Contratos
           </h2>
           <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem; line-height: 1.6;">
-            Por determinação da administração e regimento interno, os demonstrativos detalhados de receitas e despesas são exclusivos para moradores cadastrados e autorizados.
+            Por determinação da administração e convenção condominial, o acesso aos demonstrativos financeiros, balancetes e contratos de prestação de serviços é exclusivo para moradores cadastrados.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
             <span class="material-symbols-outlined">login</span> Entrar / Cadastrar para Liberar Acesso
@@ -31,6 +31,58 @@ window.PrestacaoComponent = {
       return;
     }
 
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+        
+        <!-- Bar de Abas Unificadas da Gestão Financeira -->
+        <div class="card-widget" style="padding: 0.5rem; background: var(--bg-surface); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn-secondary ${this.activeTab === 'prestacao' ? 'btn-primary' : ''}" 
+                    style="flex: 1; min-width: 180px; justify-content: center; padding: 0.75rem 1rem; font-weight: 700; border-radius: 8px;"
+                    onclick="PrestacaoComponent.trocarAba('prestacao')">
+              <span class="material-symbols-outlined">analytics</span> 📑 Prestação de Contas
+            </button>
+
+            <button class="btn-secondary ${this.activeTab === 'balancetes' ? 'btn-primary' : ''}" 
+                    style="flex: 1; min-width: 180px; justify-content: center; padding: 0.75rem 1rem; font-weight: 700; border-radius: 8px;"
+                    onclick="PrestacaoComponent.trocarAba('balancetes')">
+              <span class="material-symbols-outlined">account_balance_wallet</span> 📊 Balancetes &amp; Planilhas
+            </button>
+
+            <button class="btn-secondary ${this.activeTab === 'contratos' ? 'btn-primary' : ''}" 
+                    style="flex: 1; min-width: 180px; justify-content: center; padding: 0.75rem 1rem; font-weight: 700; border-radius: 8px;"
+                    onclick="PrestacaoComponent.trocarAba('contratos')">
+              <span class="material-symbols-outlined">description</span> 📄 Contratos &amp; Terceirizações
+            </button>
+          </div>
+        </div>
+
+        <!-- Container do Conteúdo da Aba Ativa -->
+        <div id="unifiedTabContent"></div>
+
+      </div>
+    `;
+
+    const tabContentEl = document.getElementById('unifiedTabContent');
+    if (!tabContentEl) return;
+
+    if (this.activeTab === 'balancetes') {
+      if (window.BalancetesComponent) window.BalancetesComponent.render(tabContentEl, data);
+    } else if (this.activeTab === 'contratos') {
+      if (window.ContratosComponent) window.ContratosComponent.render(tabContentEl, data);
+    } else {
+      this.renderPrestacaoInterna(tabContentEl, data);
+    }
+  },
+
+  trocarAba(tab) {
+    this.activeTab = tab;
+    App.currentRoute = 'prestacao';
+    window.location.hash = tab === 'prestacao' ? 'prestacao' : tab;
+    App.render();
+  },
+
+  renderPrestacaoInterna(container, data) {
     const prestacoes = data.prestacaoContas || [];
     const atual = prestacoes[this.selectedPeriodIndex] || prestacoes[0] || {};
 
@@ -75,15 +127,13 @@ window.PrestacaoComponent = {
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.35rem;">
         
-        <!-- Header de Alta Credibilidade (Navy Gradient) -->
+        <!-- Header da Prestação de Contas -->
         <div class="card-widget" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
-              <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.4rem;">
-                <span class="badge" style="background: rgba(255,255,255,0.12); color: #94A3B8; font-weight: 600;">
-                  GESTOR: SÍNDICO ALESSANDRO
-                </span>
-              </div>
+              <span class="badge" style="background: rgba(255,255,255,0.12); color: #94A3B8; font-weight: 600; margin-bottom: 0.4rem;">
+                GESTOR: SÍNDICO ALESSANDRO
+              </span>
 
               <h2 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700; color: #F8FAFC;">
                 Prestação de Contas &amp; Transparência Condominial
@@ -106,7 +156,7 @@ window.PrestacaoComponent = {
           </div>
         </div>
 
-        <!-- 4 KPI Cards Institucionais de Credibilidade -->
+        <!-- 4 KPI Cards Institucionais -->
         <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
           
           <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-top: 4px solid #10B981; padding: 1.1rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
@@ -174,7 +224,7 @@ window.PrestacaoComponent = {
         <!-- GRÁFICOS FINANCEIROS DE ALTA CREDIBILIDADE (2 COLUNAS) -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.25rem;">
           
-          <!-- Gráfico 1: Indicador de Saúde Orçamentária com Anel SVG & Barras de Confiança -->
+          <!-- Gráfico 1: Indicador de Saúde Orçamentária com Anel SVG -->
           <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
@@ -239,7 +289,7 @@ window.PrestacaoComponent = {
             </div>
           </div>
 
-          <!-- Gráfico 2: Composição Visual Auditada das Despesas (Cores de Credibilidade) -->
+          <!-- Gráfico 2: Composição Visual das Despesas -->
           <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
               <h3 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #0F172A;">
@@ -290,7 +340,7 @@ window.PrestacaoComponent = {
 
         </div>
 
-        <!-- Tabelas de Detalhamento das Receitas e Despesas (Nomes Genericos Protegidos) -->
+        <!-- Tabelas de Detalhamento das Receitas e Despesas -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.35rem;">
           
           <!-- Tabela de Receitas -->
