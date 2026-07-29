@@ -319,5 +319,26 @@ window.SupabaseConfig = {
       if (id) await this.client.from('moradores').delete().eq('id', id).catch(() => {});
       if (email) await this.client.from('moradores').delete().eq('email', email.toLowerCase().trim()).catch(() => {});
     } catch (err) {}
+  },
+
+  async deleteContratoFromSupabase(id) {
+    if (!this.client || !id) return;
+    try {
+      await this.client.from('contratos').delete().eq('id', id).catch(() => {});
+    } catch (err) {}
+  },
+
+  async deleteBalanceteFromSupabase(id) {
+    if (!this.client || !id) return;
+    try {
+      await this.client.from('balancetes').delete().eq('id', id).catch(() => {});
+    } catch (err) {}
+  },
+
+  async deleteDocumentoFromSupabase(id) {
+    if (!this.client || !id) return;
+    try {
+      await this.client.from('documentos').delete().eq('id', id).catch(() => {});
+    } catch (err) {}
   }
 };

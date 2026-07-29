@@ -1,11 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Restauração do Morador Pedro Ferro + Suporte Aos E-mails do Síndico
-   Exclusão Definitiva de Moradores Selecionados pelo Síndico
+   Garantia Total de Preservação de Documentos Anexados no Supabase Cloud
+   Sincronização 100% Automática de Arquivos, Contratos, Balancetes e Recados
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V43';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V43';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V44';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V44';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
 
 const INITIAL_DATA = {
@@ -271,7 +271,6 @@ class StoreEngine {
   }
 
   isMoradorDeleted(id, email) {
-    // Exceção de restauração para Pedro Ferro
     if (id === 'usr_pedro_ferro' || (email && email.toLowerCase().includes('pedro.ferro'))) return false;
 
     const list = this.getDeletedMoradoresList();
@@ -344,8 +343,9 @@ class StoreEngine {
       if (raw) loadedData = JSON.parse(raw);
     } catch (e) {}
 
-    // 2. Escanear e restaurar moradores de TODAS as chaves salvas no navegador
+    // 2. Escanear e restaurar moradores, documentos, contratos e balancetes de TODAS as chaves salvas no navegador
     const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V43',
       'MODERN_LIFE_CONDO_DATA_V42',
       'MODERN_LIFE_CONDO_DATA_V41',
       'MODERN_LIFE_CONDO_DATA_V40',
@@ -368,28 +368,70 @@ class StoreEngine {
     }
 
     if (!loadedData.moradores) loadedData.moradores = [];
+    if (!loadedData.documentos) loadedData.documentos = [];
+    if (!loadedData.contratos) loadedData.contratos = [];
+    if (!loadedData.balancetes) loadedData.balancetes = [];
 
     legacyKeys.forEach(k => {
       try {
         const rawOld = localStorage.getItem(k);
         if (rawOld) {
           const old = JSON.parse(rawOld);
-          if (old && old.moradores && old.moradores.length > 0) {
-            old.moradores.forEach(m => {
-              if (m && m.email && !mockFakeIds.includes(m.id) && !this.isMoradorDeleted(m.id, m.email)) {
-                const normEmail = m.email.toLowerCase().trim();
-                const exists = loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === normEmail);
-                if (!exists) {
-                  loadedData.moradores.push(m);
+          if (old) {
+            // Mesclar Moradores
+            if (old.moradores && old.moradores.length > 0) {
+              old.moradores.forEach(m => {
+                if (m && m.email && !mockFakeIds.includes(m.id) && !this.isMoradorDeleted(m.id, m.email)) {
+                  const normEmail = m.email.toLowerCase().trim();
+                  const exists = loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === normEmail);
+                  if (!exists) {
+                    loadedData.moradores.push(m);
+                  }
                 }
-              }
-            });
+              });
+            }
+
+            // Mesclar Documentos Anexados
+            if (old.documentos && old.documentos.length > 0) {
+              old.documentos.forEach(d => {
+                if (d && d.id && d.id !== 'doc_sistema_md') {
+                  const exists = loadedData.documentos.some(x => x.id === d.id);
+                  if (!exists) {
+                    loadedData.documentos.push(d);
+                  }
+                }
+              });
+            }
+
+            // Mesclar Contratos
+            if (old.contratos && old.contratos.length > 0) {
+              old.contratos.forEach(c => {
+                if (c && c.id) {
+                  const exists = loadedData.contratos.some(x => x.id === c.id);
+                  if (!exists) {
+                    loadedData.contratos.push(c);
+                  }
+                }
+              });
+            }
+
+            // Mesclar Balancetes
+            if (old.balancetes && old.balancetes.length > 0) {
+              old.balancetes.forEach(b => {
+                if (b && b.id) {
+                  const exists = loadedData.balancetes.some(x => x.id === b.id);
+                  if (!exists) {
+                    loadedData.balancetes.push(b);
+                  }
+                }
+              });
+            }
           }
         }
       } catch (err) {}
     });
 
-    // Purga estrita de moradores deletados pelo Síndico ou de cadastros fictícios de teste
+    // Purga de moradores excluídos e fictícios
     loadedData.moradores = loadedData.moradores.filter(m => {
       if (!m || !m.email) return false;
       if (mockFakeIds.includes(m.id)) return false;
@@ -397,7 +439,7 @@ class StoreEngine {
       return true;
     });
 
-    // Garantir moradores iniciais e restored morador (Pedro Ferro, Síndico, Portaria)
+    // Garantir moradores padrão
     INITIAL_DATA.moradores.forEach(m => {
       if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
         loadedData.moradores.push(m);
@@ -481,7 +523,7 @@ class StoreEngine {
           let updatedSupa = false;
           const mockFakeIds = ['usr_morador_01', 'usr_morador_02', 'usr_morador_03', 'usr_morador_04', 'usr_morador_05'];
 
-          // 1. Moradores - Respeitando estritamente a lista de excluídos
+          // 1. Moradores
           if (supaData.moradores && supaData.moradores.length > 0) {
             supaData.moradores.forEach(m => {
               if (!m || !m.email || mockFakeIds.includes(m.id) || this.isMoradorDeleted(m.id, m.email)) return;
@@ -551,13 +593,16 @@ class StoreEngine {
             });
           }
 
-          // 6. Documentos
+          // 6. Documentos Anexados (Preservando conteúdo Base64 / URL)
           if (supaData.documentos && supaData.documentos.length > 0) {
             if (!this.data.documentos) this.data.documentos = [];
             supaData.documentos.forEach(d => {
               const idx = this.data.documentos.findIndex(item => item.id === d.id);
               if (idx === -1) {
                 this.data.documentos.unshift(d);
+                updatedSupa = true;
+              } else if (d.arquivo && d.arquivo !== this.data.documentos[idx].arquivo) {
+                this.data.documentos[idx].arquivo = d.arquivo;
                 updatedSupa = true;
               }
             });
@@ -613,6 +658,9 @@ class StoreEngine {
     if (!this.data.contratos) return false;
     this.data.contratos = this.data.contratos.filter(c => c.id !== id);
     this.saveData();
+    if (window.SupabaseConfig && window.SupabaseConfig.deleteContratoFromSupabase) {
+      window.SupabaseConfig.deleteContratoFromSupabase(id);
+    }
     return true;
   }
 
@@ -673,6 +721,9 @@ class StoreEngine {
     if (!this.data.balancetes) return false;
     this.data.balancetes = this.data.balancetes.filter(b => b.id !== id);
     this.saveData();
+    if (window.SupabaseConfig && window.SupabaseConfig.deleteBalanceteFromSupabase) {
+      window.SupabaseConfig.deleteBalanceteFromSupabase(id);
+    }
     return true;
   }
 
@@ -695,6 +746,9 @@ class StoreEngine {
     if (!this.data.documentos) return false;
     this.data.documentos = this.data.documentos.filter(d => d.id !== id);
     this.saveData();
+    if (window.SupabaseConfig && window.SupabaseConfig.deleteDocumentoFromSupabase) {
+      window.SupabaseConfig.deleteDocumentoFromSupabase(id);
+    }
     return true;
   }
 
@@ -808,21 +862,14 @@ class StoreEngine {
     const deleteId = target ? target.id : id;
     const deleteEmail = target ? (target.email || '').toLowerCase().trim() : (typeof id === 'string' && id.includes('@') ? id.toLowerCase().trim() : '');
 
-    // 1. Grava no registro de exclusão permanente do navegador
     this.registerDeletedMorador(deleteId, deleteEmail);
-
-    // 2. Remove da lista local
     this.data.moradores = this.data.moradores.filter(m => m.id !== deleteId && (m.email ? m.email.toLowerCase().trim() !== deleteId : true));
-
-    // 3. Persiste no localStorage
     this.saveData();
 
-    // 4. Deleta da nuvem Supabase
     if (window.SupabaseConfig && window.SupabaseConfig.deleteMoradorFromSupabase) {
       window.SupabaseConfig.deleteMoradorFromSupabase(deleteId, deleteEmail);
     }
 
-    // 5. Se o morador excluído for quem estava logado, desloga
     if (this.currentUser && (this.currentUser.id === deleteId || (deleteEmail && this.currentUser.email && this.currentUser.email.toLowerCase() === deleteEmail))) {
       this.setCurrentUser(null);
     }
