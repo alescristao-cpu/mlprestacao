@@ -5,6 +5,8 @@
 
 window.AuthComponent = {
   activeTab: 'login',
+  loginStep: 1,
+  verifiedMorador: null,
 
   renderAuthModal() {
     const existing = document.getElementById('modalAuth');
@@ -54,6 +56,10 @@ window.AuthComponent = {
 
   switchTab(tab) {
     this.activeTab = tab;
+    if (tab === 'login') {
+      this.loginStep = 1;
+      this.verifiedMorador = null;
+    }
     const body = document.querySelector('#modalAuth .modal-body');
     if (body) {
       body.innerHTML = this.renderAuthTabs();
@@ -61,29 +67,174 @@ window.AuthComponent = {
   },
 
   renderLoginForm() {
+    if (this.loginStep === 1) {
+      return `
+        <!-- Passo 1: Digitar o E-mail de Acesso -->
+        <form id="formLoginStep1" onsubmit="event.preventDefault(); AuthComponent.verificarEmailLogin();" style="margin-top: 0.5rem;">
+          <div class="form-group">
+            <label class="form-label" style="font-weight: 700; color: var(--primary-dark); font-size: 0.95rem;">Digite o seu E-mail de Acesso</label>
+            <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required autocomplete="email" style="font-size: 1.05rem; padding: 0.85rem; font-weight: 600;" value="${this.verifiedMorador ? this.verifiedMorador.email : ''}">
+          </div>
+
+          <div id="loginEmailFeedback" style="margin-top: 0.5rem; margin-bottom: 0.75rem;"></div>
+
+          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.9rem; font-weight: 800; font-size: 1rem; border-radius: 8px; margin-top: 0.5rem; background: var(--primary-dark); color: white;">
+            <span>AVANÇAR</span> <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </form>
+      `;
+    }
+
+    // Passo 2: E-mail Confirmado e Autorizado -> Digitar Senha
+    const m = this.verifiedMorador;
     return `
-      <!-- Formulário: Entrar com E-mail Cadastrado e Senha -->
-      <form id="formLogin" onsubmit="event.preventDefault(); AuthComponent.handleLogin();" style="margin-top: 0.5rem;">
-        <div class="form-group">
-          <label class="form-label" style="font-weight: 700;">E-mail Cadastrado do Morador</label>
-          <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required autocomplete="email">
+      <!-- Passo 2: Confirmação do Morador e Digitação da Senha -->
+      <form id="formLoginStep2" onsubmit="event.preventDefault(); AuthComponent.handleLogin();" style="margin-top: 0.5rem;">
+        
+        <div style="background: #E8F5E9; border: 1px solid #C8E6C9; padding: 0.85rem 1rem; border-radius: 8px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 800; color: #1F4D30; font-size: 0.95rem;">
+              👤 ${m ? m.nome : 'Morador'} (Apto ${m ? m.apartamento : ''})
+            </div>
+            <div style="font-size: 0.82rem; color: #2E6B42;">
+              📧 ${m ? m.email : ''}
+            </div>
+          </div>
+
+          <button type="button" onclick="AuthComponent.voltarPasso1Email()" style="background: white; border: 1px solid #A5D6A7; color: #2E6B42; font-size: 0.78rem; font-weight: 700; padding: 0.4rem 0.75rem; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.2rem;">
+            <span class="material-symbols-outlined" style="font-size: 0.95rem;">edit</span> Trocar E-mail
+          </button>
         </div>
 
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-            <label class="form-label" style="margin-bottom: 0; font-weight: 700;">Sua Senha de Acesso</label>
+            <label class="form-label" style="margin-bottom: 0; font-weight: 700; color: var(--primary-dark);">Digite sua Senha de Acesso</label>
             <a href="javascript:void(0)" onclick="AuthComponent.openEsqueciSenhaModal()" style="font-size: 0.78rem; color: var(--primary); font-weight: 600; text-decoration: none;">
               🔑 Esqueci minha senha
             </a>
           </div>
-          <input type="password" id="loginSenha" class="form-control" placeholder="Digite sua senha de acesso" required autocomplete="current-password">
+          <input type="password" id="loginSenha" class="form-control" placeholder="Digite sua senha de acesso" required autocomplete="current-password" style="font-size: 1.05rem; padding: 0.85rem; font-weight: 600;">
         </div>
 
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.9rem; font-weight: 700; font-size: 1rem; border-radius: 8px; margin-top: 0.75rem;" onclick="AuthComponent.handleLogin()">
-          <span class="material-symbols-outlined">login</span> Entrar com E-mail e Senha
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.9rem; font-weight: 800; font-size: 1.05rem; border-radius: 8px; margin-top: 0.75rem; background: linear-gradient(135deg, #2E6B42 0%, #1F4D30 100%); color: white;">
+          <span class="material-symbols-outlined">login</span> ENTRAR NO PORTAL
         </button>
       </form>
     `;
+  },
+
+  verificarEmailLogin() {
+    const emailInput = document.getElementById('loginEmail');
+    if (!emailInput) return;
+    const email = emailInput.value.trim().toLowerCase();
+    const feedbackDiv = document.getElementById('loginEmailFeedback');
+
+    if (!email) {
+      App.showToast('⚠️ Por favor, digite o seu e-mail de acesso.', 'error');
+      return;
+    }
+
+    const dataMoradores = (window.CondoStore && window.CondoStore.data && window.CondoStore.data.moradores) 
+      ? window.CondoStore.data.moradores 
+      : [];
+
+    let morador = dataMoradores.find(m => m && m.email && m.email.toLowerCase().trim() === email);
+
+    // Fallback mestre para o Síndico Administrador
+    if (!morador && email === 'condominio.modern.life@gmail.com') {
+      morador = {
+        id: 'usr_sindico',
+        nome: 'Alessandro Cristiano da Silva',
+        apartamento: 'Administração',
+        cpf: 'Cadastrado no Portal',
+        telefone: '27992516970',
+        email: 'condominio.modern.life@gmail.com',
+        senha: 'ModernLife2026',
+        status: 'Aprovado',
+        role: 'Administrador',
+        dataCadastro: '2025-01-10'
+      };
+    }
+
+    if (!morador) {
+      if (feedbackDiv) {
+        feedbackDiv.innerHTML = `
+          <div style="background: #FFEBEE; border: 1px solid #FFCDD2; padding: 1rem; border-radius: 8px; margin-top: 0.5rem; text-align: center;">
+            <div style="font-weight: 800; color: #C62828; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+              <span class="material-symbols-outlined">no_accounts</span> E-mail Não Cadastrado
+            </div>
+            <div style="font-size: 0.84rem; color: #B71C1C; margin-bottom: 0.85rem; line-height: 1.4;">
+              O e-mail <strong>${email}</strong> ainda não está cadastrado no portal. Por favor, faça o seu cadastro de morador para solicitar acesso ao Síndico.
+            </div>
+            <button type="button" onclick="AuthComponent.irParaCadastroComEmail('${email}')" style="background: #C62828; color: white; border: none; font-weight: 800; font-size: 0.88rem; padding: 0.75rem 1.25rem; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; box-shadow: 0 4px 10px rgba(198,40,40,0.25);">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem;">person_add</span> 📝 Criar Meu Cadastro Agora
+            </button>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    if (morador.status === 'Pendente' || morador.status === 'Em Análise') {
+      if (feedbackDiv) {
+        feedbackDiv.innerHTML = `
+          <div style="background: #FFF3E0; border: 1px solid #FFE0B2; padding: 1rem; border-radius: 8px; margin-top: 0.5rem; text-align: center;">
+            <div style="font-weight: 800; color: #E65100; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+              <span class="material-symbols-outlined">hourglass_top</span> Cadastro em Análise pelo Síndico
+            </div>
+            <div style="font-size: 0.84rem; color: #D84315; line-height: 1.4;">
+              Seu cadastro para o <strong>Apto ${morador.apartamento}</strong> foi recebido e aguarda a autorização do Síndico Alessandro. Assim que aprovado, seu acesso será liberado!
+            </div>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    if (morador.status === 'Recusado' || morador.status === 'Bloqueado') {
+      if (feedbackDiv) {
+        feedbackDiv.innerHTML = `
+          <div style="background: #FFEBEE; border: 1px solid #FFCDD2; padding: 1rem; border-radius: 8px; margin-top: 0.5rem; text-align: center;">
+            <div style="font-weight: 800; color: #C62828; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+              <span class="material-symbols-outlined">block</span> Acesso Não Autorizado
+            </div>
+            <div style="font-size: 0.84rem; color: #B71C1C; line-height: 1.4;">
+              O acesso para este e-mail não foi autorizado pela administração do condomínio.
+            </div>
+          </div>
+        `;
+      }
+      return;
+    }
+
+    // E-mail ENCONTRADO e AUTORIZADO! Liberar o campo de senha (Passo 2)
+    this.verifiedMorador = morador;
+    this.loginStep = 2;
+    const body = document.querySelector('#modalAuth .modal-body');
+    if (body) {
+      body.innerHTML = this.renderAuthTabs();
+    }
+  },
+
+  voltarPasso1Email() {
+    this.loginStep = 1;
+    this.verifiedMorador = null;
+    const body = document.querySelector('#modalAuth .modal-body');
+    if (body) {
+      body.innerHTML = this.renderAuthTabs();
+    }
+  },
+
+  irParaCadastroComEmail(email) {
+    this.activeTab = 'register';
+    const body = document.querySelector('#modalAuth .modal-body');
+    if (body) {
+      body.innerHTML = this.renderAuthTabs();
+    }
+    setTimeout(() => {
+      const regEmail = document.getElementById('regEmail');
+      if (regEmail && email) regEmail.value = email;
+    }, 100);
   },
 
   renderRegisterForm() {
@@ -209,48 +360,29 @@ window.AuthComponent = {
 
   handleLogin() {
     try {
-      const emailInput = document.getElementById('loginEmail');
-      const senhaInput = document.getElementById('loginSenha');
-
-      if (!emailInput || !senhaInput) {
-        alert('Por favor, informe seu e-mail e senha.');
-        return;
-      }
-
-      const email = emailInput.value.trim().toLowerCase();
-      const senha = senhaInput.value;
-
-      if (!email) {
-        App.showToast('⚠️ Por favor, digite seu e-mail cadastrado.', 'error');
-        return;
-      }
-
-      const moradores = (window.CondoStore && window.CondoStore.data) ? window.CondoStore.data.moradores : [];
-      let morador = moradores.find(m => m.email && m.email.toLowerCase().trim() === email);
-
-      // Fallback infalível para o Síndico Master (condominio.modern.life@gmail.com)
-      if (!morador && email === 'condominio.modern.life@gmail.com') {
-        morador = {
-          id: 'usr_sindico',
-          nome: 'Alessandro Cristiano da Silva',
-          apartamento: 'Administração',
-          cpf: 'Cadastrado no Portal',
-          telefone: '27992516970',
-          email: 'condominio.modern.life@gmail.com',
-          senha: 'ModernLife2026',
-          status: 'Aprovado',
-          role: 'Administrador',
-          dataCadastro: '2025-01-10'
-        };
-      }
+      let morador = this.verifiedMorador;
 
       if (!morador) {
-        App.showToast(`❌ O e-mail "${email}" não foi encontrado. Clique na aba Cadastrar-se.`, 'error');
+        const emailInput = document.getElementById('loginEmail');
+        const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+        if (email) {
+          this.verificarEmailLogin();
+          return;
+        }
+        App.showToast('⚠️ Por favor, digite seu e-mail para avançar.', 'error');
+        return;
+      }
+
+      const senhaInput = document.getElementById('loginSenha');
+      const senha = senhaInput ? senhaInput.value : '';
+
+      if (!senha) {
+        App.showToast('⚠️ Por favor, digite sua senha de acesso.', 'error');
         return;
       }
 
       if (morador.senha && morador.senha !== senha) {
-        App.showToast('❌ Senha incorreta. Caso tenha esquecido sua senha, utilize a opção de recuperação.', 'error');
+        App.showToast('❌ Senha incorreta. Verifique sua senha e tente novamente.', 'error');
         return;
       }
 
@@ -258,6 +390,9 @@ window.AuthComponent = {
 
       const modal = document.getElementById('modalAuth');
       if (modal) modal.remove();
+
+      this.loginStep = 1;
+      this.verifiedMorador = null;
 
       if (morador.senhaTemporaria) {
         AuthComponent.openTrocaSenhaObrigatoriaModal(morador);
