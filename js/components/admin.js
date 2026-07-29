@@ -846,9 +846,10 @@ window.AdminComponent = {
                 </div>
               </div>
 
-              <div style="background: #E8F5E9; border: 1px solid #C8E6C9; padding: 0.85rem; border-radius: 8px; font-size: 0.82rem; color: #2E6B42; margin-bottom: 1rem;">
-                <span class="material-symbols-outlined" style="font-size: 1.1rem; vertical-align: middle;">info</span>
-                <strong>Sem necessidade de senha!</strong> O morador criará a sua própria senha pessoal no primeiro acesso ao entrar no portal.
+              <div style="background: #FFF8E1; border: 1px solid #FFE0B2; padding: 0.85rem; border-radius: 8px; font-size: 0.84rem; color: #E65100; margin-bottom: 1rem; line-height: 1.4;">
+                <span class="material-symbols-outlined" style="font-size: 1.1rem; vertical-align: middle;">key</span>
+                <strong>Senha Inicial Provisória: <code>123456</code></strong><br>
+                Ao autorizar, o morador entrará com o e-mail e a senha inicial <strong>123456</strong>, e o portal solicitará obrigatoriamente que ele crie a sua nova senha pessoal no primeiro acesso.
               </div>
 
               <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
