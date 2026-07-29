@@ -888,10 +888,32 @@ window.AdminComponent = {
       return;
     }
 
+    // 1. Autorização instantânea no mesmo milissegundo
     window.CondoStore.updateMoradorStatus(res.morador.id, 'Aprovado');
 
-    alert(`✅ MORADOR AUTORIZADO COM SUCESSO!\n\nMorador: ${nome} (Apto ${apartamento})\nE-mail: ${email}\n\nO acesso do morador foi ativado.`);
-    document.getElementById('modalQuickApprove').remove();
+    // 2. Envio imediato de e-mail de notificação ao morador
+    if (email) {
+      try {
+        fetch(`https://formsubmit.co/ajax/${email}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            _subject: `[MODERN LIFE RESIDENCE] Seu Acesso ao Portal Foi Autorizado pelo Síndico!`,
+            "Nome do Morador": nome || 'Morador',
+            "Unidade / Apto": apartamento || '',
+            "E-mail de Acesso": email,
+            "Senha de Acesso": senha || 'Senha definida na autorização',
+            "Status": "AUTORIZADO COM SUCESSO",
+            "Instruções": "Seu acesso ao portal oficial foi ativado pelo Síndico Alessandro. Você já pode acessar utilizando o seu e-mail e a senha cadastrada.",
+            "Link do Portal": "https://mlprestacao.vercel.app"
+          })
+        }).catch(() => {});
+      } catch (e) {}
+    }
+
+    App.showToast(`✅ Acesso do morador "${nome}" (Apto ${apartamento}) AUTORIZADO instantaneamente!`, 'success');
+    const modalQuick = document.getElementById('modalQuickApprove');
+    if (modalQuick) modalQuick.remove();
     App.render();
   },
 
