@@ -186,7 +186,8 @@ window.App = {
   },
 
   updateNavigationUI() {
-    const user = window.CondoStore.currentUser;
+    const data = (window.CondoStore && window.CondoStore.data) ? window.CondoStore.data : {};
+    const user = window.CondoStore ? window.CondoStore.currentUser : null;
     const isPortaria = user && user.role === 'Portaria';
 
     const portariaAllowedRoutes = ['portaria', 'utilidades', 'agenda'];
