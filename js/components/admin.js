@@ -477,26 +477,19 @@ window.AdminComponent = {
   aprovarMorador(id, nome, email, apartamento) {
     window.CondoStore.updateMoradorStatus(id, 'Aprovado');
 
-    if (email) {
-      try {
-        fetch(`https://formsubmit.co/ajax/${email}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({
-            _subject: `[MODERN LIFE RESIDENCE] Seu Acesso ao Portal Foi Autorizado pelo Síndico!`,
-            "Nome do Morador": nome || 'Morador',
-            "Unidade / Apto": apartamento || '',
-            "E-mail de Acesso": email,
-            "Status": "AUTORIZADO",
-            "Instruções": "Seu acesso ao portal oficial foi aprovado pelo Síndico Alessandro. Você já pode entrar utilizando o seu e-mail e a senha cadastrada.",
-            "Link do Portal": "https://mlprestacao.vercel.app"
-          })
-        }).catch(err => {
-          console.warn('[FormSubmit Error] Falha ao enviar e-mail de autorização:', err);
-        });
-      } catch (e) {
-        console.error('[Email Dispatch Error]:', e);
-      }
+    if (email && window.EmailService) {
+      window.EmailService.sendEmail({
+        to: email,
+        subject: `[MODERN LIFE RESIDENCE] Seu cadastro foi AUTORIZADO pelo Síndico!`,
+        data: {
+          "Nome do Morador": nome || 'Morador',
+          "Unidade / Apto": apartamento || '',
+          "E-mail de Acesso": email,
+          "Status": "AUTORIZADO",
+          "Instruções": "Seu acesso ao portal oficial foi aprovado pelo Síndico Alessandro. Você já pode entrar utilizando o seu e-mail e a senha cadastrada.",
+          "Link do Portal": "https://mlprestacao.vercel.app"
+        }
+      });
     }
 
     App.showToast(`Acesso do morador "${nome}" AUTORIZADO com sucesso!`, 'success');
@@ -504,43 +497,34 @@ window.AdminComponent = {
   },
 
   enviarEmailSenhaTemporaria(morador, senhaTemp) {
-    if (!morador || !morador.email) return;
-    
-    try {
-      fetch(`https://formsubmit.co/ajax/${morador.email}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-          _subject: `[MODERN LIFE RESIDENCE] Sua Senha Temporária de Acesso (Apto ${morador.apartamento})`,
-          "Nome do Morador": morador.nome,
-          "Unidade / Apto": morador.apartamento,
-          "E-mail de Acesso": morador.email,
-          "Senha Temporária": senhaTemp,
-          "Instruções": "Utilize a senha temporária acima para entrar no portal. No primeiro acesso, o sistema solicitará obrigatoriamente que você cadastre a sua nova senha pessoal.",
-          "Link do Portal": "https://mlprestacao.vercel.app",
-          "Data da Solicitação": new Date().toLocaleString("pt-BR")
-        })
-      }).catch(err => {
-        console.warn('[FormSubmit Error] Falha ao enviar e-mail com senha temporária:', err);
-      });
-    } catch (e) {
-      console.error('[Email Dispatch Error]:', e);
-    }
+    if (!morador || !morador.email || !window.EmailService) return;
 
-    try {
-      fetch(`https://formsubmit.co/ajax/condominio.modern.life@gmail.com`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-          _subject: `[SENHA TEMPORÁRIA ENTREGUE] Morador ${morador.nome} (${morador.email})`,
-          "Nome do Morador": morador.nome,
-          "Unidade / Apto": morador.apartamento,
-          "E-mail do Morador": morador.email,
-          "Senha Temporária": senhaTemp,
-          "Data de Emissão": new Date().toLocaleString("pt-BR")
-        })
-      }).catch(() => {});
-    } catch (e) {}
+    window.EmailService.sendEmail({
+      to: morador.email,
+      subject: `[MODERN LIFE RESIDENCE] Sua Senha Temporária de Acesso (Apto ${morador.apartamento})`,
+      data: {
+        "Nome do Morador": morador.nome,
+        "Unidade / Apto": morador.apartamento,
+        "E-mail de Acesso": morador.email,
+        "Senha Temporária": senhaTemp,
+        "Instruções": "Utilize a senha temporária acima para entrar no portal. No primeiro acesso, o sistema solicitará obrigatoriamente que você cadastre a sua nova senha pessoal.",
+        "Link do Portal": "https://mlprestacao.vercel.app",
+        "Data da Solicitação": new Date().toLocaleString("pt-BR")
+      }
+    });
+
+    window.EmailService.sendEmail({
+      to: 'condominio.modern.life@gmail.com',
+      subject: `[SENHA TEMPORÁRIA ENTREGUE] Morador ${morador.nome} (${morador.email})`,
+      data: {
+        "Nome do Morador": morador.nome,
+        "Unidade / Apto": morador.apartamento,
+        "E-mail do Morador": morador.email,
+        "Senha Temporária": senhaTemp,
+        "Data de Emissão": new Date().toLocaleString("pt-BR")
+      }
+    });
+  },
   },
 
   exibirSucessoSenhaTemporariaModal(morador, senhaTemp) {
