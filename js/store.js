@@ -8,6 +8,75 @@ const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V49';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V49';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
 const DELETED_DOCS_KEY = 'MODERN_LIFE_DELETED_DOCS_LIST_V2';
+const SESSION_TOKEN_KEY = 'MODERN_LIFE_SESSION_TOKEN_V2';
+
+/* Gerador e Validador de Tokens de Sessão Assinados (HMAC-SHA256) */
+window.SessionTokenManager = {
+  SECRET_KEY: 'ModernLife_HMAC_SecretKey_2026_!@#$%^&*',
+
+  async generateToken(user) {
+    if (!user || !user.email) return null;
+    const now = Date.now();
+    const payload = {
+      id: user.id,
+      email: (user.email || '').toLowerCase().trim(),
+      role: user.role || 'Morador',
+      nome: user.nome,
+      apartamento: user.apartamento,
+      iat: now,
+      exp: now + (8 * 60 * 60 * 1000) // TTL 8 horas
+    };
+
+    const payloadStr = btoa(JSON.stringify(payload));
+    const signature = await this.signPayload(payloadStr);
+    return `${payloadStr}.${signature}`;
+  },
+
+  async signPayload(payloadStr) {
+    if (window.crypto && window.crypto.subtle) {
+      try {
+        const encoder = new TextEncoder();
+        const keyData = encoder.encode(this.SECRET_KEY);
+        const cryptoKey = await window.crypto.subtle.importKey(
+          'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+        );
+        const signatureBuffer = await window.crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(payloadStr));
+        const hashArray = Array.from(new Uint8Array(signatureBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch (e) {}
+    }
+
+    let hash = 0;
+    const str = payloadStr + this.SECRET_KEY;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(16) + '00000000000000000000000000000000'.slice(0, 48);
+  },
+
+  async verifyToken(tokenStr) {
+    if (!tokenStr || typeof tokenStr !== 'string' || !tokenStr.includes('.')) return null;
+    try {
+      const [payloadStr, signature] = tokenStr.split('.');
+      const expectedSignature = await this.signPayload(payloadStr);
+
+      if (signature !== expectedSignature) {
+        console.warn('⛔ Alerta de Segurança: Assinatura do token de sessão é inválida ou foi adulterada!');
+        return null;
+      }
+
+      const payload = JSON.parse(atob(payloadStr));
+      if (Date.now() > payload.exp) {
+        console.warn('⚠️ Sessão expirada.');
+        return null;
+      }
+      return payload;
+    } catch (e) {
+      return null;
+    }
+  }
+};
 
 /* Helper Criptográfico de Hash de Senha SHA-256 (WebCrypto Standard) */
 window.hashPassword = async function(password) {
@@ -503,76 +572,6 @@ class StoreEngine {
     this.notify();
     this.broadcastToCloud();
   }
-
-const SESSION_TOKEN_KEY = 'MODERN_LIFE_SESSION_TOKEN_V2';
-
-/* Gerador e Validador de Tokens de Sessão Assinados (HMAC-SHA256) */
-window.SessionTokenManager = {
-  SECRET_KEY: 'ModernLife_HMAC_SecretKey_2026_!@#$%^&*',
-
-  async generateToken(user) {
-    if (!user || !user.email) return null;
-    const now = Date.now();
-    const payload = {
-      id: user.id,
-      email: (user.email || '').toLowerCase().trim(),
-      role: user.role || 'Morador',
-      nome: user.nome,
-      apartamento: user.apartamento,
-      iat: now,
-      exp: now + (8 * 60 * 60 * 1000) // TTL 8 horas
-    };
-
-    const payloadStr = btoa(JSON.stringify(payload));
-    const signature = await this.signPayload(payloadStr);
-    return `${payloadStr}.${signature}`;
-  },
-
-  async signPayload(payloadStr) {
-    if (window.crypto && window.crypto.subtle) {
-      try {
-        const encoder = new TextEncoder();
-        const keyData = encoder.encode(this.SECRET_KEY);
-        const cryptoKey = await window.crypto.subtle.importKey(
-          'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
-        );
-        const signatureBuffer = await window.crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(payloadStr));
-        const hashArray = Array.from(new Uint8Array(signatureBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-      } catch (e) {}
-    }
-
-    let hash = 0;
-    const str = payloadStr + this.SECRET_KEY;
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
-    }
-    return Math.abs(hash).toString(16) + '00000000000000000000000000000000'.slice(0, 48);
-  },
-
-  async verifyToken(tokenStr) {
-    if (!tokenStr || typeof tokenStr !== 'string' || !tokenStr.includes('.')) return null;
-    try {
-      const [payloadStr, signature] = tokenStr.split('.');
-      const expectedSignature = await this.signPayload(payloadStr);
-
-      if (signature !== expectedSignature) {
-        console.warn('⛔ Alerta de Segurança: Assinatura do token de sessão é inválida ou foi adulterada!');
-        return null;
-      }
-
-      const payload = JSON.parse(atob(payloadStr));
-      if (Date.now() > payload.exp) {
-        console.warn('⚠️ Sessão expirada.');
-        return null;
-      }
-      return payload;
-    } catch (e) {
-      return null;
-    }
-  }
-};
 
   async loadUser() {
     try {
