@@ -9,7 +9,7 @@ window.AdminComponent = {
 
   render(container, data) {
     const user = window.CondoStore ? window.CondoStore.currentUser : null;
-    const isMasterAdmin = user && (user.role === 'Administrador' || (user.email && ['condominio.modern.life@gmail.com', 'contatoalecristiano@gmail.com'].includes(user.email.toLowerCase().trim())));
+    const isMasterAdmin = user && (user.role === 'Administrador' || (user.email && ['alecristao@hotmail.com', 'condominio.modern.life@gmail.com', 'contatoalecristiano@gmail.com'].includes(user.email.toLowerCase().trim())));
 
     if (!user || !isMasterAdmin) {
       container.innerHTML = `
@@ -19,9 +19,9 @@ window.AdminComponent = {
             Acesso ao Painel do Síndico Administrador
           </h2>
           <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0.85rem 0 1.35rem 0; line-height: 1.5;">
-            Para gerenciar moradores, aprovar novos cadastros, responder aos condôminos e fazer a gestão financeira do condomínio, é necessário se autenticar com a conta de Síndico Administrador.
+            Para gerenciar moradores, aprovar novos cadastros, responder aos condôminos e fazer a gestão financeira do condomínio, é necessário se autenticar com a conta de Síndico Administrador (<code>alecristao@hotmail.com</code>).
           </p>
-          <button class="btn-primary" onclick="AuthComponent.verifiedMorador = null; AuthComponent.loginStep = 1; AuthComponent.irParaSenhaComEmail('condominio.modern.life@gmail.com')" style="width: 100%; justify-content: center; padding: 1rem; font-weight: 800; font-size: 1.05rem; background: linear-gradient(135deg, #2E6B42 0%, #1F4D30 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
+          <button class="btn-primary" onclick="AuthComponent.verifiedMorador = null; AuthComponent.loginStep = 1; AuthComponent.irParaSenhaComEmail('alecristao@hotmail.com')" style="width: 100%; justify-content: center; padding: 1rem; font-weight: 800; font-size: 1.05rem; background: linear-gradient(135deg, #2E6B42 0%, #1F4D30 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
             <span class="material-symbols-outlined">key</span> ENTRAR COMO SÍNDICO ADMINISTRADOR
           </button>
         </div>

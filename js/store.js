@@ -406,47 +406,39 @@ class StoreEngine {
   ensureSindicoMaster() {
     if (!this.data || !this.data.moradores) return;
 
-    let sindicoOficial = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
-    if (!sindicoOficial) {
-      sindicoOficial = {
-        id: 'usr_sindico',
+    let sindicoHotmail = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === 'alecristao@hotmail.com');
+    if (!sindicoHotmail) {
+      sindicoHotmail = {
+        id: 'usr_sindico_hotmail',
         nome: 'Alessandro Cristiano da Silva',
         apartamento: 'Administração',
         cpf: 'Cadastrado no Portal',
         telefone: '27992516970',
-        email: 'condominio.modern.life@gmail.com',
+        email: 'alecristao@hotmail.com',
         senha: 'ModernLife2026',
         status: 'Aprovado',
         role: 'Administrador',
         dataCadastro: '2025-01-10'
       };
-      this.data.moradores.unshift(sindicoOficial);
+      this.data.moradores.unshift(sindicoHotmail);
     } else {
+      sindicoHotmail.role = 'Administrador';
+      sindicoHotmail.status = 'Aprovado';
+      if (!sindicoHotmail.senha) sindicoHotmail.senha = 'ModernLife2026';
+    }
+
+    let sindicoOficial = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (sindicoOficial) {
       sindicoOficial.role = 'Administrador';
       sindicoOficial.status = 'Aprovado';
-      if (!sindicoOficial.senha) sindicoOficial.senha = 'ModernLife2026';
     }
 
     let sindicoPessoal = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com');
-    if (!sindicoPessoal) {
-      sindicoPessoal = {
-        id: 'usr_sindico_pessoal',
-        nome: 'Alessandro Cristiano da Silva',
-        apartamento: 'Administração',
-        cpf: 'Cadastrado no Portal',
-        telefone: '27992516970',
-        email: 'contatoalecristiano@gmail.com',
-        senha: 'ModernLife2026',
-        status: 'Aprovado',
-        role: 'Morador',
-        dataCadastro: '2025-01-10'
-      };
-      this.data.moradores.unshift(sindicoPessoal);
-    } else {
-      sindicoPessoal.role = 'Morador';
+    if (sindicoPessoal) {
+      sindicoPessoal.role = 'Administrador';
       sindicoPessoal.status = 'Aprovado';
-      if (!sindicoPessoal.senha) sindicoPessoal.senha = 'ModernLife2026';
     }
+  }
 
     if (this.data.documentos) {
       this.data.documentos = this.data.documentos.filter(d => d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome));

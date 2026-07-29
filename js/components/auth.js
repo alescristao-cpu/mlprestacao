@@ -184,14 +184,15 @@ window.AuthComponent = {
     }
 
     // Fallback mestre para o Síndico Administrador
-    if (!morador && email === 'condominio.modern.life@gmail.com') {
+    const adminEmails = ['alecristao@hotmail.com', 'condominio.modern.life@gmail.com', 'contatoalecristiano@gmail.com'];
+    if (!morador && adminEmails.includes(email)) {
       morador = {
-        id: 'usr_sindico',
+        id: 'usr_sindico_hotmail',
         nome: 'Alessandro Cristiano da Silva',
         apartamento: 'Administração',
         cpf: 'Cadastrado no Portal',
         telefone: '27992516970',
-        email: 'condominio.modern.life@gmail.com',
+        email: email,
         senha: 'ModernLife2026',
         status: 'Aprovado',
         role: 'Administrador',
@@ -430,8 +431,8 @@ window.AuthComponent = {
         return;
       }
 
-      // Se for o Síndico Master (condominio.modern.life@gmail.com), LIBERAÇÃO ABSOLUTA E IMEDIATA!
-      const isSindicoMaster = morador.email && morador.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
+      // Se for o Síndico Master, LIBERAÇÃO ABSOLUTA E IMEDIATA!
+      const isSindicoMaster = morador.email && (['alecristao@hotmail.com', 'condominio.modern.life@gmail.com', 'contatoalecristiano@gmail.com'].includes(morador.email.toLowerCase().trim()) || morador.role === 'Administrador');
       if (isSindicoMaster) {
         morador.senha = 'hash_sha256_ModernLife2026';
         morador.status = 'Aprovado';

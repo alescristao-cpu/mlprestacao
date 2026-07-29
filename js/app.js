@@ -105,7 +105,8 @@ window.App = {
     const isPortaria = user && user.role === 'Portaria';
 
     if (route === 'admin') {
-      const isSindicoUser = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
+      const adminEmails = ['alecristao@hotmail.com', 'condominio.modern.life@gmail.com', 'contatoalecristiano@gmail.com'];
+      const isSindicoUser = user && (user.role === 'Administrador' || (user.email && adminEmails.includes(user.email.toLowerCase().trim())));
 
       if (isSindicoUser) {
         user.role = 'Administrador';
@@ -140,12 +141,12 @@ window.App = {
                 </div>
                 <div class="modal-body" style="padding: 1.35rem;">
                   <div style="background: #E8F5E9; border: 1px solid #C8E6C9; padding: 1rem; border-radius: 8px; font-size: 0.9rem; color: #1F4D30; margin-bottom: 1.25rem; line-height: 1.5;">
-                    🔑 Digite o e-mail oficial do Síndico (<code>condominio.modern.life@gmail.com</code>) para acessar o painel de administração do condomínio.
+                    🔑 Digite o e-mail oficial do Síndico (<code>alecristao@hotmail.com</code>) para acessar o painel de administração do condomínio.
                   </div>
-                  <form onsubmit="event.preventDefault(); const inp = document.getElementById('loginEmailSindico'); const email = inp ? inp.value.trim() : 'condominio.modern.life@gmail.com'; AuthComponent.verifiedMorador = null; AuthComponent.loginStep = 1; AuthComponent.irParaSenhaComEmail(email);">
+                  <form onsubmit="event.preventDefault(); const inp = document.getElementById('loginEmailSindico'); const email = inp ? inp.value.trim() : 'alecristao@hotmail.com'; AuthComponent.verifiedMorador = null; AuthComponent.loginStep = 1; AuthComponent.irParaSenhaComEmail(email);">
                     <div class="form-group" style="margin-bottom: 1rem;">
                       <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">E-mail do Síndico</label>
-                      <input type="email" id="loginEmailSindico" class="form-control" value="condominio.modern.life@gmail.com" required style="font-weight: 700; font-size: 1.05rem; padding: 0.85rem;">
+                      <input type="email" id="loginEmailSindico" class="form-control" value="alecristao@hotmail.com" required style="font-weight: 700; font-size: 1.05rem; padding: 0.85rem;">
                     </div>
                     <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.95rem; font-weight: 800; font-size: 1.05rem; background: #2E6B42; color: white; border: none; border-radius: 8px; cursor: pointer;">
                       <span class="material-symbols-outlined">login</span> AVANÇAR PARA A SENHA DO SÍNDICO
