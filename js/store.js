@@ -1,11 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Exclusão DEFINITIVA de Documentos (Sem Ressurreição por Chaves Legadas ou Cloud Sync)
+   Inclusão Oficial do Manual do Proprietário (39.9MB) e Regimento Interno (407KB)
    Garantia Total de Preservação de Documentos Ativos no Supabase Cloud
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V45';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V45';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V46';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V46';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
 const DELETED_DOCS_KEY = 'MODERN_LIFE_DELETED_DOCS_LIST_V2';
 
@@ -182,15 +182,61 @@ const INITIAL_DATA = {
     }
   ],
 
+  // Repositório Oficial de Documentos, Manuais e Regimentos
   documentos: [
     {
-      id: 'doc_01',
-      nome: 'Convenção do Condomínio Modern Life Residence',
+      id: 'doc_manual_proprietario',
+      nome: 'Manual do Proprietário & Instruções do Condomínio',
+      categoria: 'Manuais',
+      visibilidade: 'Moradores',
+      dataUpload: '2026-07-24',
+      tamanho: '39.9 MB',
+      arquivo: 'assets/docs/MANUAL.pdf'
+    },
+    {
+      id: 'doc_regimento_oficial',
+      nome: 'Regimento Interno Oficial do Condomínio (Aprovado em Assembleia)',
+      categoria: 'Regimento',
+      visibilidade: 'Moradores',
+      dataUpload: '2025-02-25',
+      tamanho: '407 KB',
+      arquivo: 'assets/docs/REGIMENTO_INTERNO_-_APROV_25.02.2025_assinado_assinado.pdf'
+    },
+    {
+      id: 'doc_convencao_01',
+      nome: 'Convenção Condominial & Edital de Convocação AGE',
       categoria: 'Convenção',
       visibilidade: 'Moradores',
-      dataUpload: '2024-01-15',
+      dataUpload: '2026-01-15',
       tamanho: '4.2 MB',
       arquivo: 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf'
+    },
+    {
+      id: 'doc_contrato_sather',
+      nome: 'Contrato de Terceirização de Portaria & Limpeza Sather',
+      categoria: 'Laudos',
+      visibilidade: 'Conselho',
+      dataUpload: '2026-07-21',
+      tamanho: '2.2 MB',
+      arquivo: 'assets/docs/Sather Assinada - Contrato Terceirizaçao - Ed. Modern Life.pdf'
+    },
+    {
+      id: 'doc_contrato_real',
+      nome: 'Contrato de Assessoria Contábil & Gestão Real',
+      categoria: 'Laudos',
+      visibilidade: 'Conselho',
+      dataUpload: '2026-07-21',
+      tamanho: '3.0 MB',
+      arquivo: 'assets/docs/REAL ASSESSORIA - CONTRATO MODERN LIFE.pdf'
+    },
+    {
+      id: 'doc_contrato_jardins',
+      nome: 'Contrato de Manutenção de Jardins & Paisagismo',
+      categoria: 'Laudos',
+      visibilidade: 'Moradores',
+      dataUpload: '2026-07-21',
+      tamanho: '303 KB',
+      arquivo: 'assets/docs/JARDINS PAISAGIMO - MANUTENÇAO DE JARDIM.pdf'
     }
   ],
 
@@ -220,9 +266,7 @@ const INITIAL_DATA = {
       descricao: 'Deliberação sobre a aprovação das contas do 1º semestre.'
     }
   ],
-  galeria: [
-    { id: 'gal_01', titulo: 'Torre Modern Life Residence', categoria: 'Fachada', imagem: './assets/images/IMG_2956.jpg' }
-  ]
+  galeria: []
 };
 
 class StoreEngine {
@@ -371,6 +415,7 @@ class StoreEngine {
 
     // 2. Escanear e restaurar moradores, documentos, contratos e balancetes de TODAS as chaves salvas no navegador
     const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V45',
       'MODERN_LIFE_CONDO_DATA_V44',
       'MODERN_LIFE_CONDO_DATA_V43',
       'MODERN_LIFE_CONDO_DATA_V42',
@@ -418,7 +463,7 @@ class StoreEngine {
               });
             }
 
-            // Mesclar Documentos Anexados (Respeitando estritamente a lixeira permanente de documentos)
+            // Mesclar Documentos Anexados (Respeitando estritamente a lixeira permanente)
             if (old.documentos && old.documentos.length > 0) {
               old.documentos.forEach(d => {
                 if (d && d.id && d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome)) {
@@ -470,6 +515,20 @@ class StoreEngine {
       if (!d || d.id === 'doc_sistema_md') return false;
       if (this.isDocDeleted(d.id, d.nome)) return false;
       return true;
+    });
+
+    // Garantir inclusão dos documentos oficiais padrão (Manual do Proprietário 39.9MB, Regimento 407KB, etc.)
+    INITIAL_DATA.documentos.forEach(docOficial => {
+      if (!this.isDocDeleted(docOficial.id, docOficial.nome)) {
+        const idx = loadedData.documentos.findIndex(x => x.id === docOficial.id || x.nome === docOficial.nome);
+        if (idx === -1) {
+          loadedData.documentos.push(docOficial);
+        } else {
+          // Atualiza com caminho oficial limpo do servidor
+          loadedData.documentos[idx].arquivo = docOficial.arquivo;
+          loadedData.documentos[idx].tamanho = docOficial.tamanho;
+        }
+      }
     });
 
     // Garantir moradores padrão
@@ -790,16 +849,12 @@ class StoreEngine {
 
     // 3. Remove das chaves legadas no localStorage do navegador para evitar ressurreição
     const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V45',
       'MODERN_LIFE_CONDO_DATA_V44',
       'MODERN_LIFE_CONDO_DATA_V43',
       'MODERN_LIFE_CONDO_DATA_V42',
       'MODERN_LIFE_CONDO_DATA_V41',
-      'MODERN_LIFE_CONDO_DATA_V40',
-      'MODERN_LIFE_CONDO_DATA_V39',
-      'MODERN_LIFE_CONDO_DATA_V38',
-      'MODERN_LIFE_CONDO_DATA_V37',
-      'MODERN_LIFE_CONDO_DATA_V36',
-      'MODERN_LIFE_CONDO_DATA_V35'
+      'MODERN_LIFE_CONDO_DATA_V40'
     ];
     legacyKeys.forEach(k => {
       try {
