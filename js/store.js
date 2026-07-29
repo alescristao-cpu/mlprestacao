@@ -528,6 +528,32 @@ class StoreEngine {
             });
           }
 
+          // 1b. Extração e fusão infalível de cadastros pendentes da nuvem via Ocorrências/Vault
+          if (supaData.ocorrencias && supaData.ocorrencias.length > 0) {
+            supaData.ocorrencias.forEach(o => {
+              if (o && (o.categoria === 'Solicitação de Cadastro' || o.categoria === 'PendingMoradorVault') && (o.status === 'Pendente' || o.status === 'Pendente de Aprovação')) {
+                const normEmail = (o.moradorEmail || '').toLowerCase().trim();
+                if (normEmail && !this.isMoradorDeleted(o.moradorId, normEmail)) {
+                  const idx = this.data.moradores.findIndex(x => x.email && x.email.toLowerCase().trim() === normEmail);
+                  if (idx === -1) {
+                    this.data.moradores.push({
+                      id: o.moradorId || o.id,
+                      nome: o.moradorNome || o.assunto || 'Morador Solicitante',
+                      email: o.moradorEmail || '',
+                      telefone: (o.respostas && o.respostas[0] && o.respostas[0].telefone) || '',
+                      apartamento: o.apartamento || '',
+                      senha: (o.respostas && o.respostas[0] && o.respostas[0].senha) || '123456',
+                      status: 'Pendente',
+                      role: 'Morador',
+                      dataCadastro: o.data || new Date().toISOString().split('T')[0]
+                    });
+                    updatedSupa = true;
+                  }
+                }
+              }
+            });
+          }
+
           // Garantir logins mestres do Síndico
           INITIAL_DATA.moradores.forEach(mMaster => {
             if (!this.data.moradores.some(x => x.email && x.email.toLowerCase().trim() === mMaster.email.toLowerCase().trim())) {
@@ -806,7 +832,7 @@ class StoreEngine {
       descricao: `O morador ${newMorador.nome} (E-mail: ${newMorador.email}, Telefone: ${newMorador.telefone || 'Não informado'}) solicitou autorização de acesso ao portal para o Apto ${newMorador.apartamento}.`,
       status: 'Pendente de Aprovação',
       data: new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
-      respostas: []
+      respostas: [{ telefone: newMorador.telefone || '', email: newMorador.email, senha: newMorador.senha || '' }]
     });
 
     this.saveData();

@@ -286,6 +286,31 @@ window.SupabaseConfig = {
         });
       }
 
+      // Resgatar também solicitações de cadastro enviadas pela tabela de ocorrências
+      if (resOcorrencias && resOcorrencias.data && resOcorrencias.data.length > 0) {
+        resOcorrencias.data.forEach(o => {
+          if (o && (o.categoria === 'Solicitação de Cadastro' || o.categoria === 'PendingMoradorVault') && (o.status === 'Pendente' || o.status === 'Pendente de Aprovação')) {
+            const emailNorm = (o.morador_email || '').toLowerCase().trim();
+            if (emailNorm) {
+              const exists = moradoresFromCloud.some(x => x.id === o.morador_id || (x.email && x.email.toLowerCase().trim() === emailNorm));
+              if (!exists) {
+                moradoresFromCloud.push({
+                  id: o.morador_id || o.id,
+                  nome: o.morador_nome || o.assunto || 'Morador Solicitante',
+                  email: o.morador_email || '',
+                  telefone: (o.respostas && o.respostas[0] && o.respostas[0].telefone) || '',
+                  apartamento: o.apartamento || '',
+                  senha: (o.respostas && o.respostas[0] && o.respostas[0].senha) || '123456',
+                  status: 'Pendente',
+                  role: 'Morador',
+                  dataCadastro: o.data || new Date().toISOString().split('T')[0]
+                });
+              }
+            }
+          }
+        });
+      }
+
       let docsFromCloud = [];
       if (resDocumentos && resDocumentos.data && resDocumentos.data.length > 0) {
         resDocumentos.data.forEach(d => {
