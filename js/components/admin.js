@@ -133,9 +133,15 @@ window.AdminComponent = {
                 </div>
               </div>
 
-              <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; padding: 0.65rem 1rem; font-size: 0.85rem;" onclick="AdminComponent.openQuickApproveModal()">
-                <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.1rem;">person_add</span> ➕ Cadastrar / Autorizar Morador Manualmente
-              </button>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn-primary" style="background: #E65100; color: white; font-weight: 700; padding: 0.65rem 1rem; font-size: 0.85rem; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;" onclick="window.CondoStore.pullFromCloudSilently().then(() => App.render())">
+                  <span class="material-symbols-outlined" style="font-size: 1.1rem;">sync</span> 🔄 Buscar Novos Pedidos na Nuvem
+                </button>
+
+                <button class="btn-primary" style="background: white; color: var(--primary-dark); font-weight: 700; padding: 0.65rem 1rem; font-size: 0.85rem;" onclick="AdminComponent.openQuickApproveModal()">
+                  <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.1rem;">person_add</span> ➕ Autorizar Morador Manualmente
+                </button>
+              </div>
             </div>
 
             ${pendentes.length === 0 ? `
