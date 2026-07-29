@@ -1,11 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Motor de Sincronização em Nuvem Supabase 100% Autorritativo (Multi-Dispositivo e Multi-Navegador)
-   Garantia de Identidade Única entre Celular, Tablet e Computador
+   Recuperação TOTAL e Preservação Incondicional de TODOS os Moradores Reais Cadastrados
+   Resgate de Moradores de Todas as Versões Anteriores + Backup Direto no Supabase Cloud Database
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V48';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V48';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V49';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V49';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
 const DELETED_DOCS_KEY = 'MODERN_LIFE_DELETED_DOCS_LIST_V2';
 
@@ -350,6 +350,7 @@ class StoreEngine {
     let loadedData = null;
     const mockFakeIds = ['usr_morador_01', 'usr_morador_02', 'usr_morador_03', 'usr_morador_04', 'usr_morador_05'];
 
+    // 1. Carregar chave atual
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) loadedData = JSON.parse(raw);
@@ -364,6 +365,73 @@ class StoreEngine {
     if (!loadedData.contratos) loadedData.contratos = [];
     if (!loadedData.balancetes) loadedData.balancetes = [];
     if (!loadedData.galeria) loadedData.galeria = [];
+
+    // 2. Escanear e RESGATAR moradores de TODAS as chaves anteriores salvas no navegador
+    const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V48',
+      'MODERN_LIFE_CONDO_DATA_V47',
+      'MODERN_LIFE_CONDO_DATA_V46',
+      'MODERN_LIFE_CONDO_DATA_V45',
+      'MODERN_LIFE_CONDO_DATA_V44',
+      'MODERN_LIFE_CONDO_DATA_V43',
+      'MODERN_LIFE_CONDO_DATA_V42',
+      'MODERN_LIFE_CONDO_DATA_V41',
+      'MODERN_LIFE_CONDO_DATA_V40',
+      'MODERN_LIFE_CONDO_DATA_V39',
+      'MODERN_LIFE_CONDO_DATA_V38',
+      'MODERN_LIFE_CONDO_DATA_V37',
+      'MODERN_LIFE_CONDO_DATA_V36',
+      'MODERN_LIFE_CONDO_DATA_V35',
+      'MODERN_LIFE_CONDO_DATA_V34',
+      'MODERN_LIFE_CONDO_DATA_V33',
+      'MODERN_LIFE_CONDO_DATA_V32',
+      'MODERN_LIFE_CONDO_DATA_V31',
+      'MODERN_LIFE_CONDO_DATA_V30',
+      'MODERN_LIFE_CONDO_DATA_V2',
+      'MODERN_LIFE_CONDO_DATA'
+    ];
+
+    legacyKeys.forEach(k => {
+      try {
+        const rawOld = localStorage.getItem(k);
+        if (rawOld) {
+          const old = JSON.parse(rawOld);
+          if (old && old.moradores && old.moradores.length > 0) {
+            old.moradores.forEach(m => {
+              if (m && m.email && !mockFakeIds.includes(m.id) && !this.isMoradorDeleted(m.id, m.email)) {
+                const normEmail = m.email.toLowerCase().trim();
+                const exists = loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === normEmail);
+                if (!exists) {
+                  loadedData.moradores.push(m);
+                }
+              }
+            });
+          }
+
+          if (old && old.documentos && old.documentos.length > 0) {
+            old.documentos.forEach(d => {
+              if (d && d.id && d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome)) {
+                const exists = loadedData.documentos.some(x => x.id === d.id);
+                if (!exists) {
+                  loadedData.documentos.push(d);
+                }
+              }
+            });
+          }
+
+          if (old && old.galeria && old.galeria.length > 0) {
+            old.galeria.forEach(g => {
+              if (g && g.id) {
+                const exists = loadedData.galeria.some(x => x.id === g.id);
+                if (!exists) {
+                  loadedData.galeria.push(g);
+                }
+              }
+            });
+          }
+        }
+      } catch (err) {}
+    });
 
     // Purga de moradores e documentos excluídos pelo Síndico
     loadedData.moradores = loadedData.moradores.filter(m => {
@@ -449,7 +517,7 @@ class StoreEngine {
     this.pullFromCloudSilently();
     setInterval(() => {
       this.pullFromCloudSilently();
-    }, 2000);
+    }, 2500);
   }
 
   async pullFromCloudSilently() {
@@ -460,64 +528,135 @@ class StoreEngine {
       if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
         const supaData = await window.SupabaseConfig.pullDataFromSupabase();
         if (supaData) {
-          const prevStr = JSON.stringify(this.data);
-
+          let updatedSupa = false;
           const mockFakeIds = ['usr_morador_01', 'usr_morador_02', 'usr_morador_03', 'usr_morador_04', 'usr_morador_05'];
 
-          // 1. Moradores (Nuvem como Autoridade Principal)
-          if (supaData.moradores) {
-            const cleanSupaMoradores = supaData.moradores.filter(m => m && m.email && !mockFakeIds.includes(m.id) && !this.isMoradorDeleted(m.id, m.email));
-            
-            // Garantir que os logins mestres do Síndico nunca desapareçam
-            INITIAL_DATA.moradores.forEach(mMaster => {
-              if (!cleanSupaMoradores.some(x => x.email && x.email.toLowerCase().trim() === mMaster.email.toLowerCase().trim())) {
-                cleanSupaMoradores.unshift(mMaster);
+          // 1. Moradores: Mesclar sem apagar moradores reais locais
+          if (supaData.moradores && supaData.moradores.length > 0) {
+            supaData.moradores.forEach(m => {
+              if (!m || !m.email || mockFakeIds.includes(m.id) || this.isMoradorDeleted(m.id, m.email)) return;
+
+              const idx = this.data.moradores.findIndex(item => item.id === m.id || (item.email && m.email && item.email.toLowerCase().trim() === m.email.toLowerCase().trim()));
+              if (idx === -1) {
+                this.data.moradores.push(m);
+                updatedSupa = true;
+              } else if (this.data.moradores[idx].status !== m.status || this.data.moradores[idx].senha !== m.senha) {
+                this.data.moradores[idx] = m;
+                updatedSupa = true;
               }
             });
-
-            this.data.moradores = cleanSupaMoradores;
           }
 
+          // Garantir logins mestres do Síndico
+          INITIAL_DATA.moradores.forEach(mMaster => {
+            if (!this.data.moradores.some(x => x.email && x.email.toLowerCase().trim() === mMaster.email.toLowerCase().trim())) {
+              this.data.moradores.unshift(mMaster);
+              updatedSupa = true;
+            }
+          });
+
           // 2. Reservas da Agenda
-          if (supaData.reservas) {
-            this.data.agendaReservas = supaData.reservas;
+          if (supaData.reservas && supaData.reservas.length > 0) {
+            if (!this.data.agendaReservas) this.data.agendaReservas = [];
+            supaData.reservas.forEach(r => {
+              const idx = this.data.agendaReservas.findIndex(item => item.id === r.id);
+              if (idx === -1) {
+                this.data.agendaReservas.unshift(r);
+                updatedSupa = true;
+              } else if (this.data.agendaReservas[idx].status !== r.status) {
+                this.data.agendaReservas[idx] = r;
+                updatedSupa = true;
+              }
+            });
           }
 
           // 3. Ocorrências
-          if (supaData.ocorrencias) {
-            this.data.ocorrencias = supaData.ocorrencias;
+          if (supaData.ocorrencias && supaData.ocorrencias.length > 0) {
+            if (!this.data.ocorrencias) this.data.ocorrencias = [];
+            supaData.ocorrencias.forEach(o => {
+              const idx = this.data.ocorrencias.findIndex(item => item.id === o.id);
+              if (idx === -1) {
+                this.data.ocorrencias.unshift(o);
+                updatedSupa = true;
+              } else if (this.data.ocorrencias[idx].status !== o.status || (o.respostas && o.respostas.length !== (this.data.ocorrencias[idx].respostas || []).length)) {
+                this.data.ocorrencias[idx] = o;
+                updatedSupa = true;
+              }
+            });
           }
 
           // 4. Balancetes
           if (supaData.balancetes && supaData.balancetes.length > 0) {
-            this.data.balancetes = supaData.balancetes;
+            if (!this.data.balancetes) this.data.balancetes = [];
+            supaData.balancetes.forEach(b => {
+              const idx = this.data.balancetes.findIndex(item => item.id === b.id || (item.mes === b.mes && item.ano === b.ano));
+              if (idx === -1) {
+                this.data.balancetes.unshift(b);
+                updatedSupa = true;
+              }
+            });
           }
 
           // 5. Contratos
           if (supaData.contratos && supaData.contratos.length > 0) {
-            this.data.contratos = supaData.contratos;
+            if (!this.data.contratos) this.data.contratos = [];
+            supaData.contratos.forEach(c => {
+              const idx = this.data.contratos.findIndex(item => item.id === c.id || item.empresa === c.empresa);
+              if (idx === -1) {
+                this.data.contratos.unshift(c);
+                updatedSupa = true;
+              }
+            });
           }
 
           // 6. Documentos Anexados pelo Síndico (Filtrados com Lixeira Permanente)
-          if (supaData.documentos) {
-            this.data.documentos = supaData.documentos.filter(d => d && d.id && d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome));
+          if (supaData.documentos && supaData.documentos.length > 0) {
+            if (!this.data.documentos) this.data.documentos = [];
+            supaData.documentos.forEach(d => {
+              if (!d || !d.id || d.id === 'doc_sistema_md' || this.isDocDeleted(d.id, d.nome)) return;
+
+              const idx = this.data.documentos.findIndex(item => item.id === d.id);
+              if (idx === -1) {
+                this.data.documentos.push(d);
+                updatedSupa = true;
+              } else if (d.arquivo && d.arquivo !== this.data.documentos[idx].arquivo) {
+                this.data.documentos[idx].arquivo = d.arquivo;
+                updatedSupa = true;
+              }
+            });
           }
 
-          // 7. Fotos da Galeria (Sincronizadas com Nuvem)
+          // 7. Fotos da Galeria
           if (supaData.galeria && supaData.galeria.length > 0) {
-            this.data.galeria = supaData.galeria;
+            if (!this.data.galeria) this.data.galeria = [];
+            supaData.galeria.forEach(g => {
+              const idx = this.data.galeria.findIndex(item => item.id === g.id);
+              if (idx === -1) {
+                this.data.galeria.unshift(g);
+                updatedSupa = true;
+              }
+            });
           }
 
           // 8. Recados
           if (supaData.recados && supaData.recados.length > 0) {
-            this.data.recados = supaData.recados;
+            if (!this.data.recados) this.data.recados = [];
+            supaData.recados.forEach(r => {
+              const idx = this.data.recados.findIndex(item => item.id === r.id);
+              if (idx === -1) {
+                this.data.recados.unshift(r);
+                updatedSupa = true;
+              } else if (this.data.recados[idx].titulo !== r.titulo || this.data.recados[idx].imagem !== r.imagem) {
+                this.data.recados[idx] = r;
+                updatedSupa = true;
+              }
+            });
           }
 
-          const newStr = JSON.stringify(this.data);
-
-          if (prevStr !== newStr) {
+          if (updatedSupa) {
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
             this.notify();
+            this.broadcastToCloud(); // Backup automático de todos os moradores reais resgatados para o Supabase Cloud
           }
         }
       }
