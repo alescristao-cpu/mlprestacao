@@ -1,7 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Módulo & Dashboard de Gestão de Contratos
-   Títulos Genéricos de Serviços sem Nomes de Empresas ou Pessoas
-   Suporte Completo a EDIÇÃO ✏️ e EXCLUSÃO 🗑️ de Contratos com Sincronização Cloud
+   Acesso Exclusivo de LEITURA para Moradores & Permissão ÚNICA do SÍNDICO para Postar, Editar e Excluir
    ---------------------------------------------------- */
 
 window.ContratosComponent = {
@@ -12,7 +11,7 @@ window.ContratosComponent = {
   render(container, data) {
     const user = window.CondoStore.currentUser;
     const isApproved = user && user.status === 'Aprovado';
-    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase() === 'condominio.modern.life@gmail.com');
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
 
     // Access Gate para visitantes não aprovados
     if (!user || !isApproved) {
@@ -25,7 +24,7 @@ window.ContratosComponent = {
             Acesso Restrito: Contratos de Prestação de Serviços
           </h2>
           <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem; line-height: 1.6;">
-            Por determinação da convenção condominial, o acesso aos contratos firmados com serviços terceirizados (elevadores, portaria, limpeza e manutenção) é sigiloso e exclusivo para moradores cadastrados.
+            Por determinação da convenção condominial, a leitura dos contratos firmados com serviços terceirizados (elevadores, portaria, limpeza e manutenção) é de uso exclusivo dos moradores cadastrados.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
             <span class="material-symbols-outlined">login</span> Entrar / Cadastrar para Solicitar Acesso
@@ -86,15 +85,20 @@ window.ContratosComponent = {
                 Dashboard de Contratos &amp; Serviços Terceirizados
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.8; color: #94A3B8; margin-top: 0.2rem;">
-                Leitura e acompanhamento de contratos por serviço com opções de edição ✏️ e exclusão 🗑️.
+                ${isSindico ? 'Painel de Gestão do Síndico: Importe, edite e gerencie os contratos de serviços.' : 'Modo Leitura para Moradores: Acompanhe as vigências, valores e obrigações contratadas.'}
               </p>
             </div>
 
+            <!-- Botão de Upload VISÍVEL SOMENTE PARA O SÍNDICO -->
             ${isSindico ? `
               <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);" onclick="ContratosComponent.openImportModal()">
                 <span class="material-symbols-outlined" style="font-size: 1.3rem;">cloud_upload</span> 📄 Importar Contratos (PDF / DOC)
               </button>
-            ` : ''}
+            ` : `
+              <span class="badge" style="background: rgba(255,255,255,0.1); color: #94A3B8; font-size: 0.8rem; padding: 6px 12px;">
+                👁️ Acesso de Leitura para Moradores
+              </span>
+            `}
           </div>
         </div>
 
@@ -231,7 +235,7 @@ window.ContratosComponent = {
           </div>
         </div>
 
-        <!-- Tabela Completa de Contratos com Opções de Edição ✏️ e Exclusão 🗑️ -->
+        <!-- Tabela Completa de Contratos com Leitura para Moradores e Edição/Exclusão para o Síndico -->
         <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
           
           <div class="card-header" style="margin-bottom: 1.25rem;">
@@ -335,6 +339,13 @@ window.ContratosComponent = {
   },
 
   openImportModal() {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico tem permissão para postar ou importar novos contratos.');
+      return;
+    }
+
     const existing = document.getElementById('modalImportContrato');
     if (existing) existing.remove();
 
@@ -375,6 +386,13 @@ window.ContratosComponent = {
   },
 
   manipularArquivosContratosMulti(event) {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico pode cadastrar contratos.');
+      return;
+    }
+
     const files = Array.from(event.target.files);
     if (!files || files.length === 0) return;
 
@@ -394,7 +412,7 @@ window.ContratosComponent = {
         processados++;
 
         if (processados === files.length) {
-          App.showToast(`🚀 ${files.length} contrato(s) lidos e cadastrados com sucesso!`, 'success');
+          App.showToast(`🚀 ${files.length} contrato(s) lidos e cadastrados com sucesso pelo Síndico!`, 'success');
           const modal = document.getElementById('modalImportContrato');
           if (modal) modal.remove();
           App.render();
@@ -406,7 +424,6 @@ window.ContratosComponent = {
 
   parseEProcessarContratoAuto(text, fileName = '') {
     const lines = (text || '').split(/\r?\n/);
-    let empresaDetectada = '';
     let valorDetectado = 0;
     let objetoDetectado = '';
     let obrigacoesDetectadas = [];
@@ -470,6 +487,13 @@ window.ContratosComponent = {
   },
 
   openEditModal(id) {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico tem permissão para editar contratos.');
+      return;
+    }
+
     const contratos = window.CondoStore.data.contratos || [];
     const target = contratos.find(c => c.id === id);
     if (!target) return;
@@ -483,7 +507,7 @@ window.ContratosComponent = {
         <div class="modal-card" style="max-width: 580px; border: 2px solid #2563EB; border-radius: 12px;">
           <div class="modal-header" style="background: #0F172A; color: white;">
             <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
-              <span class="material-symbols-outlined" style="color: #60A5FA;">edit</span> Editar Contrato de Serviço
+              <span class="material-symbols-outlined" style="color: #60A5FA;">edit</span> Editar Contrato de Serviço (Painel do Síndico)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalEditContrato').remove()">✕</button>
           </div>
@@ -551,6 +575,13 @@ window.ContratosComponent = {
 
   salvarEdicaoContrato(e) {
     e.preventDefault();
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico pode salvar alterações de contratos.');
+      return;
+    }
+
     const contratos = window.CondoStore.data.contratos || [];
     const target = contratos.find(c => c.id === this.editingContractId);
     if (!target) return;
@@ -565,7 +596,7 @@ window.ContratosComponent = {
     target.valorTotalAnual = target.valorMensal * 12;
 
     window.CondoStore.saveData();
-    App.showToast(`✏️ Contrato "${target.empresa}" atualizado com sucesso!`, 'success');
+    App.showToast(`✏️ Contrato "${target.empresa}" atualizado com sucesso pelo Síndico!`, 'success');
 
     const modal = document.getElementById('modalEditContrato');
     if (modal) modal.remove();
@@ -637,6 +668,13 @@ window.ContratosComponent = {
   },
 
   excluirContrato(id, empresa) {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico tem permissão para excluir contratos.');
+      return;
+    }
+
     if (!confirm(`⚠️ CONFIRMAÇÃO DE EXCLUSÃO\n\nTem certeza que deseja EXCLUIR permanentemente o contrato "${empresa}"?`)) return;
 
     const res = window.CondoStore.deleteContrato(id);

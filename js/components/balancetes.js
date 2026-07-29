@@ -1,7 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Balancetes & Dashboard Financeiro
-   Importador 100% Automático de Planilhas Sem Solicitação de Preenchimento Manual
-   Selecionou o arquivo -> Lê a planilha -> Transforma em Dashboards e Gráficos Instantaneamente
+   Acesso Exclusivo de LEITURA para Moradores & Permissão ÚNICA do SÍNDICO para Importar, Editar e Excluir
    ---------------------------------------------------- */
 
 window.BalancetesComponent = {
@@ -10,7 +9,7 @@ window.BalancetesComponent = {
   render(container, data) {
     const user = window.CondoStore.currentUser;
     const isApproved = user && user.status === 'Aprovado';
-    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase() === 'condominio.modern.life@gmail.com');
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
 
     // Restrição de acesso para visitantes não autorizados
     if (!user || !isApproved) {
@@ -47,7 +46,6 @@ window.BalancetesComponent = {
     const percentExecucao = receita > 0 ? Math.min(100, Math.round((despesa / receita) * 100)) : 0;
     const percentSuperavit = 100 - percentExecucao;
 
-    // Paleta de Cores Clean Premium em Degradê Suave
     const categorias = (activeBal && activeBal.categoriasDespesa && activeBal.categoriasDespesa.length > 0)
       ? activeBal.categoriasDespesa
       : [
@@ -77,7 +75,7 @@ window.BalancetesComponent = {
                 Balancetes &amp; Dashboard Financeiro
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.2rem; color: #94A3B8;">
-                Importação 100% direta de planilhas. Selecione o arquivo e o sistema gera o dashboard na hora sem pedir valores.
+                ${isSindico ? 'Painel de Gestão do Síndico: Importe planilhas e gerencie os balancetes.' : 'Modo Leitura para Moradores: Acompanhe os balancetes e gráficos consolidados do caixa.'}
               </p>
             </div>
 
@@ -91,11 +89,16 @@ window.BalancetesComponent = {
                 `).join('')}
               </select>
 
+              <!-- Botão de Upload VISÍVEL SOMENTE PARA O SÍNDICO -->
               ${isSindico ? `
                 <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.8rem 1.1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px;" onclick="BalancetesComponent.openImportModal()">
                   <span class="material-symbols-outlined" style="font-size: 1.2rem;">cloud_upload</span> 📊 Carregar Planilha &amp; Gerar Dash
                 </button>
-              ` : ''}
+              ` : `
+                <span class="badge" style="background: rgba(255,255,255,0.1); color: #94A3B8; font-size: 0.8rem; padding: 6px 12px;">
+                  👁️ Modo Leitura (Morador)
+                </span>
+              `}
             </div>
           </div>
         </div>
@@ -349,6 +352,13 @@ window.BalancetesComponent = {
   },
 
   openImportModal() {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico tem permissão para importar planilhas ou alterar balancetes.');
+      return;
+    }
+
     const existing = document.getElementById('modalImportBalancete');
     if (existing) existing.remove();
 
@@ -389,6 +399,13 @@ window.BalancetesComponent = {
   },
 
   manipularArquivoPlanilha(event) {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico pode importar planilhas.');
+      return;
+    }
+
     const file = event.target.files[0];
     if (!file) return;
 
@@ -523,7 +540,7 @@ window.BalancetesComponent = {
 
     this.selectedBalanceteId = newBal.id;
 
-    App.showToast(`🚀 Planilha lida com sucesso! Dashboard e Prestação de Contas de ${mesFinal}/${anoFinal} gerados automaticamente.`, 'success');
+    App.showToast(`🚀 Planilha lida com sucesso pelo Síndico! Dashboard e Prestação de Contas de ${mesFinal}/${anoFinal} gerados automaticamente.`, 'success');
 
     const modal = document.getElementById('modalImportBalancete');
     if (modal) modal.remove();
@@ -532,6 +549,13 @@ window.BalancetesComponent = {
   },
 
   excluirBalancete(id, mesAno) {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico tem permissão para excluir balancetes.');
+      return;
+    }
+
     if (!confirm(`Tem certeza que deseja excluir o balancete de "${mesAno}"?`)) return;
 
     const res = window.CondoStore.deleteBalancete(id);
