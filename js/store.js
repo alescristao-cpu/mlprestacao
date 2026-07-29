@@ -1033,11 +1033,30 @@ class StoreEngine {
     }
     return false;
   }
+
+  invalidateQueries(queryKeys) {
+    if (!queryKeys) queryKeys = ['users', 'moradores'];
+    this.isSyncing = false;
+    return this.pullFromCloudSilently().then(() => {
+      this.notify();
+      if (window.App && typeof window.App.render === 'function') {
+        window.App.render();
+      }
+    });
+  }
 }
 
 // Inicialização segura com proteção de escopo global
 try {
   window.CondoStore = new StoreEngine();
+  window.queryClient = {
+    invalidateQueries: (queryKeys) => {
+      if (window.CondoStore) {
+        return window.CondoStore.invalidateQueries(queryKeys);
+      }
+      return Promise.resolve();
+    }
+  };
 } catch (err) {
   console.error('Erro na inicialização da Store:', err);
 }
