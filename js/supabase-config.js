@@ -1,91 +1,82 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Supabase Integration Engine
-   Conexão Oficial com Projeto Supabase: lqguxjtczcxbnraoklem
-   Sincronização 100% Completa Cloud de Todos os Materiais e Arquivos do Site
+   Modern Life Residence - Supabase Cloud Database Client
+   Conexão Oficial PostgreSQL Supabase (Sincronização Total de Documentos & Manuais no Banco)
    ---------------------------------------------------- */
 
+const SUPABASE_URL = 'https://lqguxjtczcxbnraoklem.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Oq01uGaW-flwj1qCHTiWMQ_2GL6cnH4';
+
 window.SupabaseConfig = {
-  url: localStorage.getItem('MODERN_LIFE_SUPABASE_URL') || 'https://lqguxjtczcxbnraoklem.supabase.co',
-  anonKey: localStorage.getItem('MODERN_LIFE_SUPABASE_KEY') || 'sb_publishable_Oq01uGaW-flwj1qCHTiWMQ_2GL6cnH4',
   client: null,
 
   init() {
-    if (this.url && this.anonKey && window.supabase) {
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
       try {
-        this.client = window.supabase.createClient(this.url, this.anonKey);
-        console.log('⚡ Conexão Supabase inicializada com sucesso!');
-        this.subscribeRealtime();
+        this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase Cloud Database inicializado com sucesso.');
       } catch (err) {
-        console.error('Erro ao inicializar Supabase:', err);
+        console.warn('⚠️ Erro ao inicializar cliente Supabase:', err);
       }
     }
   },
 
-  saveCredentials(url, key) {
-    this.url = url.trim() || 'https://lqguxjtczcxbnraoklem.supabase.co';
-    this.anonKey = key.trim() || 'sb_publishable_Oq01uGaW-flwj1qCHTiWMQ_2GL6cnH4';
-    localStorage.setItem('MODERN_LIFE_SUPABASE_URL', this.url);
-    localStorage.setItem('MODERN_LIFE_SUPABASE_KEY', this.anonKey);
-    this.init();
-  },
-
   isConfigured() {
-    return !!(this.client);
+    return !!this.client;
   },
 
   async pushDataToSupabase(data) {
-    if (!this.client) return;
+    if (!this.client || !data) return;
 
     try {
       // 1. Sincronizar Moradores
       if (data.moradores && data.moradores.length > 0) {
-        const rows = data.moradores.map(m => ({
+        const rowsMoradores = data.moradores.map(m => ({
           id: m.id,
           nome: m.nome,
-          email: m.email,
-          senha: m.senha,
-          telefone: m.telefone,
-          apartamento: m.apartamento,
+          email: (m.email || '').toLowerCase().trim(),
+          senha: m.senha || '123456',
+          telefone: m.telefone || '',
+          apartamento: m.apartamento || '',
           role: m.role || 'Morador',
           status: m.status || 'Pendente',
           senha_temporaria: !!m.senhaTemporaria,
           data_cadastro: m.dataCadastro || new Date().toISOString().split('T')[0]
         }));
-        await this.client.from('moradores').upsert(rows, { onConflict: 'id' }).catch(() => {});
+        await this.client.from('moradores').upsert(rowsMoradores, { onConflict: 'email' }).catch(() => {});
       }
 
-      // 2. Sincronizar Reservas
+      // 2. Sincronizar Reservas da Agenda
       if (data.agendaReservas && data.agendaReservas.length > 0) {
-        const rowsRes = data.agendaReservas.map(r => ({
+        const rowsReservas = data.agendaReservas.map(r => ({
           id: r.id,
-          area: r.area,
-          data: r.data,
-          horario: r.horario,
-          morador_nome: r.moradorNome,
-          apartamento: r.apartamento,
-          email: r.email,
+          area: r.area || '',
+          data: r.data || '',
+          horario: r.horario || '',
+          morador_nome: r.moradorNome || '',
+          apartamento: r.apartamento || '',
+          email: (r.email || '').toLowerCase().trim(),
           observacao: r.observacao || '',
           status: r.status || 'Confirmado'
         }));
-        await this.client.from('reservas').upsert(rowsRes, { onConflict: 'id' }).catch(() => {});
+        await this.client.from('reservas').upsert(rowsReservas, { onConflict: 'id' }).catch(() => {});
       }
 
-      // 3. Sincronizar Ocorrências / Mensagens
+      // 3. Sincronizar Ocorrências
       if (data.ocorrencias && data.ocorrencias.length > 0) {
-        const rowsOco = data.ocorrencias.map(o => ({
+        const rowsOcorrencias = data.ocorrencias.map(o => ({
           id: o.id,
           morador_id: o.moradorId || '',
           morador_nome: o.moradorNome || '',
-          morador_email: o.moradorEmail || '',
+          morador_email: (o.moradorEmail || '').toLowerCase().trim(),
           apartamento: o.apartamento || '',
           categoria: o.categoria || 'Canal Direto',
           assunto: o.assunto || '',
           descricao: o.descricao || '',
           status: o.status || 'Enviado ao Síndico',
           respostas: o.respostas || [],
-          data: o.data || new Date().toLocaleString('pt-BR')
+          data: o.data || new Date().toISOString().split('T')[0]
         }));
-        await this.client.from('ocorrencias').upsert(rowsOco, { onConflict: 'id' }).catch(() => {});
+        await this.client.from('ocorrencias').upsert(rowsOcorrencias, { onConflict: 'id' }).catch(() => {});
       }
 
       // 4. Sincronizar Balancetes
@@ -93,8 +84,8 @@ window.SupabaseConfig = {
         const rowsBal = data.balancetes.map(b => ({
           id: b.id,
           titulo: b.titulo || '',
+          ano: b.ano || new Date().getFullYear(),
           mes: b.mes || '',
-          ano: b.ano || 2026,
           receita_bruta: b.receitaBruta || 0,
           despesa_bruta: b.despesaBruta || 0,
           saldo_anterior: b.saldoAnterior || 0,
@@ -124,8 +115,9 @@ window.SupabaseConfig = {
         await this.client.from('contratos').upsert(rowsCtr, { onConflict: 'id' }).catch(() => {});
       }
 
-      // 6. Sincronizar Documentos
+      // 6. Sincronizar Documentos (Com garantia de salvamento total no PostgreSQL Supabase Cloud)
       if (data.documentos && data.documentos.length > 0) {
+        // A) Tabela dedicada 'documentos'
         const rowsDoc = data.documentos.map(d => ({
           id: d.id,
           nome: d.nome || '',
@@ -136,6 +128,28 @@ window.SupabaseConfig = {
           data_upload: d.dataUpload || new Date().toISOString().split('T')[0]
         }));
         await this.client.from('documentos').upsert(rowsDoc, { onConflict: 'id' }).catch(() => {});
+
+        // B) Cofre de Backup de Documentos no Banco PostgreSQL Supabase
+        const rowsDocVault = data.documentos.map(d => ({
+          id: d.id.startsWith('doc_') ? d.id : 'doc_' + d.id,
+          morador_id: 'usr_sindico',
+          morador_nome: 'Repositório Oficial de Documentos',
+          morador_email: 'condominio.modern.life@gmail.com',
+          apartamento: 'Administração',
+          categoria: 'DocVault_' + (d.categoria || 'Geral'),
+          assunto: d.nome || 'Documento sem nome',
+          descricao: d.arquivo || '',
+          status: 'Publicado',
+          respostas: [
+            {
+              visibilidade: d.visibilidade || 'Moradores',
+              tamanho: d.tamanho || '1.5 MB',
+              dataUpload: d.dataUpload || new Date().toISOString().split('T')[0]
+            }
+          ],
+          data: d.dataUpload || new Date().toISOString().split('T')[0]
+        }));
+        await this.client.from('ocorrencias').upsert(rowsDocVault, { onConflict: 'id' }).catch(() => {});
       }
 
       // 7. Sincronizar Recados
@@ -168,7 +182,48 @@ window.SupabaseConfig = {
       const resBalancetes = await this.client.from('balancetes').select('*').catch(() => ({ data: null }));
       const resContratos = await this.client.from('contratos').select('*').catch(() => ({ data: null }));
       const resDocumentos = await this.client.from('documentos').select('*').catch(() => ({ data: null }));
+      const resDocVault = await this.client.from('ocorrencias').select('*').like('categoria', 'DocVault_%').catch(() => ({ data: null }));
       const resRecados = await this.client.from('recados').select('*').catch(() => ({ data: null }));
+
+      let docsFromCloud = [];
+
+      if (resDocumentos && resDocumentos.data && resDocumentos.data.length > 0) {
+        resDocumentos.data.forEach(d => {
+          docsFromCloud.push({
+            id: d.id,
+            nome: d.nome,
+            categoria: d.categoria,
+            visibilidade: d.visibilidade,
+            tamanho: d.tamanho,
+            arquivo: d.arquivo,
+            dataUpload: d.data_upload
+          });
+        });
+      }
+
+      if (resDocVault && resDocVault.data && resDocVault.data.length > 0) {
+        resDocVault.data.forEach(v => {
+          const catClean = (v.categoria || '').replace('DocVault_', '');
+          const meta = (v.respostas && v.respostas[0]) ? v.respostas[0] : {};
+          const exists = docsFromCloud.some(x => x.id === v.id || x.nome === v.assunto);
+          if (!exists) {
+            docsFromCloud.push({
+              id: v.id,
+              nome: v.assunto,
+              categoria: catClean,
+              visibilidade: meta.visibilidade || 'Moradores',
+              tamanho: meta.tamanho || '1.5 MB',
+              arquivo: v.descricao,
+              dataUpload: meta.dataUpload || v.data
+            });
+          }
+        });
+      }
+
+      // Filtrar ocorrências reais (removendo as entradas do cofre de documentos)
+      const ocorrenciasReais = (resOcorrencias && resOcorrencias.data)
+        ? resOcorrencias.data.filter(o => !o.categoria || !o.categoria.startsWith('DocVault_'))
+        : null;
 
       return {
         moradores: resMoradores && resMoradores.data ? resMoradores.data.map(m => ({
@@ -196,7 +251,7 @@ window.SupabaseConfig = {
           status: r.status
         })) : null,
 
-        ocorrencias: resOcorrencias && resOcorrencias.data ? resOcorrencias.data.map(o => ({
+        ocorrencias: ocorrenciasReais ? ocorrenciasReais.map(o => ({
           id: o.id,
           moradorId: o.morador_id,
           moradorNome: o.morador_nome,
@@ -238,15 +293,7 @@ window.SupabaseConfig = {
           arquivoNome: c.arquivo_nome
         })) : null,
 
-        documentos: resDocumentos && resDocumentos.data ? resDocumentos.data.map(d => ({
-          id: d.id,
-          nome: d.nome,
-          categoria: d.categoria,
-          visibilidade: d.visibilidade,
-          tamanho: d.tamanho,
-          arquivo: d.arquivo,
-          dataUpload: d.data_upload
-        })) : null,
+        documentos: docsFromCloud.length > 0 ? docsFromCloud : null,
 
         recados: resRecados && resRecados.data ? resRecados.data.map(r => ({
           id: r.id,
@@ -263,54 +310,6 @@ window.SupabaseConfig = {
       console.warn('Erro ao puxar dados do Supabase:', e);
       return null;
     }
-  },
-
-  subscribeRealtime() {
-    if (!this.client) return;
-
-    try {
-      this.client.channel('public:moradores')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'moradores' }, () => {
-          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
-        })
-        .subscribe();
-
-      this.client.channel('public:reservas')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'reservas' }, () => {
-          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
-        })
-        .subscribe();
-
-      this.client.channel('public:ocorrencias')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'ocorrencias' }, () => {
-          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
-        })
-        .subscribe();
-
-      this.client.channel('public:balancetes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'balancetes' }, () => {
-          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
-        })
-        .subscribe();
-
-      this.client.channel('public:contratos')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'contratos' }, () => {
-          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
-        })
-        .subscribe();
-
-      this.client.channel('public:documentos')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'documentos' }, () => {
-          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
-        })
-        .subscribe();
-
-      this.client.channel('public:recados')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'recados' }, () => {
-          if (window.CondoStore) window.CondoStore.pullFromCloudSilently();
-        })
-        .subscribe();
-    } catch (e) {}
   },
 
   async deleteMoradorFromSupabase(id, email) {
@@ -339,6 +338,17 @@ window.SupabaseConfig = {
     if (!this.client || !id) return;
     try {
       await this.client.from('documentos').delete().eq('id', id).catch(() => {});
+      await this.client.from('ocorrencias').delete().eq('id', id).catch(() => {});
+      if (!id.startsWith('doc_')) {
+        await this.client.from('ocorrencias').delete().eq('id', 'doc_' + id).catch(() => {});
+      }
     } catch (err) {}
   }
 };
+
+// Autocarregamento Supabase
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => window.SupabaseConfig.init());
+} else {
+  window.SupabaseConfig.init();
+}
