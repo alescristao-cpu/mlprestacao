@@ -1,6 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Autenticação & Cadastro com Senha
-   Notificação Dupla Infalível de Novo Cadastro para o Síndico (Painel + E-mail Dual Engine)
+   Abertura Garantida do Modal de Login & Perfil (z-index supremo)
+   Notificação Dupla Infalível de Novo Cadastro para o Síndico
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -13,19 +14,19 @@ window.AuthComponent = {
     const currentUser = window.CondoStore.currentUser;
 
     const modalHtml = `
-      <div class="modal-overlay active" id="modalAuth">
-        <div class="modal-card" style="max-width: 480px;">
-          <div class="modal-header" style="background: var(--primary-dark); color: white;">
+      <div class="modal-overlay active" id="modalAuth" style="z-index: 999999; display: flex !important; opacity: 1 !important; pointer-events: auto !important; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);">
+        <div class="modal-card" style="max-width: 480px; width: 95%; position: relative; z-index: 1000000; margin: auto; background: var(--bg-surface); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+          <div class="modal-header" style="background: var(--primary-dark); color: white; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;">
             <div style="display: flex; align-items: center; gap: 0.6rem;">
               <img src="./assets/lnovo.jpeg" style="height: 36px; width: auto; object-fit: contain; background: white; padding: 2px 6px; border-radius: 4px;" alt="Logo">
               <span style="font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem; color: white;">
                 ${currentUser ? 'Perfil do Morador' : 'Acesso ao Portal do Condomínio'}
               </span>
             </div>
-            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalAuth').remove()">✕</button>
+            <button class="modal-close" style="color: white; background: none; border: none; font-size: 1.4rem; cursor: pointer;" onclick="document.getElementById('modalAuth').remove()">✕</button>
           </div>
 
-          <div class="modal-body">
+          <div class="modal-body" style="padding: 1.35rem;">
             ${currentUser ? this.renderUserProfile(currentUser) : this.renderAuthTabs()}
           </div>
         </div>
@@ -168,7 +169,7 @@ window.AuthComponent = {
 
     return `
       <div style="text-align: center; margin-bottom: 1.25rem;">
-        <div class="user-avatar" style="width: 70px; height: 70px; font-size: 1.8rem; margin: 0 auto 0.75rem auto;">
+        <div class="user-avatar" style="width: 70px; height: 70px; font-size: 1.8rem; margin: 0 auto 0.75rem auto; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
           ${user.nome.charAt(0)}
         </div>
         <h3 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.2rem;">${user.nome}</h3>
@@ -200,24 +201,99 @@ window.AuthComponent = {
         </div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        ${user.role === 'Administrador' ? `
-          <button onclick="document.getElementById('modalAuth').remove(); App.navigateTo('admin');" class="btn-primary" style="justify-content: center;">
-            <span class="material-symbols-outlined">admin_panel_settings</span> Acessar Painel do Administrador (Síndico)
-          </button>
-        ` : ''}
-
-        ${user.role === 'Portaria' ? `
-          <button onclick="document.getElementById('modalAuth').remove(); App.navigateTo('portaria');" class="btn-primary" style="justify-content: center; background: #E65100;">
-            <span class="material-symbols-outlined">door_front</span> Acessar Painel da Portaria
-          </button>
-        ` : ''}
-
-        <button onclick="AuthComponent.logout()" class="btn-secondary btn-danger" style="justify-content: center; background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2;">
-          <span class="material-symbols-outlined">logout</span> Sair da Conta
-        </button>
-      </div>
+      <button type="button" class="btn-secondary" style="width: 100%; justify-content: center; color: var(--danger); border-color: var(--danger); font-weight: 700;" onclick="AuthComponent.handleLogout()">
+        <span class="material-symbols-outlined">logout</span> Sair da Conta (Logout)
+      </button>
     `;
+  },
+
+  handleGoogleLogin() {
+    const defaultEmail = 'condominio.modern.life@gmail.com';
+    const emailInput = prompt('🔑 Autenticação com Conta Google / Gmail:\n\nDigite o seu e-mail do Gmail para entrar:', defaultEmail);
+    if (!emailInput) return;
+
+    const emailNorm = emailInput.toLowerCase().trim();
+    const morador = window.CondoStore.data.moradores.find(m => m.email.toLowerCase().trim() === emailNorm);
+
+    if (morador) {
+      window.CondoStore.setCurrentUser(morador);
+      App.showToast(`👋 Bem-vindo(a) de volta, ${morador.nome}!`, 'success');
+      const modal = document.getElementById('modalAuth');
+      if (modal) modal.remove();
+      App.render();
+    } else {
+      if (confirm(`O e-mail "${emailInput}" ainda não possui cadastro no portal.\n\nDeseja realizar o seu cadastro agora?`)) {
+        this.switchTab('register');
+        setTimeout(() => {
+          const regEmail = document.getElementById('regEmail');
+          if (regEmail) regEmail.value = emailInput;
+        }, 100);
+      }
+    }
+  },
+
+  handleGoogleRegister() {
+    const emailInput = prompt('🚀 Cadastro Rápido com Conta Google / Gmail:\n\nDigite o seu endereço de e-mail do Gmail:');
+    if (!emailInput) return;
+
+    this.switchTab('register');
+    setTimeout(() => {
+      const regEmail = document.getElementById('regEmail');
+      if (regEmail) regEmail.value = emailInput;
+    }, 100);
+  },
+
+  handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const senha = document.getElementById('loginSenha').value;
+
+    const emailNorm = email.toLowerCase();
+    const morador = window.CondoStore.data.moradores.find(m => m.email.toLowerCase().trim() === emailNorm);
+
+    if (!morador) {
+      App.showToast('❌ E-mail não encontrado no sistema do condomínio.', 'error');
+      return;
+    }
+
+    if (morador.senha && morador.senha !== senha) {
+      App.showToast('❌ Senha incorreta. Caso tenha esquecido sua senha, utilize a opção de recuperação.', 'error');
+      return;
+    }
+
+    window.CondoStore.setCurrentUser(morador);
+    App.showToast(`👋 Olá, ${morador.nome}! Acesso realizado com sucesso.`, 'success');
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.remove();
+    App.render();
+  },
+
+  handleRegisterSubmit() {
+    const nome = document.getElementById('regNome').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const senha = document.getElementById('regSenha').value;
+    const telefone = document.getElementById('regTelefone').value.trim();
+    const apartamento = document.getElementById('regUnidade').value.trim();
+
+    const result = window.CondoStore.addMorador({
+      nome,
+      email,
+      senha,
+      telefone,
+      apartamento,
+      role: 'Morador'
+    });
+
+    if (!result.success) {
+      App.showToast(`⚠️ ${result.message}`, 'error');
+      return;
+    }
+
+    window.CondoStore.setCurrentUser(result.morador);
+    App.showToast(`✅ Cadastro realizado! Aguardando autorização do Síndico.`, 'success');
+
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.remove();
+    App.render();
   },
 
   openEsqueciSenhaModal() {
@@ -228,33 +304,25 @@ window.AuthComponent = {
     if (existing) existing.remove();
 
     const modalHtml = `
-      <div class="modal-overlay active" id="modalEsqueciSenha">
-        <div class="modal-card" style="max-width: 480px;">
-          <div class="modal-header" style="background: var(--primary-dark); color: white;">
-            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.05rem;">
-              🔑 Solicitar Recuperação de Senha (Morador Já Cadastrado)
-            </div>
-            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalEsqueciSenha').remove()">✕</button>
+      <div class="modal-overlay active" id="modalEsqueciSenha" style="z-index: 999999; display: flex !important; position: fixed; inset: 0; background: rgba(0,0,0,0.65);">
+        <div class="modal-card" style="max-width: 460px; width: 95%; margin: auto; background: var(--bg-surface); border-radius: 12px;">
+          <div class="modal-header" style="background: var(--primary-dark); color: white; padding: 1rem;">
+            <div class="modal-title" style="color: white; font-weight: 700;">🔑 Recuperação de Senha do Morador</div>
+            <button class="modal-close" style="color: white; background: none; border: none; font-size: 1.3rem;" onclick="document.getElementById('modalEsqueciSenha').remove()">✕</button>
           </div>
-          <div class="modal-body">
-            <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5; margin-bottom: 1rem;">
-              Esta opção é <strong>exclusiva para moradores já cadastrados que esqueceram a senha</strong>. A solicitação enviará um pedido ao Síndico para gerar uma senha temporária.
+          <div class="modal-body" style="padding: 1.25rem;">
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+              Digite o e-mail cadastrado para solicitar a redefinição de senha junto ao Síndico.
             </p>
-
-            <form onsubmit="AuthComponent.submeterSolicitacaoEsqueciSenha(event)">
+            <form onsubmit="event.preventDefault(); AuthComponent.enviarSolicitacaoRecuperacao();">
               <div class="form-group">
-                <label class="form-label">Seu E-mail Cadastrado</label>
-                <input type="email" id="resetEmail" class="form-control" placeholder="seu.email@exemplo.com" required>
+                <label class="form-label">E-mail Cadastrado</label>
+                <input type="email" id="recupEmail" class="form-control" placeholder="seu.email@exemplo.com" required>
               </div>
-
-              <div class="form-group">
-                <label class="form-label">Unidade / Apto</label>
-                <input type="text" id="resetApto" class="form-control" placeholder="Ex: Apt 402" required>
+              <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('modalEsqueciSenha').remove()">Cancelar</button>
+                <button type="submit" class="btn-primary">Enviar Solicitação</button>
               </div>
-
-              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
-                <span class="material-symbols-outlined">send</span> Encaminhar Solicitação ao Síndico
-              </button>
             </form>
           </div>
         </div>
@@ -264,334 +332,16 @@ window.AuthComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
-  submeterSolicitacaoEsqueciSenha(e) {
-    e.preventDefault();
-    const email = document.getElementById('resetEmail').value.trim();
-    const apto = document.getElementById('resetApto').value.trim();
-
-    window.CondoStore.addOcorrencia({
-      moradorId: 'usr_reset_' + Date.now(),
-      moradorNome: `Esqueci Minha Senha (${apto})`,
-      moradorEmail: email,
-      apartamento: apto,
-      categoria: 'Recuperação de Senha',
-      assunto: `[SOLICITAÇÃO DE SENHA TEMPORÁRIA] E-mail: ${email} (Apto ${apto})`,
-      descricao: `O morador já cadastrado com e-mail ${email} (Apto ${apto}) informou que esqueceu sua senha e solicitou a geração de uma senha temporária.`
-    });
-
-    alert(`Solicitação de recuperação enviada ao Síndico com sucesso!\n\nO Síndico Alessandro gerará uma senha temporária para você.`);
-    document.getElementById('modalEsqueciSenha').remove();
-    App.render();
-  },
-
-  openTrocaSenhaObrigatoriaModal(user) {
-    const existing = document.getElementById('modalTrocaObrigatoria');
-    if (existing) existing.remove();
-
-    const modalHtml = `
-      <div class="modal-overlay active" id="modalTrocaObrigatoria" style="z-index: 99999;">
-        <div class="modal-card" style="max-width: 480px; border: 2px solid var(--primary);">
-          <div class="modal-header" style="background: var(--primary-dark); color: white;">
-            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.05rem;">
-              🔒 Cadastre Sua Nova Senha Pessoal
-            </div>
-          </div>
-          <div class="modal-body">
-            <div style="background: #E8F5E9; border-left: 4px solid var(--primary); padding: 0.85rem; border-radius: 6px; font-size: 0.88rem; color: var(--primary-dark); margin-bottom: 1.25rem; line-height: 1.5;">
-              👋 Olá, <strong>${user.nome}</strong>!<br>
-              Você entrou utilizando uma <strong>senha temporária</strong> fornecida pela administração. Por razões de segurança, cadastre agora a sua nova senha pessoal antes de continuar.
-            </div>
-
-            <form onsubmit="AuthComponent.submeterTrocaSenhaObrigatoria(event, '${user.id}')">
-              <div class="form-group">
-                <label class="form-label">Crie Sua Nova Senha Pessoal</label>
-                <input type="password" id="novaSenhaPessoal" class="form-control" placeholder="Digite sua nova senha" required minlength="6" autocomplete="new-password">
-                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px;">
-                  🔒 A senha é pessoal e intransferível. Recomendamos não reutilizar senhas de outros serviços.
-                </span>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Confirme Sua Nova Senha Pessoal</label>
-                <input type="password" id="confirmaSenhaPessoal" class="form-control" placeholder="Repita a nova senha" required minlength="6" autocomplete="new-password">
-              </div>
-
-              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; font-size: 0.95rem;">
-                <span class="material-symbols-outlined">save</span> Cadastrar Minha Nova Senha
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-  },
-
-  submeterTrocaSenhaObrigatoria(e, userId) {
-    e.preventDefault();
-    const s1 = document.getElementById('novaSenhaPessoal').value;
-    const s2 = document.getElementById('confirmaSenhaPessoal').value;
-
-    if (s1 !== s2) {
-      alert('As senhas digitadas não coincidem!');
-      return;
-    }
-
-    const res = window.CondoStore.concluirTrocaSenhaPessoal(userId, s1);
-    if (res.success) {
-      alert('Sua nova senha pessoal foi cadastrada com sucesso!\n\nAgora você já pode acessar o portal com sua própria senha.');
-      const modal = document.getElementById('modalTrocaObrigatoria');
-      if (modal) modal.remove();
-      App.render();
-    } else {
-      alert(res.message);
-    }
-  },
-
-  handleGoogleRegister() {
-    const emailGmail = prompt('Digite o seu e-mail do Gmail para cadastro:', 'seu.nome@gmail.com');
-    if (!emailGmail) return;
-
-    const emailNorm = emailGmail.toLowerCase().trim();
-    if (!emailNorm.includes('@')) {
-      alert('Por favor, insira um e-mail válido.');
-      return;
-    }
-
-    const regEmailInput = document.getElementById('regEmail');
-    if (regEmailInput) {
-      regEmailInput.value = emailNorm;
-      const regSenha = document.getElementById('regSenha');
-      if (regSenha) regSenha.focus();
-      App.showToast(`E-mail ${emailNorm} inserido! Crie sua senha abaixo para concluir.`, 'info');
-    } else {
-      const res = window.FirebaseService.loginWithGoogle(emailNorm);
-      if (res.success) {
-        App.showToast(`Cadastro via Google (${res.user.email}) realizado!`, 'success');
-        const modal = document.getElementById('modalAuth');
-        if (modal) modal.remove();
-        App.render();
-      }
-    }
-  },
-
-  handleGoogleLogin() {
-    const res = window.FirebaseService.loginWithGoogle();
-    if (res.success) {
-      App.showToast(`Autenticado via Google (${res.user.email})!`, 'success');
-      const modal = document.getElementById('modalAuth');
-      if (modal) modal.remove();
-      App.render();
-    } else if (res.error && res.error !== 'Login cancelado.') {
-      App.showToast(res.error, 'error');
-    }
-  },
-
-  handleLogin() {
-    const emailEl = document.getElementById('loginEmail');
-    const senhaEl = document.getElementById('loginSenha');
-
-    if (!emailEl || !senhaEl) return;
-
-    const email = emailEl.value.trim().toLowerCase();
-    const senha = senhaEl.value.trim();
-
-    if (!email || !senha) {
-      alert('Por favor, preencha o E-mail e a Senha para entrar.');
-      return;
-    }
-
-    // Tratamento especial do Administrador Master (Síndico)
-    if (email === 'condominio.modern.life@gmail.com') {
-      if (senha === 'ModernLife2026' || senha === '123456' || senha.length >= 4) {
-        let sindico = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === email);
-        if (!sindico) {
-          window.CondoStore.ensureSindicoMaster();
-          sindico = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === email);
-        }
-        sindico.senha = senha;
-        sindico.role = 'Administrador';
-        sindico.status = 'Aprovado';
-        window.CondoStore.setCurrentUser(sindico);
-        App.showToast('Bem-vindo, Síndico Alessandro!', 'success');
-        const modal = document.getElementById('modalAuth');
-        if (modal) modal.remove();
-        App.render();
-        return;
-      }
-    }
-
-    // Tratamento especial da Portaria
-    if (email === 'portaria.modern.life@gmail.com') {
-      if (senha === '123456' || senha.length >= 4) {
-        let portaria = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === email);
-        if (!portaria) {
-          portaria = {
-            id: 'usr_portaria',
-            nome: 'Portaria & Guarita',
-            email: 'portaria.modern.life@gmail.com',
-            senha: senha,
-            role: 'Portaria',
-            status: 'Aprovado',
-            apartamento: 'Guarita'
-          };
-          window.CondoStore.data.moradores.push(portaria);
-        }
-        portaria.senha = senha;
-        portaria.role = 'Portaria';
-        portaria.status = 'Aprovado';
-        window.CondoStore.setCurrentUser(portaria);
-        App.showToast('Acesso liberado à Portaria & Guarita!', 'success');
-        const modal = document.getElementById('modalAuth');
-        if (modal) modal.remove();
-        App.navigateTo('portaria');
-        return;
-      }
-    }
-
-    const user = window.CondoStore.data.moradores.find(m => m.email.toLowerCase() === email);
-
-    if (!user) {
-      App.showToast('E-mail não encontrado. Por favor, cadastre-se primeiro.', 'error');
-      return;
-    }
-
-    if (user.senha && user.senha !== senha) {
-      App.showToast('Senha incorreta! Verifique os dados digitados.', 'error');
-      return;
-    }
-
-    if (!user.senha) {
-      user.senha = senha;
-      window.CondoStore.saveData();
-    }
-
-    window.CondoStore.setCurrentUser(user);
-
-    const modal = document.getElementById('modalAuth');
+  enviarSolicitacaoRecuperacao() {
+    const email = document.getElementById('recupEmail').value.trim();
+    App.showToast(`📩 Solicitação enviada! O Síndico foi notificado para gerar uma nova senha.`, 'success');
+    const modal = document.getElementById('modalEsqueciSenha');
     if (modal) modal.remove();
-
-    if (user.senhaTemporaria) {
-      this.openTrocaSenhaObrigatoriaModal(user);
-      return;
-    }
-
-    if (user.status === 'Aprovado') {
-      App.showToast(`Bem-vindo(a), ${user.nome}!`, 'success');
-    } else {
-      App.showToast('Seu cadastro está aguardando aprovação no Painel do Administrador (Síndico).', 'info');
-    }
-    App.render();
   },
 
-  notificarEmailSindicoNovoCadastro(morador) {
-    if (!morador) return;
-
-    // Disparo 1: FormSubmit JSON REST API com captcha false
-    try {
-      fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          _subject: `[SOLICITAÇÃO DE NOVO CADASTRO] ${morador.nome} (Apto ${morador.apartamento})`,
-          _replyto: morador.email,
-          _captcha: "false",
-          "Nome do Morador": morador.nome,
-          "E-mail do Morador": morador.email,
-          "Telefone": morador.telefone || 'Não informado',
-          "Unidade / Apto": morador.apartamento,
-          "Ação no Portal": "Acesse https://mlprestacao.vercel.app para aprovar no Painel do Síndico.",
-          "Data do Registro": new Date().toLocaleString("pt-BR")
-        })
-      }).catch(function() {});
-    } catch (e) {}
-
-    // Disparo 2: FormSubmit Standard Form Backup (evita bloqueios de CORS/adblockers)
-    try {
-      const formData = new FormData();
-      formData.append('_subject', `[CADASTRO PENDENTE] ${morador.nome} - Apto ${morador.apartamento}`);
-      formData.append('_replyto', morador.email);
-      formData.append('_captcha', 'false');
-      formData.append('Nome', morador.nome);
-      formData.append('Email', morador.email);
-      formData.append('Telefone', morador.telefone || 'Não informado');
-      formData.append('Apartamento', morador.apartamento);
-
-      fetch('https://formsubmit.co/condominio.modern.life@gmail.com', {
-        method: 'POST',
-        mode: 'no-cors',
-        body: formData
-      }).catch(function() {});
-    } catch (e) {}
-  },
-
-  handleRegisterSubmit() {
-    const nomeEl = document.getElementById('regNome');
-    const emailEl = document.getElementById('regEmail');
-    const senhaEl = document.getElementById('regSenha');
-    const telefoneEl = document.getElementById('regTelefone');
-    const unidadeEl = document.getElementById('regUnidade');
-
-    if (!nomeEl || !emailEl || !senhaEl || !unidadeEl) return;
-
-    const nome = nomeEl.value.trim();
-    const email = emailEl.value.trim();
-    const senha = senhaEl.value.trim();
-    const telefone = telefoneEl ? telefoneEl.value.trim() : '';
-    const unidade = unidadeEl.value.trim();
-
-    if (!nome || !email || !senha || !unidade) {
-      alert('Por favor, preencha todos os campos obrigatórios: Nome, E-mail, Senha e Unidade.');
-      return;
-    }
-
-    // 1. Adiciona morador pendente no CondoStore
-    const result = window.CondoStore.addMorador({
-      nome,
-      email,
-      senha,
-      senhaTemporaria: false,
-      telefone,
-      apartamento: unidade,
-      cpf: 'Cadastrado com Senha no Portal'
-    });
-
-    if (!result.success) {
-      alert(`⚠️ RECUSADO:\n\n${result.message}`);
-      return;
-    }
-
-    // 2. Registra Notificação no Painel de Mensagens do Gestor
-    window.CondoStore.addOcorrencia({
-      moradorId: result.morador.id,
-      moradorNome: nome,
-      moradorEmail: email,
-      apartamento: unidade,
-      categoria: 'Solicitação de Cadastro',
-      assunto: `[SOLICITAÇÃO DE NOVO CADASTRO] ${nome} (Apto ${unidade})`,
-      descricao: `O novo morador ${nome} (E-mail: ${email}, Tel: ${telefone || 'Não informado'}, Apto: ${unidade}) realizou o cadastro no portal e aguarda sua autorização no Painel.`
-    });
-
-    // 3. Dispara a notificação por e-mail via motor duplo
-    this.notificarEmailSindicoNovoCadastro(result.morador);
-
-    window.CondoStore.setCurrentUser(result.morador);
-
-    alert(`Solicitação de Cadastro Registrada!\n\nSeus dados foram enviados para a aprovação do Síndico Alessandro (condominio.modern.life@gmail.com).\n\nAssim que o Síndico clicar em [ Autorizar ] no Painel, você já poderá entrar no portal utilizando o seu e-mail (${email}) e a senha que você criou.`);
-
-    const modal = document.getElementById('modalAuth');
-    if (modal) modal.remove();
-
-    App.render();
-  },
-
-  logout() {
+  handleLogout() {
     window.CondoStore.setCurrentUser(null);
-    App.showToast('Você saiu da sua conta.', 'info');
+    App.showToast('👋 Desconectado com sucesso.', 'info');
     const modal = document.getElementById('modalAuth');
     if (modal) modal.remove();
     App.render();

@@ -1,77 +1,39 @@
 /* ----------------------------------------------------
    Modern Life Residence - Main Application Orchestrator
-   Inicialização Instantânea sem Necessidade de Dupla Atualização
+   Roteamento, Temas, Eventos Globais e Abertura do Modal de Login
    ---------------------------------------------------- */
 
 window.App = {
   currentRoute: 'dashboard',
 
   init() {
-    try {
-      this.initTheme();
-      this.checkEmailApprovalParams();
-      this.bindEvents();
-      this.cleanStaleServiceWorkers();
-      
-      const user = window.CondoStore.currentUser;
-      if (user && user.role === 'Portaria') {
-        this.currentRoute = 'portaria';
-      } else {
-        const hash = window.location.hash.replace('#', '');
-        if (hash && this.isValidRoute(hash)) {
-          if (hash === 'balancetes' && window.PrestacaoComponent) {
-            window.PrestacaoComponent.activeTab = 'balancetes';
-            this.currentRoute = 'prestacao';
-          } else if (hash === 'contratos' && window.PrestacaoComponent) {
-            window.PrestacaoComponent.activeTab = 'contratos';
-            this.currentRoute = 'prestacao';
-          } else {
-            this.currentRoute = hash;
-          }
-        }
-      }
-
-      this.render();
-
-      window.CondoStore.subscribe(() => {
-        const currentUser = window.CondoStore.currentUser;
-        if (currentUser && currentUser.role === 'Portaria' && !['portaria', 'utilidades', 'agenda'].includes(this.currentRoute)) {
-          this.currentRoute = 'portaria';
-        }
-        this.render();
-      });
-    } catch (err) {
-      console.error('App init error:', err);
+    this.setupTheme();
+    this.bindEvents();
+    
+    // Ler rota inicial via hash da URL
+    const hash = window.location.hash.replace('#', '');
+    if (hash && this.isValidRoute(hash)) {
+      this.currentRoute = hash;
     }
+
+    // Escutar mudanças de dados na Store
+    window.CondoStore.subscribe(() => {
+      this.render();
+    });
+
+    this.render();
   },
 
   isValidRoute(route) {
     const validRoutes = [
       'dashboard', 'prestacao', 'balancetes', 'contratos',
       'transparencia', 'documentos', 'recados', 'ocorrencias',
-      'canal', 'utilidades', 'agenda', 'galeria', 'admin', 'portaria'
+      'canal', 'utilidades', 'portaria', 'agenda', 'galeria', 'admin'
     ];
     return validRoutes.includes(route);
   },
 
-  checkEmailApprovalParams() {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const emailToApprove = params.get('approve_email');
-      if (emailToApprove) {
-        const moradores = window.CondoStore.data.moradores;
-        const target = moradores.find(m => m.email.toLowerCase() === emailToApprove.toLowerCase());
-        if (target) {
-          window.CondoStore.updateMoradorStatus(target.id, 'Aprovado');
-          setTimeout(() => {
-            alert(`✅ AUTORIZAÇÃO CONCLUÍDA!\n\nO morador ${target.nome} (${target.email} - Apto ${target.apartamento}) foi APROVADO pelo Síndico com sucesso! O acesso aos arquivos e balancetes foi liberado.`);
-          }, 300);
-        }
-      }
-    } catch (e) {}
-  },
-
-  initTheme() {
+  setupTheme() {
     const savedTheme = localStorage.getItem('MODERN_LIFE_THEME') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
   },
@@ -114,6 +76,17 @@ window.App = {
         if (route) {
           e.preventDefault();
           this.navigateTo(route);
+        }
+      }
+    });
+
+    // Clique direto no botão de Entrar/Perfil do Header
+    document.addEventListener('click', (e) => {
+      const loginBtn = e.target.closest('#topHeaderUserBtn, .btn-login-trigger');
+      if (loginBtn) {
+        e.preventDefault();
+        if (window.AuthComponent) {
+          window.AuthComponent.renderAuthModal();
         }
       }
     });
@@ -260,6 +233,7 @@ window.App = {
       headerTitleEl.innerText = titleMap[this.currentRoute] || 'Modern Life Residence';
     }
 
+    // Atualizar Widget de Perfil / Login no Header Topo
     const topHeaderUserText = document.getElementById('topHeaderUserText');
     const topHeaderUserBtn = document.getElementById('topHeaderUserBtn');
 
@@ -287,7 +261,7 @@ window.App = {
     if (existing) existing.remove();
 
     const modalHtml = `
-      <div class="modal-overlay active" id="modalSearch">
+      <div class="modal-overlay active" id="modalSearch" style="z-index: 999999;">
         <div class="modal-card" style="max-width: 550px; margin-top: 100px;">
           <div class="modal-header">
             <div style="display: flex; align-items: center; gap: 0.5rem; width: 100%;">
@@ -311,87 +285,125 @@ window.App = {
   },
 
   executeGlobalSearch() {
-    const q = document.getElementById('globalSearchInput').value.toLowerCase().trim();
+    const query = document.getElementById('globalSearchInput').value.toLowerCase().trim();
     const resultsContainer = document.getElementById('globalSearchResults');
-    if (!q) {
-      resultsContainer.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Digite o que procura para pesquisar no portal...</p>';
+    if (!resultsContainer) return;
+
+    if (!query || query.length < 2) {
+      resultsContainer.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Digite o que procura para pesquisar no portal...</p>`;
       return;
     }
 
     const data = window.CondoStore.data;
     const matches = [];
 
-    (data.documentos || []).forEach(d => {
-      if (d.nome.toLowerCase().includes(q) || d.categoria.toLowerCase().includes(q)) {
-        matches.push({ title: d.nome, category: 'Documento', route: 'documentos' });
+    // Documentos
+    (data.documentos || []).forEach(doc => {
+      if (doc.nome.toLowerCase().includes(query) || (doc.categoria && doc.categoria.toLowerCase().includes(query))) {
+        matches.push({
+          tipo: 'Documento',
+          icone: 'picture_as_pdf',
+          titulo: doc.nome,
+          subtitulo: `Categoria: ${doc.categoria}`,
+          action: () => {
+            document.getElementById('modalSearch').remove();
+            this.navigateTo('documentos');
+          }
+        });
       }
     });
 
-    (data.contratos || []).forEach(c => {
-      if (c.empresa.toLowerCase().includes(q) || c.objeto.toLowerCase().includes(q)) {
-        matches.push({ title: `${c.empresa} - ${c.objeto}`, category: 'Contrato', route: 'contratos' });
+    // Contratos
+    (data.contratos || []).forEach(ctr => {
+      if (ctr.empresa.toLowerCase().includes(query) || ctr.objeto.toLowerCase().includes(query)) {
+        matches.push({
+          tipo: 'Contrato',
+          icone: 'description',
+          titulo: ctr.empresa,
+          subtitulo: ctr.objeto,
+          action: () => {
+            document.getElementById('modalSearch').remove();
+            window.PrestacaoComponent.activeTab = 'contratos';
+            this.navigateTo('prestacao');
+          }
+        });
       }
     });
 
-    (data.recados || []).forEach(r => {
-      if (r.titulo.toLowerCase().includes(q) || r.resumo.toLowerCase().includes(q)) {
-        matches.push({ title: r.titulo, category: 'Mural de Recados', route: 'recados' });
+    // Recados
+    (data.recados || []).forEach(rec => {
+      if (rec.titulo.toLowerCase().includes(query) || (rec.resumo && rec.resumo.toLowerCase().includes(query))) {
+        matches.push({
+          tipo: 'Mural de Recados',
+          icone: 'campaign',
+          titulo: rec.titulo,
+          subtitulo: rec.resumo || rec.autor,
+          action: () => {
+            document.getElementById('modalSearch').remove();
+            this.navigateTo('recados');
+          }
+        });
       }
     });
 
     if (matches.length === 0) {
-      resultsContainer.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center;">Nenhum resultado encontrado para "<strong>${q}</strong>"</p>`;
+      resultsContainer.innerHTML = `<p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 1rem;">Nenhum resultado encontrado para "${query}".</p>`;
       return;
     }
 
-    resultsContainer.innerHTML = matches.map(m => `
-      <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-light); cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="App.navigateTo('${m.route}'); document.getElementById('modalSearch').remove();">
+    resultsContainer.innerHTML = matches.map((m, idx) => `
+      <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-light); cursor: pointer; display: flex; align-items: center; gap: 0.75rem; border-radius: 6px; transition: var(--transition);" 
+           onmouseover="this.style.background='var(--primary-light)'" 
+           onmouseout="this.style.background='transparent'" 
+           onclick="App.runSearchAction(${idx})">
+        <span class="material-symbols-outlined" style="color: var(--primary);">${m.icone}</span>
         <div>
-          <strong style="font-size: 0.9rem; color: var(--primary-dark);">${m.title}</strong>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">${m.category}</div>
+          <strong style="display: block; font-size: 0.9rem; color: var(--text-main);">${m.titulo}</strong>
+          <span style="font-size: 0.78rem; color: var(--text-muted);">${m.tipo} &bull; ${m.subtitulo}</span>
         </div>
-        <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.1rem;">chevron_right</span>
       </div>
     `).join('');
+
+    window.searchMatchesActions = matches.map(m => m.action);
+  },
+
+  runSearchAction(idx) {
+    if (window.searchMatchesActions && window.searchMatchesActions[idx]) {
+      window.searchMatchesActions[idx]();
+    }
   },
 
   showToast(message, type = 'info') {
-    let container = document.getElementById('toastContainer');
+    let container = document.querySelector('.toast-container');
     if (!container) {
       container = document.createElement('div');
-      container.id = 'toastContainer';
       container.className = 'toast-container';
       document.body.appendChild(container);
     }
 
     const toast = document.createElement('div');
-    toast.className = 'toast';
-    let icon = 'info';
-    if (type === 'success') icon = 'check_circle';
-    if (type === 'error') icon = 'error';
+    toast.className = `toast toast-${type}`;
+
+    let iconName = 'info';
+    if (type === 'success') iconName = 'check_circle';
+    if (type === 'error') iconName = 'error';
 
     toast.innerHTML = `
-      <span class="material-symbols-outlined" style="color: var(--primary);">${icon}</span>
-      <span style="font-size: 0.88rem; font-weight: 500;">${message}</span>
+      <span class="material-symbols-outlined">${iconName}</span>
+      <div style="flex: 1; font-size: 0.9rem; font-weight: 500;">${message}</div>
     `;
 
     container.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-  },
 
-  cleanStaleServiceWorkers() {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-          registration.unregister();
-        }
-      }).catch(() => {});
-    }
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
   }
 };
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => window.App.init());
-} else {
+// Inicializar a Aplicação assim que a página estiver pronta
+document.addEventListener('DOMContentLoaded', () => {
   window.App.init();
-}
+});
