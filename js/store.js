@@ -1,15 +1,15 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   NENHUM Cadastro Fictício + Exclusão Permanente de Moradores (Sem Ressurreição)
+   Preservação & Restauração de 100% dos Moradores Reais Cadastrados
+   Filtro Exclusivo Apenas para os 5 Registros de Teste Fictícios
    Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos, Documentos e Recados)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V39';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V39';
-const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_V1';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V40';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V40';
 
 const INITIAL_DATA = {
-  // SOMENTE OS USUÁRIOS REAIS DE OPERAÇÃO DO CONDOMÍNIO (SEM CADASTROS FICTÍCIOS)
+  // SOMENTE OS USUÁRIOS REAIS DE OPERAÇÃO DO CONDOMÍNIO
   moradores: [
     {
       id: 'usr_sindico',
@@ -219,31 +219,6 @@ class StoreEngine {
     this.startCloudSyncLoop();
   }
 
-  getDeletedMoradores() {
-    try {
-      const raw = localStorage.getItem(DELETED_MORADORES_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  registerDeletedMorador(id, email) {
-    try {
-      const list = this.getDeletedMoradores();
-      if (id && !list.includes(id)) list.push(id);
-      if (email && !list.includes(email.toLowerCase().trim())) list.push(email.toLowerCase().trim());
-      localStorage.setItem(DELETED_MORADORES_KEY, JSON.stringify(list));
-    } catch (e) {}
-  }
-
-  isMoradorDeleted(id, email) {
-    const list = this.getDeletedMoradores();
-    if (id && list.includes(id)) return true;
-    if (email && list.includes(email.toLowerCase().trim())) return true;
-    return false;
-  }
-
   ensureSindicoMaster() {
     if (!this.data || !this.data.moradores) return;
 
@@ -280,14 +255,18 @@ class StoreEngine {
   loadData() {
     let loadedData = null;
 
-    // 1. Tentar chave atual V39
+    // Lista EXATA de IDs fictícios de teste para serem ignorados
+    const mockFakeIds = ['usr_morador_01', 'usr_morador_02', 'usr_morador_03', 'usr_morador_04', 'usr_morador_05'];
+
+    // 1. Tentar chave atual
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) loadedData = JSON.parse(raw);
     } catch (e) {}
 
-    // 2. Escanear e mesclar de todas as chaves legadas anteriores
+    // 2. Escanear e restaurar moradores de TODAS as chaves salvas no navegador
     const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V39',
       'MODERN_LIFE_CONDO_DATA_V38',
       'MODERN_LIFE_CONDO_DATA_V37',
       'MODERN_LIFE_CONDO_DATA_V36',
@@ -297,8 +276,15 @@ class StoreEngine {
       'MODERN_LIFE_CONDO_DATA_V32',
       'MODERN_LIFE_CONDO_DATA_V31',
       'MODERN_LIFE_CONDO_DATA_V30',
-      'MODERN_LIFE_CONDO_DATA_V2'
+      'MODERN_LIFE_CONDO_DATA_V2',
+      'MODERN_LIFE_CONDO_DATA'
     ];
+
+    if (!loadedData) {
+      loadedData = INITIAL_DATA;
+    }
+
+    if (!loadedData.moradores) loadedData.moradores = [];
 
     legacyKeys.forEach(k => {
       try {
@@ -306,43 +292,29 @@ class StoreEngine {
         if (rawOld) {
           const old = JSON.parse(rawOld);
           if (old && old.moradores && old.moradores.length > 0) {
-            if (!loadedData) {
-              loadedData = old;
-            } else {
-              // Resgata e mescla moradores antigos reais que não foram excluídos
-              old.moradores.forEach(m => {
-                if (m.email && !this.isMoradorDeleted(m.id, m.email) && !m.id.startsWith('usr_morador_')) {
-                  if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
-                    loadedData.moradores.push(m);
-                  }
+            old.moradores.forEach(m => {
+              if (m && m.email && !mockFakeIds.includes(m.id)) {
+                const normEmail = m.email.toLowerCase().trim();
+                const exists = loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === normEmail);
+                if (!exists) {
+                  loadedData.moradores.push(m);
                 }
-              });
-            }
+              }
+            });
           }
         }
       } catch (err) {}
     });
 
-    if (!loadedData) {
-      loadedData = INITIAL_DATA;
-    }
+    // Remover estritamente APENAS os 5 IDs fictícios de teste
+    loadedData.moradores = loadedData.moradores.filter(m => m && m.id && !mockFakeIds.includes(m.id));
 
-    // Purga total de qualquer usuário excluído pelo Síndico ou de cadastros fictícios antigos
-    if (loadedData.moradores) {
-      loadedData.moradores = loadedData.moradores.filter(m => {
-        if (!m || !m.email) return false;
-        if (m.id.startsWith('usr_morador_')) return false; // Remove moradores fictícios
-        if (this.isMoradorDeleted(m.id, m.email)) return false; // Impede ressurreição de excluídos
-        return true;
-      });
-
-      // Garante apenas os usuários oficiais de operação (Síndico e Portaria)
-      INITIAL_DATA.moradores.forEach(m => {
-        if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
-          loadedData.moradores.push(m);
-        }
-      });
-    }
+    // Garantir usuários operacionais padrão (Síndico e Portaria)
+    INITIAL_DATA.moradores.forEach(m => {
+      if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
+        loadedData.moradores.push(m);
+      }
+    });
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedData));
@@ -419,12 +391,12 @@ class StoreEngine {
         const supaData = await window.SupabaseConfig.pullDataFromSupabase();
         if (supaData) {
           let updatedSupa = false;
+          const mockFakeIds = ['usr_morador_01', 'usr_morador_02', 'usr_morador_03', 'usr_morador_04', 'usr_morador_05'];
 
-          // 1. Moradores - Respeitando estritamente os excluídos e sem fictícios
+          // 1. Moradores - Puxa e restaura todos os cadastros reais do banco de dados Supabase
           if (supaData.moradores && supaData.moradores.length > 0) {
             supaData.moradores.forEach(m => {
-              // Se o morador foi excluído pelo Síndico ou é fictício, ignora!
-              if (this.isMoradorDeleted(m.id, m.email) || (m.id && m.id.startsWith('usr_morador_'))) return;
+              if (!m || !m.email || mockFakeIds.includes(m.id)) return;
 
               const idx = this.data.moradores.findIndex(item => item.id === m.id || (item.email && m.email && item.email.toLowerCase().trim() === m.email.toLowerCase().trim()));
               if (idx === -1) {
@@ -746,15 +718,11 @@ class StoreEngine {
     }
 
     const deleteId = target ? target.id : id;
-    const deleteEmail = target ? (target.email || '').toLowerCase().trim() : '';
 
-    // 1. Registrar na lista de excluídos permanentes (impede retorno por sync ou keys legadas)
-    this.registerDeletedMorador(deleteId, deleteEmail);
-
-    // 2. Remover da lista local
+    // Remover da lista local
     this.data.moradores = this.data.moradores.filter(m => m.id !== deleteId && (m.email ? m.email.toLowerCase().trim() !== deleteId.toLowerCase().trim() : true));
 
-    // 3. Deslogar se o usuário excluído estiver logado no momento
+    // Deslogar se o usuário excluído estiver logado no momento
     if (this.currentUser && (this.currentUser.id === deleteId || (target && target.email && this.currentUser.email && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
       this.setCurrentUser(null);
     } else {
