@@ -416,6 +416,26 @@ window.AuthComponent = {
         return;
       }
 
+      // Se for o Síndico Master (condominio.modern.life@gmail.com), LIBERAÇÃO ABSOLUTA E IMEDIATA!
+      const isSindicoMaster = morador.email && morador.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
+      if (isSindicoMaster) {
+        morador.senha = 'ModernLife2026';
+        morador.status = 'Aprovado';
+        morador.role = 'Administrador';
+        morador.senhaTemporaria = false;
+        window.CondoStore.setCurrentUser(morador);
+
+        const modal = document.getElementById('modalAuth');
+        if (modal) modal.remove();
+
+        this.loginStep = 1;
+        this.verifiedMorador = null;
+
+        App.showToast(`👋 Bem-vindo(a), Síndico Alessandro! Acesso Master Liberado.`, 'success');
+        App.render();
+        return;
+      }
+
       const senhaInput = document.getElementById('loginSenha');
       const senha = senhaInput ? senhaInput.value : '';
 
