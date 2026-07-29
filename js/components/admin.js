@@ -134,7 +134,7 @@ window.AdminComponent = {
               </div>
 
               <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button class="btn-primary" style="background: #E65100; color: white; font-weight: 700; padding: 0.65rem 1rem; font-size: 0.85rem; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;" onclick="window.CondoStore.pullFromCloudSilently().then(() => App.render())">
+                <button class="btn-primary" style="background: #E65100; color: white; font-weight: 700; padding: 0.65rem 1rem; font-size: 0.85rem; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;" onclick="AdminComponent.buscarNovosPedidosNuvem()">
                   <span class="material-symbols-outlined" style="font-size: 1.1rem;">sync</span> 🔄 Buscar Novos Pedidos na Nuvem
                 </button>
 
@@ -376,6 +376,27 @@ window.AdminComponent = {
 
       </div>
     `;
+  },
+
+  async buscarNovosPedidosNuvem() {
+    if (window.App) App.showToast('🔍 Consultando banco de dados em nuvem Supabase...', 'info');
+    try {
+      if (window.CondoStore) {
+        window.CondoStore.isSyncing = false;
+        await window.CondoStore.pullFromCloudSilently();
+      }
+      if (window.App) App.render();
+      const pendentes = (window.CondoStore && window.CondoStore.data && window.CondoStore.data.moradores) 
+        ? window.CondoStore.data.moradores.filter(m => m && (m.status === 'Pendente' || m.status === 'Em Análise')) 
+        : [];
+      if (pendentes.length > 0) {
+        if (window.App) App.showToast(`✅ ${pendentes.length} pedido(s) de autorização pendente(s) encontrado(s)!`, 'success');
+      } else {
+        if (window.App) App.showToast('✅ Consulta concluída. Nenhum novo pedido pendente no momento.', 'info');
+      }
+    } catch (e) {
+      if (window.App) App.showToast('⚠️ Erro ao consultar a nuvem: ' + e.message, 'error');
+    }
   },
 
   setTab(tabName) {
