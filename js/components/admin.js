@@ -169,8 +169,8 @@ window.AdminComponent = {
                     </div>
 
                     <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.25rem;">
-                      <button class="btn-primary" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.85rem; font-weight: 700; min-width: 170px;" onclick="AdminComponent.aprovarMorador('${p.id}', '${p.nome}', '${p.email}', '${p.apartamento}')">
-                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">check_circle</span> ✅ Autorizar Acesso do Morador
+                      <button class="btn-primary" style="flex: 1; justify-content: center; background: #2E6B42; padding: 0.85rem; font-weight: 700; min-width: 170px;" onclick="AdminComponent.openConfirmarUnidadeEAutorizarModal('${p.id}', '${p.nome}', '${p.email}', '${p.apartamento}')">
+                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">check_circle</span> ✅ Autorizar & Confirmar Unidade
                       </button>
 
                       <button class="btn-secondary btn-danger" style="background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; padding: 0.85rem; font-weight: 700;" onclick="AdminComponent.recusarMorador('${p.id}', '${p.nome}')">
@@ -402,6 +402,76 @@ window.AdminComponent = {
   setTab(tabName) {
     this.activeTab = tabName;
     App.render();
+  },
+
+  openConfirmarUnidadeEAutorizarModal(id, nome, email, apartamentoAtual) {
+    const existing = document.getElementById('modalConfirmUnidade');
+    if (existing) existing.remove();
+
+    const aptoClean = (apartamentoAtual || '').trim();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalConfirmUnidade" style="z-index: 999999; display: flex !important; position: fixed; inset: 0; background: rgba(0,0,0,0.65); align-items: center; justify-content: center; padding: 1rem;">
+        <div class="modal-card" style="max-width: 500px; width: 100%; background: var(--bg-surface); border-radius: 12px; overflow: hidden; border: 2px solid #2E6B42; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+          <div class="modal-header" style="background: #2E6B42; color: white; padding: 1.1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+            <div class="modal-title" style="color: white; font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined">apartment</span> Confirmar Unidade & Autorizar
+            </div>
+            <button class="modal-close" style="color: white; background: none; border: none; font-size: 1.3rem; cursor: pointer;" onclick="document.getElementById('modalConfirmUnidade').remove()">✕</button>
+          </div>
+          <div class="modal-body" style="padding: 1.35rem;">
+            <div style="background: #E8F5E9; border: 1px solid #C8E6C9; padding: 1rem; border-radius: 8px; font-size: 0.9rem; color: #1F4D30; margin-bottom: 1.25rem; line-height: 1.5;">
+              👤 <strong>Morador:</strong> ${nome || 'Morador'}<br>
+              📧 <strong>E-mail:</strong> <code>${email || ''}</code>
+            </div>
+
+            <form onsubmit="event.preventDefault(); AdminComponent.submeterAprovacaoComUnidade('${id}', '${nome}', '${email}');">
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">Definir / Confirmar Unidade ou Apartamento *</label>
+                <input type="text" id="confirmAptoInput" class="form-control" placeholder="Ex: Apt 402, Apt 101, Cobertura 01" value="${aptoClean}" required style="font-weight: 700; font-size: 1.05rem; padding: 0.85rem;">
+              </div>
+
+              <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem;">Escolha rápida de unidade:</div>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.25rem;">
+                ${['Apt 101', 'Apt 102', 'Apt 201', 'Apt 202', 'Apt 301', 'Apt 302', 'Apt 401', 'Apt 402', 'Cobertura 01'].map(a => `
+                  <button type="button" style="background: #F5F5F5; border: 1px solid #DDD; border-radius: 6px; padding: 0.4rem 0.65rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; color: var(--primary-dark);" onclick="document.getElementById('confirmAptoInput').value = '${a}';">
+                    ${a}
+                  </button>
+                `).join('')}
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.95rem; font-weight: 800; font-size: 1.05rem; background: #2E6B42; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                <span class="material-symbols-outlined">check_circle</span> CONFIRMAR UNIDADE E LIBERAR ACESSO
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  submeterAprovacaoComUnidade(id, nome, email) {
+    const aptoInput = document.getElementById('confirmAptoInput');
+    const aptoFinal = aptoInput ? aptoInput.value.trim() : '';
+
+    if (!aptoFinal) {
+      App.showToast('⚠️ Por favor, informe a unidade ou apartamento do morador.', 'error');
+      return;
+    }
+
+    // Atualizar unidade no morador
+    const target = window.CondoStore.data.moradores.find(m => m.id === id || (m.email && m.email.toLowerCase().trim() === (email || '').toLowerCase().trim()));
+    if (target) {
+      target.apartamento = aptoFinal;
+      window.CondoStore.saveData();
+    }
+
+    this.aprovarMorador(id, nome, email, aptoFinal);
+
+    const modal = document.getElementById('modalConfirmUnidade');
+    if (modal) modal.remove();
   },
 
   aprovarMorador(id, nome, email, apartamento) {
