@@ -8,21 +8,21 @@ window.AdminComponent = {
   activeTab: 'autorizacao', // 'autorizacao' é a aba padrão priorizada
 
   render(container, data) {
-    const user = window.CondoStore.currentUser;
-    const isMasterAdmin = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
+    const user = window.CondoStore ? window.CondoStore.currentUser : null;
+    const isMasterAdmin = user && (user.role === 'Administrador' || (user.email && ['condominio.modern.life@gmail.com', 'contatoalecristiano@gmail.com'].includes(user.email.toLowerCase().trim())));
 
     if (!user || !isMasterAdmin) {
       container.innerHTML = `
-        <div class="card-widget" style="text-align: center; padding: 3rem 1.5rem; max-width: 550px; margin: 2rem auto;">
-          <span class="material-symbols-outlined" style="font-size: 3.5rem; color: #C62828; display: block; margin-bottom: 0.5rem;">admin_panel_settings</span>
-          <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.3rem; margin-top: 0.5rem;">
-            Acesso Restrito à Administração
+        <div class="card-widget" style="text-align: center; padding: 3rem 1.5rem; max-width: 580px; margin: 2rem auto; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-radius: 14px; border: 2px solid var(--primary-dark);">
+          <span class="material-symbols-outlined" style="font-size: 4rem; color: #2E6B42; display: block; margin-bottom: 0.5rem;">admin_panel_settings</span>
+          <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 800; margin-top: 0.5rem;">
+            Acesso ao Painel do Síndico Administrador
           </h2>
-          <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0; line-height: 1.5;">
-            Este painel é de uso exclusivo da conta oficial do Síndico <code>condominio.modern.life@gmail.com</code> para autorização, recusa, geração de senha temporária e gestão dos moradores.
+          <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0.85rem 0 1.35rem 0; line-height: 1.5;">
+            Para gerenciar moradores, aprovar novos cadastros, responder aos condôminos e fazer a gestão financeira do condomínio, é necessário se autenticar com a conta de Síndico Administrador.
           </p>
-          <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="width: 100%; justify-content: center; padding: 0.85rem;">
-            <span class="material-symbols-outlined">login</span> Entrar como Síndico (condominio.modern.life@gmail.com)
+          <button class="btn-primary" onclick="AuthComponent.verifiedMorador = null; AuthComponent.loginStep = 1; AuthComponent.irParaSenhaComEmail('condominio.modern.life@gmail.com')" style="width: 100%; justify-content: center; padding: 1rem; font-weight: 800; font-size: 1.05rem; background: linear-gradient(135deg, #2E6B42 0%, #1F4D30 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
+            <span class="material-symbols-outlined">key</span> ENTRAR COMO SÍNDICO ADMINISTRADOR
           </button>
         </div>
       `;
