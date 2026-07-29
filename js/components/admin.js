@@ -834,11 +834,6 @@ window.AdminComponent = {
                 <input type="email" id="quickEmail" class="form-control" placeholder="morador@exemplo.com" required>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Definir Senha Inicial de Acesso</label>
-                <input type="password" id="quickSenha" class="form-control" placeholder="Digite a senha para o morador" required autocomplete="new-password">
-              </div>
-
               <div class="form-grid">
                 <div class="form-group">
                   <label class="form-label">Unidade / Apto</label>
@@ -851,8 +846,13 @@ window.AdminComponent = {
                 </div>
               </div>
 
+              <div style="background: #E8F5E9; border: 1px solid #C8E6C9; padding: 0.85rem; border-radius: 8px; font-size: 0.82rem; color: #2E6B42; margin-bottom: 1rem;">
+                <span class="material-symbols-outlined" style="font-size: 1.1rem; vertical-align: middle;">info</span>
+                <strong>Sem necessidade de senha!</strong> O morador criará a sua própria senha pessoal no primeiro acesso ao entrar no portal.
+              </div>
+
               <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
-                <span class="material-symbols-outlined">check_circle</span> Liberar Acesso do Morador
+                <span class="material-symbols-outlined">check_circle</span> Autorizar e Conceder Acesso
               </button>
             </form>
           </div>
@@ -868,16 +868,17 @@ window.AdminComponent = {
     const nome = document.getElementById('quickNome').value.trim();
     const role = document.getElementById('quickRole').value;
     const email = document.getElementById('quickEmail').value.trim();
-    const senha = document.getElementById('quickSenha').value.trim();
     const apartamento = document.getElementById('quickApto').value.trim();
     const telefone = document.getElementById('quickTelefone') ? document.getElementById('quickTelefone').value.trim() : '';
+
+    const senhaProvisoria = '123456';
 
     const res = window.CondoStore.addMorador({
       nome,
       role,
       email,
-      senha: senha || '123456',
-      senhaTemporaria: true, // Obriga a criação da senha pessoal no primeiro acesso
+      senha: senhaProvisoria,
+      senhaTemporaria: true, // Obriga o morador a criar sua própria senha no primeiro acesso
       telefone,
       apartamento,
       cpf: 'Autorizado Pelo Síndico'
@@ -902,9 +903,9 @@ window.AdminComponent = {
             "Nome do Morador": nome || 'Morador',
             "Unidade / Apto": apartamento || '',
             "E-mail de Acesso": email,
-            "Senha Inicial Provisória": senha || '123456',
+            "Senha Inicial Provisória": senhaProvisoria,
             "Status": "AUTORIZADO",
-            "Instruções Importantes": `Seu acesso foi ativado pelo Síndico Alessandro. Ao entrar com o e-mail (${email}) e a senha inicial (${senha || '123456'}), o portal exibirá a tela para você cadastrar a sua nova senha pessoal.`,
+            "Instruções Importantes": `Seu acesso foi ativado pelo Síndico Alessandro. Ao entrar com o e-mail (${email}) e a senha provisória (${senhaProvisoria}), o portal exibirá a tela para você cadastrar a sua nova senha pessoal.`,
             "Link do Portal": "https://mlprestacao.vercel.app"
           })
         }).catch(() => {});
