@@ -11,7 +11,7 @@ window.ContratosComponent = {
   render(container, data) {
     const user = window.CondoStore.currentUser;
     const isApproved = user && user.status === 'Aprovado';
-    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    const isSindico = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
 
     // Access Gate para visitantes não aprovados
     if (!user || !isApproved) {

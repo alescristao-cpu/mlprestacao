@@ -33,7 +33,7 @@ const INITIAL_DATA = {
       email: 'contatoalecristiano@gmail.com',
       senha: 'ModernLife2026',
       status: 'Aprovado',
-      role: 'Administrador',
+      role: 'Morador',
       dataCadastro: '2025-01-10',
       photoURL: 'https://lh3.googleusercontent.com/a/default-user'
     },
@@ -327,12 +327,12 @@ class StoreEngine {
         email: 'contatoalecristiano@gmail.com',
         senha: 'ModernLife2026',
         status: 'Aprovado',
-        role: 'Administrador',
+        role: 'Morador',
         dataCadastro: '2025-01-10'
       };
       this.data.moradores.unshift(sindicoPessoal);
     } else {
-      sindicoPessoal.role = 'Administrador';
+      sindicoPessoal.role = 'Morador';
       sindicoPessoal.status = 'Aprovado';
       if (!sindicoPessoal.senha) sindicoPessoal.senha = 'ModernLife2026';
     }

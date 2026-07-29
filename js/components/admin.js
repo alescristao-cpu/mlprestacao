@@ -9,8 +9,9 @@ window.AdminComponent = {
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
+    const isMasterAdmin = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
 
-    if (!user || user.role !== 'Administrador') {
+    if (!user || !isMasterAdmin) {
       container.innerHTML = `
         <div class="card-widget" style="text-align: center; padding: 3rem 1.5rem; max-width: 550px; margin: 2rem auto;">
           <span class="material-symbols-outlined" style="font-size: 3.5rem; color: #C62828; display: block; margin-bottom: 0.5rem;">admin_panel_settings</span>
@@ -18,10 +19,10 @@ window.AdminComponent = {
             Acesso Restrito à Administração
           </h2>
           <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0 1.25rem 0; line-height: 1.5;">
-            Este painel é de uso exclusivo do Síndico <strong>Alessandro Cristiano da Silva</strong> para autorização, recusa, geração de senha temporária e gestão dos moradores.
+            Este painel é de uso exclusivo da conta oficial do Síndico <code>condominio.modern.life@gmail.com</code> para autorização, recusa, geração de senha temporária e gestão dos moradores.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="width: 100%; justify-content: center; padding: 0.85rem;">
-            <span class="material-symbols-outlined">login</span> Entrar como Síndico / Administrador
+            <span class="material-symbols-outlined">login</span> Entrar como Síndico (condominio.modern.life@gmail.com)
           </button>
         </div>
       `;

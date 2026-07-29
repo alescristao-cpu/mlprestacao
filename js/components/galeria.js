@@ -13,11 +13,7 @@ window.GaleriaComponent = {
 
   render(container, data) {
     const user = window.CondoStore ? window.CondoStore.currentUser : null;
-    const isSindico = user && (
-      user.role === 'Administrador' ||
-      (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com') ||
-      (user.email && user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com')
-    );
+    const isSindico = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
 
     let rawList = data.galeria || [];
 
@@ -153,11 +149,7 @@ window.GaleriaComponent = {
 
   openUploadModal() {
     const user = window.CondoStore ? window.CondoStore.currentUser : null;
-    const isSindico = user && (
-      user.role === 'Administrador' ||
-      (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com') ||
-      (user.email && user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com')
-    );
+    const isSindico = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
 
     if (!isSindico) {
       alert('🔒 Acesso Restrito ao Síndico.');

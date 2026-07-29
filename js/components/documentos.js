@@ -15,11 +15,7 @@ window.DocumentosComponent = {
   render(container, data) {
     const user = window.CondoStore ? window.CondoStore.currentUser : null;
     const isApproved = user && user.status === 'Aprovado';
-    const isSindico = user && (
-      user.role === 'Administrador' ||
-      (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com') ||
-      (user.email && user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com')
-    );
+    const isSindico = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
     const isConselheiro = user && user.role === 'Conselheiro';
     const isPortaria = user && user.role === 'Portaria';
 

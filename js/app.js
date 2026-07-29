@@ -239,10 +239,12 @@ window.App = {
 
     // Atualizar Badge de Pedidos de Aprovação Pendentes para o Síndico
     const pendentesCount = (data.moradores || []).filter(m => m.status === 'Pendente').length;
+    const isMasterAdmin = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
     const adminNavItem = document.querySelector('.nav-item[data-route="admin"]');
+    
     if (adminNavItem) {
       let badgeEl = adminNavItem.querySelector('.nav-pending-badge');
-      if (pendentesCount > 0 && user && user.role === 'Administrador') {
+      if (pendentesCount > 0 && isMasterAdmin) {
         if (!badgeEl) {
           badgeEl = document.createElement('span');
           badgeEl.className = 'nav-pending-badge';
@@ -257,13 +259,13 @@ window.App = {
 
     if (user) {
       if (topHeaderUserText) {
-        topHeaderUserText.innerText = pendentesCount > 0 && user.role === 'Administrador' 
+        topHeaderUserText.innerText = pendentesCount > 0 && isMasterAdmin 
           ? `${user.nome} (${pendentesCount} 🔔)` 
           : user.nome;
       }
       if (topHeaderUserBtn) {
         topHeaderUserBtn.title = `Conectado como: ${user.nome} (Apto ${user.apartamento})`;
-        topHeaderUserBtn.style.background = pendentesCount > 0 && user.role === 'Administrador' ? '#E65100' : 'var(--primary-dark)';
+        topHeaderUserBtn.style.background = pendentesCount > 0 && isMasterAdmin ? '#E65100' : 'var(--primary-dark)';
       }
     } else {
       if (topHeaderUserText) {
