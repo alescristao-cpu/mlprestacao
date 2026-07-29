@@ -106,6 +106,8 @@ window.AuthComponent = {
           </button>
         </div>
 
+        <div id="loginSenhaFeedback" style="margin-bottom: 0.75rem;"></div>
+
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
             <label class="form-label" style="margin-bottom: 0; font-weight: 700; color: var(--primary-dark);">Digite sua Senha de Acesso</label>
@@ -423,7 +425,21 @@ window.AuthComponent = {
       }
 
       if (morador.senha && morador.senha !== senha) {
-        App.showToast('❌ Senha incorreta. Verifique sua senha e tente novamente.', 'error');
+        const errorFeedback = document.getElementById('loginSenhaFeedback');
+        if (errorFeedback) {
+          errorFeedback.innerHTML = `
+            <div style="background: #FFEBEE; border: 2px solid #C62828; padding: 0.85rem 1rem; border-radius: 8px; margin-bottom: 0.75rem; text-align: center; box-shadow: 0 4px 12px rgba(198,40,40,0.25);">
+              <div style="font-weight: 800; color: #C62828; font-size: 0.95rem; margin-bottom: 0.25rem; display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                <span class="material-symbols-outlined" style="font-size: 1.2rem;">lock_reset</span> SENHA INCORRETA
+              </div>
+              <div style="font-size: 0.82rem; color: #B71C1C; font-weight: 600; line-height: 1.4;">
+                A senha digitada não confere com o cadastro de <strong>${morador.nome}</strong>.<br>
+                Tente novamente ou clique em <a href="javascript:void(0)" onclick="AuthComponent.openEsqueciSenhaModal()" style="color: #C62828; text-decoration: underline; font-weight: 800;">Esqueci minha senha</a>.
+              </div>
+            </div>
+          `;
+        }
+        App.showToast('❌ Senha incorreta. Verifique a senha digitada.', 'error');
         return;
       }
 
@@ -435,7 +451,7 @@ window.AuthComponent = {
       this.loginStep = 1;
       this.verifiedMorador = null;
 
-      if (morador.senhaTemporaria) {
+      if (morador.senhaTemporaria === true) {
         AuthComponent.openTrocaSenhaObrigatoriaModal(morador);
       } else {
         App.showToast(`👋 Olá, ${morador.nome}! Acesso realizado com sucesso.`, 'success');
