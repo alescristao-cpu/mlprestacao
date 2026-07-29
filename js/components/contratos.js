@@ -1,8 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Módulo & Dashboard de Gestão de Contratos
-   Importador Inteligente 100% Automático de Contratos em PDF, DOC, TXT e CSV
-   Suporte a Carregamento de MÚLTIPLOS ARQUIVOS SIMULTANEAMENTE (Batch Upload)
-   Sem digitação manual ou edição de texto/valores: Selecionou os arquivos -> Lê e cadastra tudo na hora
+   Importador Inteligente 100% Automático e Exclusão Total de Contratos
+   Suporte a Carregamento de MÚLTIPLOS ARQUIVOS e Exclusão Direta com Confirmação
    ---------------------------------------------------- */
 
 window.ContratosComponent = {
@@ -76,13 +75,13 @@ window.ContratosComponent = {
                 Dashboard de Contratos &amp; Prestadores de Serviços
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.8; color: #94A3B8; margin-top: 0.2rem;">
-                Importação em lote de múltiplos arquivos em PDF/DOC. O sistema lê e grava todos de uma vez sem pedir digitação.
+                Importação em lote de múltiplos contratos em PDF/DOC com opção de exclusão e controle total.
               </p>
             </div>
 
             ${isSindico ? `
               <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);" onclick="ContratosComponent.openImportModal()">
-                <span class="material-symbols-outlined" style="font-size: 1.3rem;">cloud_upload</span> 📄 Importar Vários Contratos (PDF / DOC)
+                <span class="material-symbols-outlined" style="font-size: 1.3rem;">cloud_upload</span> 📄 Importar Contratos (PDF / DOC)
               </button>
             ` : ''}
           </div>
@@ -195,6 +194,11 @@ window.ContratosComponent = {
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                       <strong style="color: #059669; font-size: 0.95rem;">R$ ${(c.valorMensal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}/mês</strong>
                       ${statusBadge}
+                      ${isSindico ? `
+                        <button class="btn-secondary btn-sm btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA; padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="ContratosComponent.excluirContrato('${c.id}', '${c.empresa}')" title="Excluir Contrato">
+                          <span class="material-symbols-outlined" style="font-size: 0.85rem;">delete</span> Excluir
+                        </button>
+                      ` : ''}
                     </div>
                   </div>
 
@@ -224,7 +228,7 @@ window.ContratosComponent = {
             <!-- Filtros e Busca -->
             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
               <div style="position: relative; min-width: 220px;">
-                <input type="text" class="form-control" placeholder="🔍 Buscar contrato ou empresa..." value="${this.termoBusca}" oninput="ContratosComponent.buscarContratos(this.value)" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+                <input type="text" class="form-control" placeholder="🔍 Buscar contrato ou serviço..." value="${this.termoBusca}" oninput="ContratosComponent.buscarContratos(this.value)" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
               </div>
 
               <select class="form-control" style="width: auto; font-size: 0.85rem; font-weight: 600;" onchange="ContratosComponent.filtrarStatus(this.value)">
@@ -240,12 +244,12 @@ window.ContratosComponent = {
             <table class="custom-table" style="border-collapse: separate; border-spacing: 0;">
               <thead>
                 <tr style="background: #F8FAFC;">
-                  <th style="color: #475569; font-weight: 700;">Empresa Contratada</th>
-                  <th style="color: #475569; font-weight: 700;">Objeto / Serviços</th>
+                  <th style="color: #475569; font-weight: 700;">Contrato / Serviço</th>
+                  <th style="color: #475569; font-weight: 700;">Objeto / Descrição</th>
                   <th style="text-align: right; color: #059669; font-weight: 700;">Valor Mensal (R$)</th>
                   <th style="color: #475569; font-weight: 700;">Vigência Contratual</th>
                   <th style="text-align: center; color: #475569; font-weight: 700;">Status</th>
-                  <th style="text-align: center; color: #475569; font-weight: 700;">Ações &amp; Obrigações</th>
+                  <th style="text-align: center; color: #475569; font-weight: 700;">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -285,8 +289,8 @@ window.ContratosComponent = {
                           <span class="material-symbols-outlined" style="font-size: 0.95rem;">visibility</span> Obrigações
                         </button>
                         ${isSindico ? `
-                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA;" onclick="ContratosComponent.excluirContrato('${c.id}', '${c.empresa}')" title="Excluir Contrato">
-                            <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span>
+                          <button class="btn-secondary btn-sm btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA; padding: 0.35rem 0.6rem; font-weight: 700;" onclick="ContratosComponent.excluirContrato('${c.id}', '${c.empresa}')" title="Excluir Contrato">
+                            <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir
                           </button>
                         ` : ''}
                       </div>
@@ -421,7 +425,6 @@ window.ContratosComponent = {
       }
     });
 
-    // Se o texto for PDF binário ou não tiver empresa clara, usa o nome do arquivo sanitizado
     const empresaFinal = empresaDetectada || (fileName ? fileName.replace(/\.[^/.]+$/, "").replace(/contrato/i, "").replace(/_/g, " ").trim() : 'Nova Prestadora Terceirizada');
     const valorFinal = valorDetectado > 0 ? valorDetectado : 1250.00;
     const objetoFinal = objetoDetectado || `Prestação de Serviços Terceirizados para o Condomínio (${fileName})`;
@@ -429,7 +432,6 @@ window.ContratosComponent = {
       ? obrigacoesDetectadas.slice(0, 4).join('\n• ')
       : 'Atendimento emergencial 24h, manutenção preventiva mensal com laudo técnico e reposição de componentes homologados.';
 
-    // CADASTRO 100% AUTOMÁTICO SEM DIGITAÇÃO DE TEXTO OU VALORES
     window.CondoStore.addContrato({
       empresa: empresaFinal,
       objeto: objetoFinal,
@@ -446,6 +448,9 @@ window.ContratosComponent = {
     const contratos = window.CondoStore.data.contratos || [];
     const target = contratos.find(c => c.id === id);
     if (!target) return;
+
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase() === 'condominio.modern.life@gmail.com');
 
     const existing = document.getElementById('modalVerObrigacoes');
     if (existing) existing.remove();
@@ -471,7 +476,7 @@ window.ContratosComponent = {
               </div>
             </div>
 
-            <div style="margin-bottom: 1rem;">
+            <div style="margin-bottom: 1.25rem;">
               <h4 style="font-size: 0.95rem; font-weight: 700; color: #0F172A; margin-bottom: 0.4rem;">
                 📋 Obrigações Principais &amp; Termos de Serviço:
               </h4>
@@ -480,9 +485,16 @@ window.ContratosComponent = {
               </div>
             </div>
 
-            <button class="btn-secondary" style="width: 100%; justify-content: center;" onclick="document.getElementById('modalVerObrigacoes').remove()">
-              Fechar Visualizador
-            </button>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="document.getElementById('modalVerObrigacoes').remove()">
+                Fechar Visualizador
+              </button>
+              ${isSindico ? `
+                <button class="btn-secondary btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA; font-weight: 700; padding: 0.6rem 1.1rem;" onclick="document.getElementById('modalVerObrigacoes').remove(); ContratosComponent.excluirContrato('${target.id}', '${target.empresa}');">
+                  <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span> Excluir Este Contrato
+                </button>
+              ` : ''}
+            </div>
 
           </div>
         </div>
@@ -493,11 +505,11 @@ window.ContratosComponent = {
   },
 
   excluirContrato(id, empresa) {
-    if (!confirm(`Tem certeza que deseja excluir o contrato da empresa "${empresa}"?`)) return;
+    if (!confirm(`⚠️ CONFIRMAÇÃO DE EXCLUSÃO\n\nTem certeza que deseja EXCLUIR permanentemente o contrato "${empresa}"?`)) return;
 
     const res = window.CondoStore.deleteContrato(id);
     if (res) {
-      App.showToast(`Contrato de "${empresa}" removido.`, 'info');
+      App.showToast(`🗑️ Contrato "${empresa}" excluído com sucesso!`, 'info');
       App.render();
     }
   }
