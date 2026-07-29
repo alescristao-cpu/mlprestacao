@@ -438,10 +438,9 @@ class StoreEngine {
       sindicoPessoal.role = 'Administrador';
       sindicoPessoal.status = 'Aprovado';
     }
-  }
 
     if (this.data.documentos) {
-      this.data.documentos = this.data.documentos.filter(d => d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome));
+      this.data.documentos = this.data.documentos.filter(d => d && d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome));
     }
 
     try {
