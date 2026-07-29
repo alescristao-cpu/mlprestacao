@@ -877,7 +877,7 @@ window.AdminComponent = {
       role,
       email,
       senha: senha || '123456',
-      senhaTemporaria: false,
+      senhaTemporaria: true, // Obriga a criação da senha pessoal no primeiro acesso
       telefone,
       apartamento,
       cpf: 'Autorizado Pelo Síndico'
@@ -891,20 +891,20 @@ window.AdminComponent = {
     // 1. Autorização instantânea no mesmo milissegundo
     window.CondoStore.updateMoradorStatus(res.morador.id, 'Aprovado');
 
-    // 2. Envio imediato de e-mail de notificação ao morador
+    // 2. Envio imediato de e-mail de notificação ao morador informando que criará sua própria senha
     if (email) {
       try {
         fetch(`https://formsubmit.co/ajax/${email}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({
-            _subject: `[MODERN LIFE RESIDENCE] Seu Acesso ao Portal Foi Autorizado pelo Síndico!`,
+            _subject: `[MODERN LIFE RESIDENCE] Seu Acesso Foi Autorizado! Crie sua Senha no Primeiro Acesso`,
             "Nome do Morador": nome || 'Morador',
             "Unidade / Apto": apartamento || '',
             "E-mail de Acesso": email,
-            "Senha de Acesso": senha || 'Senha definida na autorização',
-            "Status": "AUTORIZADO COM SUCESSO",
-            "Instruções": "Seu acesso ao portal oficial foi ativado pelo Síndico Alessandro. Você já pode acessar utilizando o seu e-mail e a senha cadastrada.",
+            "Senha Inicial Provisória": senha || '123456',
+            "Status": "AUTORIZADO",
+            "Instruções Importantes": `Seu acesso foi ativado pelo Síndico Alessandro. Ao entrar com o e-mail (${email}) e a senha inicial (${senha || '123456'}), o portal exibirá a tela para você cadastrar a sua nova senha pessoal.`,
             "Link do Portal": "https://mlprestacao.vercel.app"
           })
         }).catch(() => {});

@@ -255,12 +255,16 @@ window.AuthComponent = {
       }
 
       window.CondoStore.setCurrentUser(morador);
-      App.showToast(`👋 Olá, ${morador.nome}! Acesso realizado com sucesso.`, 'success');
 
       const modal = document.getElementById('modalAuth');
       if (modal) modal.remove();
 
-      App.render();
+      if (morador.senhaTemporaria) {
+        AuthComponent.openTrocaSenhaObrigatoriaModal(morador);
+      } else {
+        App.showToast(`👋 Olá, ${morador.nome}! Acesso realizado com sucesso.`, 'success');
+        App.render();
+      }
     } catch (err) {
       console.error('Erro no handleLogin:', err);
       alert('Erro ao tentar logar: ' + err.message);
@@ -383,5 +387,71 @@ window.AuthComponent = {
     const modal = document.getElementById('modalAuth');
     if (modal) modal.remove();
     App.render();
+  },
+
+  openTrocaSenhaObrigatoriaModal(morador) {
+    const existing = document.getElementById('modalTrocaSenhaObrigatoria');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalTrocaSenhaObrigatoria" style="z-index: 999999; display: flex !important; position: fixed; inset: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; padding: 1rem;">
+        <div class="modal-card" style="max-width: 480px; width: 100%; background: var(--bg-surface); border-radius: 12px; overflow: hidden; border: 2px solid #E65100; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+          <div class="modal-header" style="background: linear-gradient(135deg, #E65100 0%, #D84315 100%); color: white; padding: 1.1rem 1.25rem;">
+            <div class="modal-title" style="color: white; font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined">lock_reset</span> 🔑 Cadastre Sua Nova Senha Pessoal
+            </div>
+          </div>
+          <div class="modal-body" style="padding: 1.35rem;">
+            <div style="background: #FFF3E0; border: 1px solid #FFE0B2; padding: 1rem; border-radius: 8px; font-size: 0.88rem; color: #E65100; margin-bottom: 1.25rem; line-height: 1.5;">
+              👋 Olá, <strong>${morador ? morador.nome : 'Morador'}</strong> (Apto ${morador ? morador.apartamento : ''})!<br>
+              Seu acesso ao portal foi <strong>autorizado pelo Síndico</strong>. Para a sua segurança, você deve cadastrar a sua <strong>nova senha pessoal de acesso</strong> para continuar.
+            </div>
+
+            <form onsubmit="event.preventDefault(); AuthComponent.submeterTrocaSenhaObrigatoria('${morador ? morador.id : ''}');">
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">Crie Sua Nova Senha Pessoal *</label>
+                <input type="password" id="novaSenhaPessoalInput" class="form-control" placeholder="Digite sua nova senha pessoal" required minlength="6" autocomplete="new-password" style="font-weight: 600;">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">Confirme a Nova Senha *</label>
+                <input type="password" id="confirmaSenhaPessoalInput" class="form-control" placeholder="Repita a nova senha pessoal" required minlength="6" autocomplete="new-password" style="font-weight: 600;">
+              </div>
+
+              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.95rem; font-weight: 800; font-size: 1.05rem; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; border-radius: 10px; box-shadow: 0 4px 14px rgba(16,185,129,0.35); cursor: pointer;">
+                <span class="material-symbols-outlined">verified</span> SALVAR MINHA SENHA E ENTRAR NO PORTAL
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  submeterTrocaSenhaObrigatoria(moradorId) {
+    const s1 = document.getElementById('novaSenhaPessoalInput').value;
+    const s2 = document.getElementById('confirmaSenhaPessoalInput').value;
+
+    if (s1 !== s2) {
+      App.showToast('⚠️ As senhas digitadas não coincidem. Repita a mesma senha nos dois campos.', 'error');
+      return;
+    }
+
+    if (s1.length < 6) {
+      App.showToast('⚠️ A senha deve ter no mínimo 6 caracteres.', 'error');
+      return;
+    }
+
+    const res = window.CondoStore.concluirTrocaSenhaPessoal(moradorId, s1);
+    if (res.success) {
+      App.showToast('✅ Sua senha pessoal foi cadastrada com sucesso! Acesso liberado ao portal.', 'success');
+      const modal = document.getElementById('modalTrocaSenhaObrigatoria');
+      if (modal) modal.remove();
+      App.render();
+    } else {
+      App.showToast('⚠️ ' + res.message, 'error');
+    }
   }
 };
