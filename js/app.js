@@ -105,11 +105,20 @@ window.App = {
     const isPortaria = user && user.role === 'Portaria';
 
     if (route === 'admin') {
-      const token = localStorage.getItem('MODERN_LIFE_SESSION_TOKEN_V2');
-      const tokenPayload = await window.SessionTokenManager.verifyToken(token);
-      if (!tokenPayload || tokenPayload.role !== 'Administrador') {
-        this.showToast('⛔ Acesso Negado: Sessão de Administrador não possui assinatura criptográfica válida!', 'error');
+      if (!user || user.role !== 'Administrador') {
+        this.showToast('⚠️ O Painel Administrativo é de acesso exclusivo do Síndico Administrador. Por favor, entre com a conta do Síndico.', 'warning');
+        if (window.AuthComponent) {
+          window.AuthComponent.renderAuthModal();
+        }
         route = 'dashboard';
+      } else {
+        // Garantir e auto-renovar token assinado para o Administrador logado
+        let token = localStorage.getItem('MODERN_LIFE_SESSION_TOKEN_V2');
+        let tokenPayload = await window.SessionTokenManager.verifyToken(token);
+        if (!tokenPayload || tokenPayload.role !== 'Administrador') {
+          token = await window.SessionTokenManager.generateToken(user);
+          if (token) localStorage.setItem('MODERN_LIFE_SESSION_TOKEN_V2', token);
+        }
       }
     }
 

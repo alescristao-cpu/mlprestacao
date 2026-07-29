@@ -432,7 +432,7 @@ window.AuthComponent = {
         this.verifiedMorador = null;
 
         App.showToast(`👋 Bem-vindo(a), Síndico Alessandro! Acesso Master Liberado.`, 'success');
-        App.render();
+        App.navigateTo('admin');
         return;
       }
 
