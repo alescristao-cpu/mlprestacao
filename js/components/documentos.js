@@ -1,5 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Documentos & Manuais Oficial
+   Suporte Completo a Edição (✏️ Editar) e Exclusão (🗑️ Excluir) de Documentos pelo Síndico
    Suporte Completo a Upload Real de Arquivos (PDF, DOC, Imagens e Textos)
    ---------------------------------------------------- */
 
@@ -8,11 +9,16 @@ window.DocumentosComponent = {
   uploadedFileDataUrl: '',
   uploadedFileName: '',
   uploadedFileSize: '',
+  editingDocId: null,
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
     const isApproved = user && user.status === 'Aprovado';
-    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase() === 'condominio.modern.life@gmail.com');
+    const isSindico = user && (
+      user.role === 'Administrador' ||
+      (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com') ||
+      (user.email && user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com')
+    );
     const isConselheiro = user && user.role === 'Conselheiro';
     const isPortaria = user && user.role === 'Portaria';
 
@@ -22,7 +28,7 @@ window.DocumentosComponent = {
     let documentosVisiveis = rawDocs.filter(doc => {
       const vis = doc.visibilidade || 'Moradores';
       if (isSindico) return true; // O Síndico enxerga TODOS os documentos publicados
-      if (vis === 'Sindico') return false; // Ninguém além do Síndico enxerga visibilidade 'Sindico'
+      if (vis === 'Sindico') return false; // Visibilidade 'Sindico'
       if (vis === 'Conselho') return isConselheiro;
       if (vis === 'Portaria') return isPortaria;
       return true; // Visibilidade 'Moradores' ou 'Publico'
@@ -81,7 +87,7 @@ window.DocumentosComponent = {
         ` : ''}
 
         <!-- Grid de Documentos -->
-        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));">
           ${filtered.map(doc => {
             const visLabel = doc.visibilidade === 'Sindico' ? '🔒 Apenas Síndico' : doc.visibilidade === 'Conselho' ? '👑 Conselho' : doc.visibilidade === 'Portaria' ? '🚪 Portaria' : '🏡 Todos os Moradores';
             const visBadgeClass = doc.visibilidade === 'Sindico' ? 'badge-danger' : doc.visibilidade === 'Conselho' ? 'badge-success' : doc.visibilidade === 'Portaria' ? 'badge-warning' : 'badge-info';
@@ -127,6 +133,9 @@ window.DocumentosComponent = {
                   `}
 
                   ${isSindico ? `
+                    <button class="btn-secondary btn-sm" style="background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE;" onclick="DocumentosComponent.openEditModal('${doc.id}')" title="Editar Documento">
+                      <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span>
+                    </button>
                     <button class="btn-secondary btn-sm btn-danger" style="background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2;" onclick="DocumentosComponent.excluirDocumento('${doc.id}', '${doc.nome}')" title="Excluir Documento">
                       <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span>
                     </button>
@@ -178,29 +187,28 @@ window.DocumentosComponent = {
 
                 <input type="file" id="realFileInput" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.md" style="display: none;" onchange="DocumentosComponent.manipularSelecaoArquivo(event)">
 
-                <div id="fileInfoDisplay" style="margin-top: 0.85rem; font-weight: 700; font-size: 0.88rem; color: #166534; display: none; background: white; padding: 0.6rem; border-radius: 6px; border: 1px solid #BBF7D0;">
-                </div>
+                <div id="fileInfoDisplay" style="display: none; margin-top: 0.8rem; padding: 0.5rem; background: white; border: 1px solid #3ECF8E; border-radius: 6px; font-size: 0.85rem; color: var(--primary-dark);"></div>
               </div>
 
               <div class="form-group">
                 <label class="form-label" style="font-weight: 700;">Título / Nome do Documento</label>
-                <input type="text" id="docNomeInput" class="form-control" placeholder="Ex: Regimento Interno 2026 / Edital de Convocação" required style="font-weight: 600;">
+                <input type="text" id="docNomeInput" class="form-control" placeholder="Ex: Convenção Condominial Registrada 2026" required>
               </div>
 
               <div class="form-grid">
                 <div class="form-group">
-                  <label class="form-label" style="font-weight: 700;">Categoria</label>
+                  <label class="form-label" style="font-weight: 700;">Categoria do Documento</label>
                   <select id="docCategoriaInput" class="form-control" required style="font-weight: 600;">
                     <option value="Convenção">📜 Convenção</option>
-                    <option value="Regimento" selected>📘 Regimento Interno</option>
-                    <option value="Atas">📝 Atas de Assembleia</option>
-                    <option value="Laudos">📑 Laudos &amp; Vistorias</option>
-                    <option value="Manuais">🔧 Manuais &amp; Guias</option>
+                    <option value="Regimento">📘 Regimento Interno</option>
+                    <option value="Atas">📋 Atas de Assembleia</option>
+                    <option value="Laudos">🏗️ Laudos & Vistorias</option>
+                    <option value="Manuais">📖 Manuais do Condomínio</option>
                   </select>
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label" style="font-weight: 700; color: #E65100;">🔒 Público Alvo / Visibilidade</label>
+                  <label class="form-label" style="font-weight: 700;">Nível de Visibilidade</label>
                   <select id="docVisibilidadeInput" class="form-control" required style="font-weight: 700; border: 2px solid #FFE0B2; background: #FFF8E1;">
                     <option value="Moradores">🏡 Todos os Moradores (Público)</option>
                     <option value="Conselho">👑 Membros do Conselho &amp; Síndico</option>
@@ -228,6 +236,131 @@ window.DocumentosComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
+  openEditModal(id) {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (
+      user.role === 'Administrador' ||
+      (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com') ||
+      (user.email && user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com')
+    );
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico tem permissão para editar documentos.');
+      return;
+    }
+
+    const docs = window.CondoStore.data.documentos || [];
+    const target = docs.find(d => d.id === id);
+    if (!target) return;
+
+    this.editingDocId = id;
+    this.uploadedFileDataUrl = '';
+    this.uploadedFileName = '';
+    this.uploadedFileSize = '';
+
+    const existing = document.getElementById('modalEditDoc');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalEditDoc" style="z-index: 999999;">
+        <div class="modal-card" style="max-width: 560px; border: 2px solid #2563EB;">
+          <div class="modal-header" style="background: #0F172A; color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.4rem;">
+              <span class="material-symbols-outlined" style="color: #60A5FA;">edit</span> Editar Documento (Painel do Síndico)
+            </div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalEditDoc').remove()">✕</button>
+          </div>
+          <div class="modal-body">
+            <form onsubmit="DocumentosComponent.salvarEdicaoDocumento(event)">
+              
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">Título / Nome do Documento</label>
+                <input type="text" id="editDocNomeInput" class="form-control" value="${target.nome}" required style="font-weight: 700;">
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">Categoria do Documento</label>
+                  <select id="editDocCategoriaInput" class="form-control" required style="font-weight: 600;">
+                    <option value="Convenção" ${target.categoria === 'Convenção' ? 'selected' : ''}>📜 Convenção</option>
+                    <option value="Regimento" ${target.categoria === 'Regimento' ? 'selected' : ''}>📘 Regimento Interno</option>
+                    <option value="Atas" ${target.categoria === 'Atas' ? 'selected' : ''}>📋 Atas de Assembleia</option>
+                    <option value="Laudos" ${target.categoria === 'Laudos' ? 'selected' : ''}>🏗️ Laudos & Vistorias</option>
+                    <option value="Manuais" ${target.categoria === 'Manuais' ? 'selected' : ''}>📖 Manuais do Condomínio</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">Nível de Visibilidade</label>
+                  <select id="editDocVisibilidadeInput" class="form-control" required style="font-weight: 700; border: 2px solid #FFE0B2; background: #FFF8E1;">
+                    <option value="Moradores" ${target.visibilidade === 'Moradores' ? 'selected' : ''}>🏡 Todos os Moradores (Público)</option>
+                    <option value="Conselho" ${target.visibilidade === 'Conselho' ? 'selected' : ''}>👑 Membros do Conselho &amp; Síndico</option>
+                    <option value="Portaria" ${target.visibilidade === 'Portaria' ? 'selected' : ''}>🚪 Portaria &amp; Síndico</option>
+                    <option value="Sindico" ${target.visibilidade === 'Sindico' ? 'selected' : ''}>🔒 Apenas para o Síndico (Exclusivo)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Substituição de Arquivo Opcional -->
+              <div class="form-group" style="background: #F0F9FF; border: 2px dashed #0284C7; padding: 1rem; border-radius: 8px; text-align: center;">
+                <label for="editFileInput" style="cursor: pointer; display: block;">
+                  <span class="material-symbols-outlined" style="font-size: 2rem; color: #0284C7; display: block;">cloud_upload</span>
+                  <strong style="color: #0369A1; font-size: 0.9rem;">Substituir Arquivo Anexado (Opcional)</strong>
+                </label>
+                <input type="file" id="editFileInput" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.md" style="display: none;" onchange="DocumentosComponent.manipularSelecaoArquivo(event)">
+                <div id="fileInfoDisplay" style="display: none; margin-top: 0.5rem; padding: 0.4rem; background: white; border: 1px solid #0284C7; border-radius: 6px; font-size: 0.8rem;"></div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: var(--text-muted);">Ou informe um Novo Link / URL Web (Opcional)</label>
+                <input type="text" id="editDocArquivoInput" class="form-control" value="${target.arquivo && !target.arquivo.startsWith('data:') ? target.arquivo : ''}" placeholder="https://exemplo.com/documento.pdf" style="font-size: 0.85rem;">
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.25rem;">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('modalEditDoc').remove()">Cancelar</button>
+                <button type="submit" class="btn-primary" style="background: #2563EB;">Salvar Alterações</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  salvarEdicaoDocumento(e) {
+    e.preventDefault();
+    const id = this.editingDocId;
+    if (!id) return;
+
+    const docs = window.CondoStore.data.documentos || [];
+    const target = docs.find(d => d.id === id);
+    if (!target) return;
+
+    const nome = document.getElementById('editDocNomeInput').value.trim();
+    const categoria = document.getElementById('editDocCategoriaInput').value;
+    const visibilidade = document.getElementById('editDocVisibilidadeInput').value;
+    const urlManual = document.getElementById('editDocArquivoInput').value.trim();
+
+    target.nome = nome || target.nome;
+    target.categoria = categoria || target.categoria;
+    target.visibilidade = visibilidade || target.visibilidade;
+
+    if (this.uploadedFileDataUrl) {
+      target.arquivo = this.uploadedFileDataUrl;
+      target.tamanho = this.uploadedFileSize || target.tamanho;
+    } else if (urlManual) {
+      target.arquivo = urlManual;
+    }
+
+    window.CondoStore.saveData();
+    App.showToast(`Documento "${target.nome}" atualizado com sucesso pelo Síndico!`, 'success');
+
+    const modal = document.getElementById('modalEditDoc');
+    if (modal) modal.remove();
+    App.render();
+  },
+
   manipularSelecaoArquivo(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -242,7 +375,7 @@ window.DocumentosComponent = {
     this.uploadedFileName = file.name;
     this.uploadedFileSize = sizeStr;
 
-    const inputNome = document.getElementById('docNomeInput');
+    const inputNome = document.getElementById('docNomeInput') || document.getElementById('editDocNomeInput');
     if (inputNome && !inputNome.value) {
       inputNome.value = file.name.replace(/\.[^/.]+$/, "");
     }
@@ -310,11 +443,22 @@ window.DocumentosComponent = {
   },
 
   excluirDocumento(id, nome) {
-    if (!confirm(`Tem certeza que deseja excluir o documento "${nome}"?`)) return;
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && (
+      user.role === 'Administrador' ||
+      (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com') ||
+      (user.email && user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com')
+    );
+    if (!isSindico) {
+      alert('🔒 Acesso Restrito: Apenas o Síndico pode excluir documentos.');
+      return;
+    }
+
+    if (!confirm(`⚠️ Confirmação do Síndico:\n\nTem certeza que deseja excluir definitivamente o documento "${nome}" do portal e do banco de dados?`)) return;
 
     const res = window.CondoStore.deleteDocumento(id);
     if (res) {
-      App.showToast(`Documento "${nome}" excluído.`, 'info');
+      App.showToast(`Documento "${nome}" excluído com sucesso!`, 'info');
       App.render();
     } else {
       alert('Este documento não pode ser excluído.');
