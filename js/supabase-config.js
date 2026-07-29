@@ -524,6 +524,20 @@ window.SupabaseConfig = {
     try {
       await this.client.from('reservas').delete().eq('id', id).catch(() => {});
     } catch (err) {}
+  },
+
+  subscribeRealtime() {
+    if (!this.client) return;
+    try {
+      this.client
+        .channel('public-condo-changes')
+        .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+          if (window.CondoStore && !window.CondoStore.isBroadcasting) {
+            window.CondoStore.pullFromCloudSilently();
+          }
+        })
+        .subscribe();
+    } catch (e) {}
   }
 };
 

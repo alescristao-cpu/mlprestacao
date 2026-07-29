@@ -565,12 +565,34 @@ class StoreEngine {
 
   saveData(data) {
     this.data = data || this.data;
+    this.lastLocalMutationTime = Date.now();
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
       this.cleanOldLocalStorageKeys();
     } catch (e) {}
     this.notify();
-    this.broadcastToCloud();
+    this.debouncedBroadcastToCloud();
+  }
+
+  debouncedBroadcastToCloud() {
+    if (this.broadcastTimer) clearTimeout(this.broadcastTimer);
+    this.broadcastTimer = setTimeout(() => {
+      this.broadcastToCloud();
+    }, 400);
+  }
+
+  async broadcastToCloud() {
+    if (this.isBroadcasting) return;
+    this.isBroadcasting = true;
+    try {
+      if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+        await window.SupabaseConfig.pushDataToSupabase(this.data);
+      }
+    } catch (e) {
+      console.warn('Erro no broadcast para a nuvem:', e);
+    } finally {
+      this.isBroadcasting = false;
+    }
   }
 
   async loadUser() {
@@ -657,11 +679,13 @@ class StoreEngine {
     this.pullFromCloudSilently();
     setInterval(() => {
       this.pullFromCloudSilently();
-    }, 2500);
+    }, 3000);
   }
 
   async pullFromCloudSilently() {
-    if (this.isSyncing) return;
+    if (this.isSyncing || this.isBroadcasting || (this.lastLocalMutationTime && Date.now() - this.lastLocalMutationTime < 2500)) {
+      return;
+    }
     this.isSyncing = true;
 
     try {
