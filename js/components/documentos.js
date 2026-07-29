@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
-   Modern Life Residence - Documentos & Manuais Oficial
-   Suporte Completo a Edição (✏️ Editar) e Exclusão (🗑️ Excluir) de Documentos pelo Síndico
-   Suporte Completo a Upload Real de Arquivos (PDF, DOC, Imagens e Textos)
+   Modern Life Residence - Documentos, Convenção, Regimentos & Manuais
+   Upload Seguro com Indicador de Leitura + Exclusão Permanente no Banco de Dados
+   Suporte Completo aos E-mails Autorizados do Síndico (condominio.modern.life@gmail.com e contatoalecristiano@gmail.com)
    ---------------------------------------------------- */
 
 window.DocumentosComponent = {
@@ -9,10 +9,11 @@ window.DocumentosComponent = {
   uploadedFileDataUrl: '',
   uploadedFileName: '',
   uploadedFileSize: '',
+  isReadingFile: false,
   editingDocId: null,
 
   render(container, data) {
-    const user = window.CondoStore.currentUser;
+    const user = window.CondoStore ? window.CondoStore.currentUser : null;
     const isApproved = user && user.status === 'Aprovado';
     const isSindico = user && (
       user.role === 'Administrador' ||
@@ -27,8 +28,8 @@ window.DocumentosComponent = {
     // FILTRAGEM RIGOROSA DE VISIBILIDADE POR PERFIL DE USUÁRIO:
     let documentosVisiveis = rawDocs.filter(doc => {
       const vis = doc.visibilidade || 'Moradores';
-      if (isSindico) return true; // O Síndico enxerga TODOS os documentos publicados
-      if (vis === 'Sindico') return false; // Visibilidade 'Sindico'
+      if (isSindico) return true; // O Síndico enxerga TODOS os documentos
+      if (vis === 'Sindico') return false; // Apenas Síndico
       if (vis === 'Conselho') return isConselheiro;
       if (vis === 'Portaria') return isPortaria;
       return true; // Visibilidade 'Moradores' ou 'Publico'
@@ -88,7 +89,13 @@ window.DocumentosComponent = {
 
         <!-- Grid de Documentos -->
         <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));">
-          ${filtered.map(doc => {
+          ${filtered.length === 0 ? `
+            <div class="card-widget" style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
+              <span class="material-symbols-outlined" style="font-size: 3rem; color: var(--border-color); display: block; margin-bottom: 0.5rem;">folder_off</span>
+              <strong>Nenhum documento cadastrado na categoria "${this.activeCategory}".</strong>
+              ${isSindico ? `<br><span style="font-size: 0.85rem;">Clique em <strong>📤 Publicar Novo Documento</strong> acima para anexar um arquivo.</span>` : ''}
+            </div>
+          ` : filtered.map(doc => {
             const visLabel = doc.visibilidade === 'Sindico' ? '🔒 Apenas Síndico' : doc.visibilidade === 'Conselho' ? '👑 Conselho' : doc.visibilidade === 'Portaria' ? '🚪 Portaria' : '🏡 Todos os Moradores';
             const visBadgeClass = doc.visibilidade === 'Sindico' ? 'badge-danger' : doc.visibilidade === 'Conselho' ? 'badge-success' : doc.visibilidade === 'Portaria' ? 'badge-warning' : 'badge-info';
 
@@ -159,9 +166,12 @@ window.DocumentosComponent = {
     this.uploadedFileDataUrl = '';
     this.uploadedFileName = '';
     this.uploadedFileSize = '';
+    this.isReadingFile = false;
 
     const existing = document.getElementById('modalUploadDoc');
     if (existing) existing.remove();
+
+    const catSelecionada = (this.activeCategory !== 'Todos') ? this.activeCategory : 'Regimento';
 
     const modalHtml = `
       <div class="modal-overlay active" id="modalUploadDoc" style="z-index: 999999;">
@@ -179,7 +189,7 @@ window.DocumentosComponent = {
               <div class="form-group" style="background: #F0FDF4; border: 2px dashed #3ECF8E; padding: 1.2rem; border-radius: 8px; text-align: center;">
                 <label for="realFileInput" style="cursor: pointer; display: block;">
                   <span class="material-symbols-outlined" style="font-size: 2.8rem; color: #2E6B42; display: block; margin-bottom: 0.3rem;">cloud_upload</span>
-                  <strong style="color: var(--primary-dark); font-size: 1rem;">Clique aqui para selecionar o arquivo no seu dispositivo</strong>
+                  <strong style="color: var(--primary-dark); font-size: 1rem;">Clique aqui para escolher o PDF ou arquivo</strong>
                   <span style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
                     Suporta PDF, Word (.doc, .docx), Imagens e Documentos de Texto (até 15MB)
                   </span>
@@ -192,18 +202,18 @@ window.DocumentosComponent = {
 
               <div class="form-group">
                 <label class="form-label" style="font-weight: 700;">Título / Nome do Documento</label>
-                <input type="text" id="docNomeInput" class="form-control" placeholder="Ex: Convenção Condominial Registrada 2026" required>
+                <input type="text" id="docNomeInput" class="form-control" placeholder="Ex: Regimento Interno 2026 / Manual da Piscina" required>
               </div>
 
               <div class="form-grid">
                 <div class="form-group">
                   <label class="form-label" style="font-weight: 700;">Categoria do Documento</label>
                   <select id="docCategoriaInput" class="form-control" required style="font-weight: 600;">
-                    <option value="Convenção">📜 Convenção</option>
-                    <option value="Regimento">📘 Regimento Interno</option>
-                    <option value="Atas">📋 Atas de Assembleia</option>
-                    <option value="Laudos">🏗️ Laudos & Vistorias</option>
-                    <option value="Manuais">📖 Manuais do Condomínio</option>
+                    <option value="Regimento" ${catSelecionada === 'Regimento' ? 'selected' : ''}>📘 Regimento Interno</option>
+                    <option value="Manuais" ${catSelecionada === 'Manuais' ? 'selected' : ''}>📖 Manuais do Condomínio</option>
+                    <option value="Convenção" ${catSelecionada === 'Convenção' ? 'selected' : ''}>📜 Convenção</option>
+                    <option value="Atas" ${catSelecionada === 'Atas' ? 'selected' : ''}>📋 Atas de Assembleia</option>
+                    <option value="Laudos" ${catSelecionada === 'Laudos' ? 'selected' : ''}>🏗️ Laudos & Vistorias</option>
                   </select>
                 </div>
 
@@ -221,10 +231,10 @@ window.DocumentosComponent = {
               <!-- Alternativa de Link/Caminho Manual -->
               <div class="form-group">
                 <label class="form-label" style="font-weight: 600; font-size: 0.82rem; color: var(--text-muted);">Ou informe um Link/URL Web do Documento (Opcional caso não envie arquivo)</label>
-                <input type="text" id="docArquivoInput" class="form-control" placeholder="https://exemplo.com/documento.pdf ou assets/docs/..." style="font-size: 0.85rem;">
+                <input type="text" id="docArquivoInput" class="form-control" placeholder="https://exemplo.com/documento.pdf" style="font-size: 0.85rem;">
               </div>
 
-              <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; margin-top: 0.5rem; background: var(--primary);">
+              <button type="submit" id="btnSubmitDoc" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700; margin-top: 0.5rem; background: var(--primary);">
                 <span class="material-symbols-outlined">send</span> Publicar Documento no Portal
               </button>
             </form>
@@ -237,7 +247,7 @@ window.DocumentosComponent = {
   },
 
   openEditModal(id) {
-    const user = window.CondoStore.currentUser;
+    const user = window.CondoStore ? window.CondoStore.currentUser : null;
     const isSindico = user && (
       user.role === 'Administrador' ||
       (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com') ||
@@ -256,6 +266,7 @@ window.DocumentosComponent = {
     this.uploadedFileDataUrl = '';
     this.uploadedFileName = '';
     this.uploadedFileSize = '';
+    this.isReadingFile = false;
 
     const existing = document.getElementById('modalEditDoc');
     if (existing) existing.remove();
@@ -281,11 +292,11 @@ window.DocumentosComponent = {
                 <div class="form-group">
                   <label class="form-label" style="font-weight: 700;">Categoria do Documento</label>
                   <select id="editDocCategoriaInput" class="form-control" required style="font-weight: 600;">
-                    <option value="Convenção" ${target.categoria === 'Convenção' ? 'selected' : ''}>📜 Convenção</option>
                     <option value="Regimento" ${target.categoria === 'Regimento' ? 'selected' : ''}>📘 Regimento Interno</option>
+                    <option value="Manuais" ${target.categoria === 'Manuais' ? 'selected' : ''}>📖 Manuais do Condomínio</option>
+                    <option value="Convenção" ${target.categoria === 'Convenção' ? 'selected' : ''}>📜 Convenção</option>
                     <option value="Atas" ${target.categoria === 'Atas' ? 'selected' : ''}>📋 Atas de Assembleia</option>
                     <option value="Laudos" ${target.categoria === 'Laudos' ? 'selected' : ''}>🏗️ Laudos & Vistorias</option>
-                    <option value="Manuais" ${target.categoria === 'Manuais' ? 'selected' : ''}>📖 Manuais do Condomínio</option>
                   </select>
                 </div>
 
@@ -317,7 +328,7 @@ window.DocumentosComponent = {
 
               <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.25rem;">
                 <button type="button" class="btn-secondary" onclick="document.getElementById('modalEditDoc').remove()">Cancelar</button>
-                <button type="submit" class="btn-primary" style="background: #2563EB;">Salvar Alterações</button>
+                <button type="submit" id="btnSubmitDoc" class="btn-primary" style="background: #2563EB;">Salvar Alterações</button>
               </div>
             </form>
           </div>
@@ -328,8 +339,110 @@ window.DocumentosComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
+  manipularSelecaoArquivo(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    let sizeStr = '';
+    if (file.size < 1024 * 1024) {
+      sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+    } else {
+      sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    this.uploadedFileName = file.name;
+    this.uploadedFileSize = sizeStr;
+    this.isReadingFile = true;
+
+    const display = document.getElementById('fileInfoDisplay');
+    if (display) {
+      display.style.display = 'block';
+      display.innerHTML = `⏳ Processando arquivo <strong>${file.name}</strong> (${sizeStr})... por favor aguarde um momento.`;
+    }
+
+    const btnSubmit = document.getElementById('btnSubmitDoc');
+    if (btnSubmit) {
+      btnSubmit.disabled = true;
+      btnSubmit.style.opacity = '0.6';
+      btnSubmit.innerHTML = '⏳ Processando Arquivo...';
+    }
+
+    const inputNome = document.getElementById('docNomeInput') || document.getElementById('editDocNomeInput');
+    if (inputNome && !inputNome.value) {
+      inputNome.value = file.name.replace(/\.[^/.]+$/, "");
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.uploadedFileDataUrl = e.target.result;
+      this.isReadingFile = false;
+
+      if (display) {
+        display.style.background = '#F0FDF4';
+        display.style.borderColor = '#3ECF8E';
+        display.innerHTML = `✅ Arquivo Carregado com Sucesso: <strong>${file.name}</strong> (${sizeStr})`;
+      }
+
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.style.opacity = '1';
+        btnSubmit.innerHTML = '<span class="material-symbols-outlined">send</span> Publicar Documento no Portal';
+      }
+    };
+
+    reader.onerror = () => {
+      this.isReadingFile = false;
+      alert('Erro ao ler o arquivo selecionado. Por favor tente novamente.');
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.style.opacity = '1';
+      }
+    };
+
+    reader.readAsDataURL(file);
+  },
+
+  submeterUploadDocumento(e) {
+    e.preventDefault();
+    if (this.isReadingFile) {
+      alert('⏳ Aguarde o carregamento do arquivo ser concluído antes de enviar.');
+      return;
+    }
+
+    const nome = document.getElementById('docNomeInput').value.trim();
+    const categoria = document.getElementById('docCategoriaInput').value;
+    const visibilidade = document.getElementById('docVisibilidadeInput').value;
+    const urlManual = document.getElementById('docArquivoInput').value.trim();
+
+    const arquivoFinal = this.uploadedFileDataUrl || urlManual || 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf';
+    const tamanhoFinal = this.uploadedFileSize || '1.8 MB';
+
+    if (!nome) return;
+
+    window.CondoStore.addDocumento({
+      nome,
+      categoria,
+      visibilidade,
+      arquivo: arquivoFinal,
+      tamanho: tamanhoFinal
+    });
+
+    App.showToast(`Documento "${nome}" publicado na categoria "${categoria}" com sucesso!`, 'success');
+    
+    const modal = document.getElementById('modalUploadDoc');
+    if (modal) modal.remove();
+    
+    this.activeCategory = categoria; // Muda para a categoria do documento inserido para o Síndico ver imediatamente
+    App.render();
+  },
+
   salvarEdicaoDocumento(e) {
     e.preventDefault();
+    if (this.isReadingFile) {
+      alert('⏳ Aguarde o carregamento do arquivo ser concluído antes de salvar.');
+      return;
+    }
+
     const id = this.editingDocId;
     if (!id) return;
 
@@ -354,69 +467,12 @@ window.DocumentosComponent = {
     }
 
     window.CondoStore.saveData();
-    App.showToast(`Documento "${target.nome}" atualizado com sucesso pelo Síndico!`, 'success');
+    App.showToast(`Documento "${target.nome}" atualizado com sucesso!`, 'success');
 
     const modal = document.getElementById('modalEditDoc');
     if (modal) modal.remove();
-    App.render();
-  },
 
-  manipularSelecaoArquivo(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    let sizeStr = '';
-    if (file.size < 1024 * 1024) {
-      sizeStr = (file.size / 1024).toFixed(1) + ' KB';
-    } else {
-      sizeStr = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
-    }
-
-    this.uploadedFileName = file.name;
-    this.uploadedFileSize = sizeStr;
-
-    const inputNome = document.getElementById('docNomeInput') || document.getElementById('editDocNomeInput');
-    if (inputNome && !inputNome.value) {
-      inputNome.value = file.name.replace(/\.[^/.]+$/, "");
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      this.uploadedFileDataUrl = e.target.result;
-
-      const display = document.getElementById('fileInfoDisplay');
-      if (display) {
-        display.style.display = 'block';
-        display.innerHTML = `
-          ✅ Arquivo Selecionado: <strong>${file.name}</strong> (${sizeStr})
-        `;
-      }
-    };
-    reader.readAsDataURL(file);
-  },
-
-  submeterUploadDocumento(e) {
-    e.preventDefault();
-    const nome = document.getElementById('docNomeInput').value.trim();
-    const categoria = document.getElementById('docCategoriaInput').value;
-    const visibilidade = document.getElementById('docVisibilidadeInput').value;
-    const urlManual = document.getElementById('docArquivoInput').value.trim();
-
-    const arquivoFinal = this.uploadedFileDataUrl || urlManual || 'assets/docs/EDITAL_AGE_11.08.2026_-_MODERN_LIFE_assinado.pdf';
-    const tamanhoFinal = this.uploadedFileSize || '1.8 MB';
-
-    if (!nome) return;
-
-    window.CondoStore.addDocumento({
-      nome,
-      categoria,
-      visibilidade,
-      arquivo: arquivoFinal,
-      tamanho: tamanhoFinal
-    });
-
-    App.showToast(`Documento "${nome}" publicado com sucesso! Visibilidade: ${visibilidade}`, 'success');
-    document.getElementById('modalUploadDoc').remove();
+    this.activeCategory = categoria;
     App.render();
   },
 
@@ -443,7 +499,7 @@ window.DocumentosComponent = {
   },
 
   excluirDocumento(id, nome) {
-    const user = window.CondoStore.currentUser;
+    const user = window.CondoStore ? window.CondoStore.currentUser : null;
     const isSindico = user && (
       user.role === 'Administrador' ||
       (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com') ||
@@ -454,11 +510,11 @@ window.DocumentosComponent = {
       return;
     }
 
-    if (!confirm(`⚠️ Confirmação do Síndico:\n\nTem certeza que deseja excluir definitivamente o documento "${nome}" do portal e do banco de dados?`)) return;
+    if (!confirm(`⚠️ Confirmação do Síndico:\n\nTem certeza que deseja excluir definitivamente o documento "${nome}"?`)) return;
 
     const res = window.CondoStore.deleteDocumento(id);
     if (res) {
-      App.showToast(`Documento "${nome}" excluído com sucesso!`, 'info');
+      App.showToast(`Documento "${nome}" excluído com sucesso.`, 'info');
       App.render();
     } else {
       alert('Este documento não pode ser excluído.');

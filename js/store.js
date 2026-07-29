@@ -727,6 +727,28 @@ class StoreEngine {
     return true;
   }
 
+  getDeletedDocsList() {
+    try {
+      const raw = localStorage.getItem('MODERN_LIFE_DELETED_DOCS_LIST_V1');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  registerDeletedDoc(id) {
+    try {
+      const list = this.getDeletedDocsList();
+      if (id && !list.includes(id)) list.push(id);
+      localStorage.setItem('MODERN_LIFE_DELETED_DOCS_LIST_V1', JSON.stringify(list));
+    } catch (e) {}
+  }
+
+  isDocDeleted(id) {
+    const list = this.getDeletedDocsList();
+    return id && list.includes(id);
+  }
+
   addDocumento(doc) {
     if (!this.data.documentos) this.data.documentos = [];
     const newDoc = {
@@ -744,6 +766,7 @@ class StoreEngine {
 
   deleteDocumento(id) {
     if (!this.data.documentos) return false;
+    this.registerDeletedDoc(id);
     this.data.documentos = this.data.documentos.filter(d => d.id !== id);
     this.saveData();
     if (window.SupabaseConfig && window.SupabaseConfig.deleteDocumentoFromSupabase) {
