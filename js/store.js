@@ -1,11 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Suporte a Balancetes, Prestação de Contas e Módulo de Gestão de Contratos com Leitor de PDF e Dashboard
-   Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos, Documentos e Recados com Imagens)
+   Suporte a Balancetes, Prestação de Contas e Módulo de Gestão de Contratos com Nomes Genéricos de Serviços
+   Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos, Documentos e Recados)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V35';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V35';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V36';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V36';
 
 const INITIAL_DATA = {
   moradores: [
@@ -100,10 +100,11 @@ const INITIAL_DATA = {
     }
   ],
 
+  // CONTRATOS COM NOMES GENÉRICOS DE SERVIÇO (SEM NOMES ESPECÍFICOS DE MARCAS)
   contratos: [
     {
       id: 'ctr_01',
-      empresa: 'OTIS Elevadores S/A',
+      empresa: 'Manutenção de Elevadores',
       categoria: 'Elevadores',
       objeto: 'Manutenção Preventiva e Corretiva dos Elevadores Sociais e de Serviço da Torre',
       valorMensal: 1050.00,
@@ -112,11 +113,11 @@ const INITIAL_DATA = {
       vigenciaFim: '2027-01-01',
       obrigacoes: 'Atendimento de emergência 24h em até 30 minutos, substituição de peças originais, vistoria preventiva mensal com laudo técnico e manutenção do sistema de resgate de passageiros.',
       status: 'Ativo',
-      arquivoNome: 'CONTRATO_OTIS_ELEVADORES_2025.pdf'
+      arquivoNome: 'CONTRATO_MANUTENCAO_ELEVADORES.pdf'
     },
     {
       id: 'ctr_02',
-      empresa: 'Grupo Servis Portaria & Segurança',
+      empresa: 'Portaria & Limpeza Terceirizada',
       categoria: 'Portaria & Limpeza',
       objeto: 'Prestação de Serviços Terceirizados de Portaria 24h, Ronda e Limpeza Predial',
       valorMensal: 28933.49,
@@ -125,11 +126,11 @@ const INITIAL_DATA = {
       vigenciaFim: '2026-09-01',
       obrigacoes: 'Escala 12x36, cobertura imediata de faltas em até 2h, auditoria mensal de crachás de visitantes, fornecimento de uniformes, EPIs e treinamento contínuo de segurança.',
       status: 'A Vencer',
-      arquivoNome: 'CONTRATO_GRUPO_SERVIS_PORTARIA_2024.pdf'
+      arquivoNome: 'CONTRATO_PORTARIA_E_LIMPEZA.pdf'
     },
     {
       id: 'ctr_03',
-      empresa: 'Aquaclean Piscinas & Conservação',
+      empresa: 'Manutenção de Piscinas & Paisagismo',
       categoria: 'Piscina & Verde',
       objeto: 'Manutenção Química e Física da Piscina e Conservação dos Jardins Comuns',
       valorMensal: 800.00,
@@ -138,11 +139,11 @@ const INITIAL_DATA = {
       vigenciaFim: '2027-03-01',
       obrigacoes: 'Tratamento de água com cloro 3x por semana, verificação de parâmetros de pH e alcalinidade, podas mensais de paisagismo e controle fitossanitário das plantas.',
       status: 'Ativo',
-      arquivoNome: 'CONTRATO_AQUACLEAN_PISCINAS.pdf'
+      arquivoNome: 'CONTRATO_PISCINAS_E_JARDINS.pdf'
     },
     {
       id: 'ctr_04',
-      empresa: 'Garantia Contábil & Gestão Condominial',
+      empresa: 'Assessoria Contábil & Gestão',
       categoria: 'Administração & Contábil',
       objeto: 'Assessoria Contábil, Jurídica, Cobrança de Inadimplência e Folha de Pagamento',
       valorMensal: 2450.03,
@@ -151,7 +152,7 @@ const INITIAL_DATA = {
       vigenciaFim: '2027-01-01',
       obrigacoes: 'Emissão de boletos bancários com código PIX, balancete mensal auditável, certidões negativas tributárias e representação jurídica em assembleias de moradores.',
       status: 'Ativo',
-      arquivoNome: 'CONTRATO_GARANTIA_CONTABIL.pdf'
+      arquivoNome: 'CONTRATO_ASSESSORIA_CONTABIL.pdf'
     }
   ],
 
@@ -394,7 +395,7 @@ class StoreEngine {
             });
           }
 
-          // 7. Recados (Com imagens enviadas pelo celular/computador)
+          // 7. Recados
           if (supaData.recados && supaData.recados.length > 0) {
             if (!this.data.recados) this.data.recados = [];
             supaData.recados.forEach(r => {
