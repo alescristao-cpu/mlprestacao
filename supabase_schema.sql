@@ -53,9 +53,10 @@ CREATE TABLE IF NOT EXISTS public.documentos (
     id TEXT PRIMARY KEY,
     nome TEXT NOT NULL,
     categoria TEXT NOT NULL,
-    data TEXT NOT NULL,
+    visibilidade TEXT DEFAULT 'Moradores',
     tamanho TEXT,
-    url TEXT NOT NULL,
+    arquivo TEXT,
+    data_upload TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -74,21 +75,31 @@ CREATE TABLE IF NOT EXISTS public.recados (
 CREATE TABLE IF NOT EXISTS public.contratos (
     id TEXT PRIMARY KEY,
     empresa TEXT NOT NULL,
-    servico TEXT NOT NULL,
-    valor NUMERIC NOT NULL,
-    vencimento DATE,
+    categoria TEXT,
+    objeto TEXT,
+    valor_mensal NUMERIC DEFAULT 0,
+    valor_total_anual NUMERIC DEFAULT 0,
+    vigencia_inicio TEXT,
+    vigencia_fim TEXT,
+    obrigacoes TEXT,
     status TEXT DEFAULT 'Ativo',
+    arquivo_nome TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- 7. TABELA DE BALANCETES
 CREATE TABLE IF NOT EXISTS public.balancetes (
     id TEXT PRIMARY KEY,
-    mes_ano TEXT NOT NULL,
-    receitas NUMERIC DEFAULT 0,
-    despesas NUMERIC DEFAULT 0,
-    saldo NUMERIC DEFAULT 0,
-    url_pdf TEXT,
+    titulo TEXT NOT NULL,
+    ano INT,
+    mes TEXT,
+    receita_bruta NUMERIC DEFAULT 0,
+    despesa_bruta NUMERIC DEFAULT 0,
+    saldo_anterior NUMERIC DEFAULT 0,
+    saldo_mes NUMERIC DEFAULT 0,
+    saldo_atual NUMERIC DEFAULT 0,
+    categorias_despesa JSONB DEFAULT '[]'::jsonb,
+    data_publicacao TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
