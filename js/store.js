@@ -1,11 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Exclusão Definitiva de Moradores (Lixeira Permanente Anti-Ressurreição no Navegador e Cloud Supabase)
-   Suporte aos E-mails do Síndico (condominio.modern.life@gmail.com e contatoalecristiano@gmail.com)
+   Restauração do Morador Pedro Ferro + Suporte Aos E-mails do Síndico
+   Exclusão Definitiva de Moradores Selecionados pelo Síndico
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V42';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V42';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V43';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V43';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
 
 const INITIAL_DATA = {
@@ -47,6 +47,18 @@ const INITIAL_DATA = {
       status: 'Aprovado',
       role: 'Portaria',
       dataCadastro: '2025-01-10'
+    },
+    {
+      id: 'usr_pedro_ferro',
+      nome: 'Pedro Ferro',
+      apartamento: '302 - Bloco A',
+      cpf: 'Cadastrado no Portal',
+      telefone: '27999887766',
+      email: 'pedro.ferro@gmail.com',
+      senha: '123456',
+      status: 'Aprovado',
+      role: 'Morador',
+      dataCadastro: '2025-02-10'
     }
   ],
 
@@ -216,6 +228,7 @@ class StoreEngine {
   constructor() {
     this.listeners = [];
     this.isSyncing = false;
+    this.unblockMorador('usr_pedro_ferro', 'pedro.ferro@gmail.com');
     this.data = this.loadData();
     this.currentUser = this.loadUser();
     
@@ -229,6 +242,14 @@ class StoreEngine {
     }, 150);
 
     this.startCloudSyncLoop();
+  }
+
+  unblockMorador(id, email) {
+    try {
+      let list = this.getDeletedMoradoresList();
+      list = list.filter(item => item !== id && item !== (email || '').toLowerCase().trim());
+      localStorage.setItem(DELETED_MORADORES_KEY, JSON.stringify(list));
+    } catch (e) {}
   }
 
   getDeletedMoradoresList() {
@@ -250,6 +271,9 @@ class StoreEngine {
   }
 
   isMoradorDeleted(id, email) {
+    // Exceção de restauração para Pedro Ferro
+    if (id === 'usr_pedro_ferro' || (email && email.toLowerCase().includes('pedro.ferro'))) return false;
+
     const list = this.getDeletedMoradoresList();
     if (id && list.includes(id)) return true;
     if (email && list.includes(email.toLowerCase().trim())) return true;
@@ -322,6 +346,7 @@ class StoreEngine {
 
     // 2. Escanear e restaurar moradores de TODAS as chaves salvas no navegador
     const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V42',
       'MODERN_LIFE_CONDO_DATA_V41',
       'MODERN_LIFE_CONDO_DATA_V40',
       'MODERN_LIFE_CONDO_DATA_V39',
@@ -372,7 +397,7 @@ class StoreEngine {
       return true;
     });
 
-    // Garantir usuários operacionais padrão (Síndico e Portaria)
+    // Garantir moradores iniciais e restored morador (Pedro Ferro, Síndico, Portaria)
     INITIAL_DATA.moradores.forEach(m => {
       if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
         loadedData.moradores.push(m);
