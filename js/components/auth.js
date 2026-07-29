@@ -401,7 +401,7 @@ window.AuthComponent = {
     }, 100);
   },
 
-  handleLogin() {
+  async handleLogin() {
     try {
       let morador = this.verifiedMorador;
 
