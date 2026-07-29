@@ -1,11 +1,11 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Suporte a Balancetes, Prestação de Contas e Módulo de Gestão de Contratos com Nomes Genéricos de Serviços
+   Recuperação Automática de Cadastros + Preservação de Dados de Moradores
    Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos, Documentos e Recados)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V36';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V36';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V37';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V37';
 
 const INITIAL_DATA = {
   moradores: [
@@ -33,6 +33,66 @@ const INITIAL_DATA = {
       status: 'Aprovado',
       role: 'Portaria',
       dataCadastro: '2025-01-10'
+    },
+    {
+      id: 'usr_morador_01',
+      nome: 'Carlos Eduardo Santos',
+      apartamento: '101 - Bloco A',
+      cpf: '123.456.789-00',
+      telefone: '27998887766',
+      email: 'carlos.santos@gmail.com',
+      senha: '123456',
+      status: 'Aprovado',
+      role: 'Morador',
+      dataCadastro: '2025-02-01'
+    },
+    {
+      id: 'usr_morador_02',
+      nome: 'Mariana Oliveira Costa',
+      apartamento: '202 - Bloco A',
+      cpf: '234.567.890-11',
+      telefone: '27997776655',
+      email: 'mariana.costa@gmail.com',
+      senha: '123456',
+      status: 'Aprovado',
+      role: 'Morador',
+      dataCadastro: '2025-02-05'
+    },
+    {
+      id: 'usr_morador_03',
+      nome: 'Roberto Mendes Ferreira',
+      apartamento: '304 - Bloco B',
+      cpf: '345.678.901-22',
+      telefone: '27996665544',
+      email: 'roberto.mendes@gmail.com',
+      senha: '123456',
+      status: 'Aprovado',
+      role: 'Morador',
+      dataCadastro: '2025-02-10'
+    },
+    {
+      id: 'usr_morador_04',
+      nome: 'Juliana Alencar Lima',
+      apartamento: '402 - Bloco B',
+      cpf: '456.789.012-33',
+      telefone: '27995554433',
+      email: 'juliana.alencar@gmail.com',
+      senha: '123456',
+      status: 'Aprovado',
+      role: 'Morador',
+      dataCadastro: '2025-02-15'
+    },
+    {
+      id: 'usr_morador_05',
+      nome: 'Patricia Vasconcelos',
+      apartamento: '501 - Bloco B',
+      cpf: '567.890.123-44',
+      telefone: '27994443322',
+      email: 'patricia.v@gmail.com',
+      senha: '123456',
+      status: 'Pendente',
+      role: 'Morador',
+      dataCadastro: '2025-03-01'
     }
   ],
 
@@ -100,7 +160,6 @@ const INITIAL_DATA = {
     }
   ],
 
-  // CONTRATOS COM NOMES GENÉRICOS DE SERVIÇO (SEM NOMES ESPECÍFICOS DE MARCAS)
   contratos: [
     {
       id: 'ctr_01',
@@ -248,12 +307,60 @@ class StoreEngine {
   }
 
   loadData() {
+    let loadedData = null;
+
+    // 1. Tentar chave atual V37
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
+      if (raw) loadedData = JSON.parse(raw);
     } catch (e) {}
-    this.saveData(INITIAL_DATA);
-    return INITIAL_DATA;
+
+    // 2. Escanear e mesclar de todas as chaves legadas anteriores para nunca perder moradores
+    const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V36',
+      'MODERN_LIFE_CONDO_DATA_V35',
+      'MODERN_LIFE_CONDO_DATA_V34',
+      'MODERN_LIFE_CONDO_DATA_V33',
+      'MODERN_LIFE_CONDO_DATA_V32',
+      'MODERN_LIFE_CONDO_DATA_V31',
+      'MODERN_LIFE_CONDO_DATA_V30',
+      'MODERN_LIFE_CONDO_DATA_V2'
+    ];
+
+    legacyKeys.forEach(k => {
+      try {
+        const rawOld = localStorage.getItem(k);
+        if (rawOld) {
+          const old = JSON.parse(rawOld);
+          if (old && old.moradores && old.moradores.length > 0) {
+            if (!loadedData) {
+              loadedData = old;
+            } else {
+              // Resgata e mescla moradores antigos que não estejam na lista
+              old.moradores.forEach(m => {
+                if (!loadedData.moradores.some(x => x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
+                  loadedData.moradores.push(m);
+                }
+              });
+            }
+          }
+        }
+      } catch (err) {}
+    });
+
+    if (!loadedData) {
+      loadedData = INITIAL_DATA;
+    }
+
+    // 3. Garantir que os moradores padrão da INITIAL_DATA estejam todos presentes
+    INITIAL_DATA.moradores.forEach(m => {
+      if (!loadedData.moradores.some(x => x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
+        loadedData.moradores.push(m);
+      }
+    });
+
+    this.saveData(loadedData);
+    return loadedData;
   }
 
   saveData(data) {
@@ -315,7 +422,7 @@ class StoreEngine {
         if (supaData) {
           let updatedSupa = false;
 
-          // 1. Moradores
+          // 1. Moradores - Preservação e Mesclagem Total
           if (supaData.moradores && supaData.moradores.length > 0) {
             supaData.moradores.forEach(m => {
               const idx = this.data.moradores.findIndex(item => item.id === m.id || item.email.toLowerCase().trim() === m.email.toLowerCase().trim());
