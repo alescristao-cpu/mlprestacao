@@ -533,7 +533,6 @@ window.AdminComponent = {
       }
     });
   },
-  },
 
   exibirSucessoSenhaTemporariaModal(morador, senhaTemp) {
     const existing = document.getElementById('modalSucessoSenhaTemp');

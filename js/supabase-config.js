@@ -227,16 +227,20 @@ window.SupabaseConfig = {
     if (!this.client) return null;
 
     try {
-      const resMoradores = await this.client.from('moradores').select('*').catch(() => ({ data: null }));
-      const resReservas = await this.client.from('reservas').select('*').catch(() => ({ data: null }));
-      const resOcorrencias = await this.client.from('ocorrencias').select('*').catch(() => ({ data: null }));
-      const resBalancetes = await this.client.from('balancetes').select('*').catch(() => ({ data: null }));
-      const resContratos = await this.client.from('contratos').select('*').catch(() => ({ data: null }));
-      const resDocumentos = await this.client.from('documentos').select('*').catch(() => ({ data: null }));
-      const resMoradorVault = await this.client.from('ocorrencias').select('*').like('categoria', 'PendingMoradorVault%').catch(() => ({ data: null }));
-      const resDocVault = await this.client.from('ocorrencias').select('*').like('categoria', 'DocVault_%').catch(() => ({ data: null }));
-      const resGaleriaVault = await this.client.from('ocorrencias').select('*').like('categoria', 'GaleriaVault_%').catch(() => ({ data: null }));
-      const resRecados = await this.client.from('recados').select('*').catch(() => ({ data: null }));
+      let resMoradores = null, resReservas = null, resOcorrencias = null;
+      let resBalancetes = null, resContratos = null, resDocumentos = null;
+      let resMoradorVault = null, resDocVault = null, resGaleriaVault = null, resRecados = null;
+
+      try { resMoradores = await this.client.from('moradores').select('*'); } catch (e) {}
+      try { resReservas = await this.client.from('reservas').select('*'); } catch (e) {}
+      try { resOcorrencias = await this.client.from('ocorrencias').select('*'); } catch (e) {}
+      try { resBalancetes = await this.client.from('balancetes').select('*'); } catch (e) {}
+      try { resContratos = await this.client.from('contratos').select('*'); } catch (e) {}
+      try { resDocumentos = await this.client.from('documentos').select('*'); } catch (e) {}
+      try { resMoradorVault = await this.client.from('ocorrencias').select('*').like('categoria', 'PendingMoradorVault%'); } catch (e) {}
+      try { resDocVault = await this.client.from('ocorrencias').select('*').like('categoria', 'DocVault_%'); } catch (e) {}
+      try { resGaleriaVault = await this.client.from('ocorrencias').select('*').like('categoria', 'GaleriaVault_%'); } catch (e) {}
+      try { resRecados = await this.client.from('recados').select('*'); } catch (e) {}
 
       let moradoresFromCloud = [];
       if (resMoradores && resMoradores.data && resMoradores.data.length > 0) {
