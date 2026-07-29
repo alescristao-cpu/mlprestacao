@@ -11,7 +11,7 @@ window.AuthComponent = {
     const existing = document.getElementById('modalAuth');
     if (existing) existing.remove();
 
-    const currentUser = window.CondoStore.currentUser;
+    const currentUser = window.CondoStore ? window.CondoStore.currentUser : null;
 
     const modalHtml = `
       <div class="modal-overlay active" id="modalAuth" style="z-index: 999999; display: flex !important; opacity: 1 !important; pointer-events: auto !important; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);">

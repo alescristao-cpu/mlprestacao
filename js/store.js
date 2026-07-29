@@ -1,4 +1,4 @@
-/* ----------------------------------------------------
+//* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
    Recuperação Automática de Cadastros + Preservação de Dados de Moradores
    Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos, Documentos e Recados)
