@@ -445,9 +445,29 @@ window.SupabaseConfig = {
   async deleteMoradorFromSupabase(id, email) {
     if (!this.client) return;
     try {
-      if (id) await this.client.from('moradores').delete().eq('id', id).catch(() => {});
-      if (email) await this.client.from('moradores').delete().eq('email', email.toLowerCase().trim()).catch(() => {});
-    } catch (err) {}
+      if (id) {
+        const { error: err1 } = await this.client.from('moradores').delete().eq('id', id);
+        if (err1) console.error('Erro ao deletar morador por ID:', err1);
+
+        const { error: err2 } = await this.client.from('usuarios').delete().eq('id', id);
+        if (err2 && !err2.message?.includes('does not exist')) console.error('Erro ao deletar usuário por ID:', err2);
+
+        await this.client.from('ocorrencias').delete().eq('morador_id', id).catch(() => {});
+        await this.client.from('ocorrencias').delete().eq('id', 'm_vault_' + id).catch(() => {});
+      }
+      if (email) {
+        const emailClean = email.toLowerCase().trim();
+        const { error: err3 } = await this.client.from('moradores').delete().eq('email', emailClean);
+        if (err3) console.error('Erro ao deletar morador por e-mail:', err3);
+
+        const { error: err4 } = await this.client.from('usuarios').delete().eq('email', emailClean);
+        if (err4 && !err4.message?.includes('does not exist')) console.error('Erro ao deletar usuário por e-mail:', err4);
+
+        await this.client.from('ocorrencias').delete().eq('morador_email', emailClean).catch(() => {});
+      }
+    } catch (err) {
+      console.error('Exceção ao deletar morador do Supabase:', err);
+    }
   },
 
   async deleteContratoFromSupabase(id) {
