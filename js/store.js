@@ -455,10 +455,22 @@ class StoreEngine {
     return loadedData;
   }
 
+  cleanOldLocalStorageKeys() {
+    try {
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('MODERN_LIFE_CONDO_DATA') && k !== STORAGE_KEY) {
+          localStorage.removeItem(k);
+        }
+      }
+    } catch (e) {}
+  }
+
   saveData(data) {
     this.data = data || this.data;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      this.cleanOldLocalStorageKeys();
     } catch (e) {}
     this.notify();
     this.broadcastToCloud();

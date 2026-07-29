@@ -483,6 +483,27 @@ window.SupabaseConfig = {
         await this.client.from('ocorrencias').delete().eq('id', 'gal_' + id).catch(() => {});
       }
     } catch (err) {}
+  },
+
+  async deleteRecadoFromSupabase(id) {
+    if (!this.client || !id) return;
+    try {
+      await this.client.from('recados').delete().eq('id', id).catch(() => {});
+    } catch (err) {}
+  },
+
+  async deleteOcorrenciaFromSupabase(id) {
+    if (!this.client || !id) return;
+    try {
+      await this.client.from('ocorrencias').delete().eq('id', id).catch(() => {});
+    } catch (err) {}
+  },
+
+  async deleteReservaFromSupabase(id) {
+    if (!this.client || !id) return;
+    try {
+      await this.client.from('reservas').delete().eq('id', id).catch(() => {});
+    } catch (err) {}
   }
 };
 
