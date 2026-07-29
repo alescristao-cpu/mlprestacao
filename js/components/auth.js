@@ -1,7 +1,6 @@
 /* ----------------------------------------------------
    Modern Life Residence - Autenticação & Cadastro com Senha
-   Abertura Garantida do Modal de Login & Perfil (z-index supremo)
-   Entrada por E-mail + Senha e Suporte Direto com Fallback para o Síndico
+   Formulário de Cadastro com Rolagem Fluida e Botão de Envio Destacado (Totalmente Visível em Celulares e Telas Pequenas)
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -14,9 +13,10 @@ window.AuthComponent = {
     const currentUser = window.CondoStore ? window.CondoStore.currentUser : null;
 
     const modalHtml = `
-      <div class="modal-overlay active" id="modalAuth" style="z-index: 999999; display: flex !important; opacity: 1 !important; pointer-events: auto !important; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);">
-        <div class="modal-card" style="max-width: 480px; width: 95%; position: relative; z-index: 1000000; margin: auto; background: var(--bg-surface); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
-          <div class="modal-header" style="background: var(--primary-dark); color: white; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+      <div class="modal-overlay active" id="modalAuth" style="z-index: 999999; display: flex !important; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 1rem;">
+        <div class="modal-card" style="max-width: 500px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; z-index: 1000000; background: var(--bg-surface); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 35px rgba(0,0,0,0.3);">
+          
+          <div class="modal-header" style="background: var(--primary-dark); color: white; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
             <div style="display: flex; align-items: center; gap: 0.6rem;">
               <img src="./assets/lnovo.jpeg" style="height: 36px; width: auto; object-fit: contain; background: white; padding: 2px 6px; border-radius: 4px;" alt="Logo">
               <span style="font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem; color: white;">
@@ -26,7 +26,7 @@ window.AuthComponent = {
             <button class="modal-close" style="color: white; background: none; border: none; font-size: 1.4rem; cursor: pointer;" onclick="document.getElementById('modalAuth').remove()">✕</button>
           </div>
 
-          <div class="modal-body" style="padding: 1.35rem;">
+          <div class="modal-body" style="padding: 1.35rem; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch;">
             ${currentUser ? this.renderUserProfile(currentUser) : this.renderAuthTabs()}
           </div>
         </div>
@@ -39,12 +39,12 @@ window.AuthComponent = {
   renderAuthTabs() {
     return `
       <!-- Tab Switcher -->
-      <div style="display: flex; border-bottom: 2px solid var(--border-light); margin-bottom: 1.25rem;">
+      <div style="display: flex; border-bottom: 2px solid var(--border-light); margin-bottom: 1.25rem; position: sticky; top: -1.35rem; background: var(--bg-surface); z-index: 10; padding-top: 0.25rem;">
         <button type="button" onclick="AuthComponent.switchTab('login')" id="tabBtnLogin" style="flex: 1; padding: 0.75rem; border: none; background: none; font-weight: 700; font-size: 0.92rem; cursor: pointer; color: ${this.activeTab === 'login' ? 'var(--primary)' : 'var(--text-muted)'}; border-bottom: 3px solid ${this.activeTab === 'login' ? 'var(--primary)' : 'transparent'}; margin-bottom: -2px;">
-          Entrar com E-mail Cadastrado
+          Entrar
         </button>
         <button type="button" onclick="AuthComponent.switchTab('register')" id="tabBtnRegister" style="flex: 1; padding: 0.75rem; border: none; background: none; font-weight: 700; font-size: 0.92rem; cursor: pointer; color: ${this.activeTab === 'register' ? 'var(--primary)' : 'var(--text-muted)'}; border-bottom: 3px solid ${this.activeTab === 'register' ? 'var(--primary)' : 'transparent'}; margin-bottom: -2px;">
-          Cadastrar-se
+          📝 Cadastrar-se
         </button>
       </div>
 
@@ -84,13 +84,13 @@ window.AuthComponent = {
       <!-- Formulário: Entrar com E-mail Cadastrado e Senha -->
       <form id="formLogin" onsubmit="event.preventDefault(); AuthComponent.handleLogin();">
         <div class="form-group">
-          <label class="form-label">E-mail Cadastrado do Morador</label>
+          <label class="form-label" style="font-weight: 700;">E-mail Cadastrado do Morador</label>
           <input type="email" id="loginEmail" class="form-control" placeholder="seu.email@exemplo.com" required autocomplete="email">
         </div>
 
         <div class="form-group">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-            <label class="form-label" style="margin-bottom: 0;">Sua Senha de Acesso</label>
+            <label class="form-label" style="margin-bottom: 0; font-weight: 700;">Sua Senha de Acesso</label>
             <a href="javascript:void(0)" onclick="AuthComponent.openEsqueciSenhaModal()" style="font-size: 0.78rem; color: var(--primary); font-weight: 600; text-decoration: none;">
               🔑 Esqueci minha senha
             </a>
@@ -98,7 +98,7 @@ window.AuthComponent = {
           <input type="password" id="loginSenha" class="form-control" placeholder="Digite sua senha de acesso" required autocomplete="current-password">
         </div>
 
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;" onclick="AuthComponent.handleLogin()">
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.9rem; font-weight: 700; font-size: 1rem; border-radius: 8px; margin-top: 0.5rem;" onclick="AuthComponent.handleLogin()">
           <span class="material-symbols-outlined">login</span> Entrar com E-mail e Senha
         </button>
       </form>
@@ -122,44 +122,46 @@ window.AuthComponent = {
 
       <div style="display: flex; align-items: center; margin: 1rem 0; color: var(--border-color);">
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
-        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou preencha os dados e crie sua senha</span>
+        <span style="padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">ou preencha o formulário completo abaixo</span>
         <div style="flex: 1; border-bottom: 1px solid var(--border-color);"></div>
       </div>
 
       <form id="formRegister" onsubmit="event.preventDefault(); AuthComponent.handleRegisterSubmit();">
+        
         <div class="form-group">
-          <label class="form-label">Nome Completo</label>
-          <input type="text" id="regNome" class="form-control" placeholder="Ex: João da Silva" required autocomplete="name">
+          <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">Nome Completo *</label>
+          <input type="text" id="regNome" class="form-control" placeholder="Ex: João da Silva" required autocomplete="name" style="font-weight: 600;">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Seu E-mail (Gmail ou outro)</label>
-          <input type="email" id="regEmail" class="form-control" placeholder="seu.email@gmail.com" required autocomplete="email">
+          <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">Seu E-mail (Gmail ou outro) *</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="seu.email@gmail.com" required autocomplete="email" style="font-weight: 600;">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Crie Uma Senha de Acesso</label>
-          <input type="password" id="regSenha" class="form-control" placeholder="Crie sua senha de acesso" required autocomplete="new-password">
-          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4; background: var(--bg-app); padding: 0.6rem 0.85rem; border-radius: 6px; border-left: 3px solid var(--primary);">
-            🔒 <strong>Aviso de Segurança:</strong> A senha de acesso é <strong>pessoal e intransferível</strong>. Recomendamos não utilizar a mesma senha usada para acessar seus e-mails e contas pessoais.
-          </div>
+          <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">Crie Uma Senha de Acesso *</label>
+          <input type="password" id="regSenha" class="form-control" placeholder="Crie sua senha de acesso" required autocomplete="new-password" style="font-weight: 600;">
         </div>
 
-        <div class="form-grid">
+        <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
           <div class="form-group">
-            <label class="form-label">Telefone / WhatsApp</label>
-            <input type="tel" id="regTelefone" class="form-control" placeholder="(11) 99999-9999" required autocomplete="tel">
+            <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">Telefone / WhatsApp *</label>
+            <input type="tel" id="regTelefone" class="form-control" placeholder="(27) 99999-9999" required autocomplete="tel" style="font-weight: 600;">
           </div>
 
           <div class="form-group">
-            <label class="form-label">Unidade / Apartamento</label>
-            <input type="text" id="regUnidade" class="form-control" placeholder="Ex: Apt 402" required>
+            <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">Apartamento *</label>
+            <input type="text" id="regUnidade" class="form-control" placeholder="Ex: 402" required style="font-weight: 600;">
           </div>
         </div>
 
-        <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 0.95rem; font-weight: 700;">
-          <span class="material-symbols-outlined">how_to_reg</span> Enviar Cadastro para Aprovação do Síndico
-        </button>
+        <!-- BOTÃO DE CADASTRO SEMPRE VISÍVEL E DESTACADO -->
+        <div style="margin-top: 1.25rem; margin-bottom: 0.5rem;">
+          <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem; font-size: 1.05rem; font-weight: 800; background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none; border-radius: 10px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); cursor: pointer;" onclick="AuthComponent.handleRegisterSubmit()">
+            <span class="material-symbols-outlined" style="font-size: 1.4rem;">how_to_reg</span> FINALIZAR E ENVIAR CADASTRO
+          </button>
+        </div>
+
       </form>
     `;
   },
@@ -305,11 +307,26 @@ window.AuthComponent = {
 
   handleRegisterSubmit() {
     try {
-      const nome = document.getElementById('regNome').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const senha = document.getElementById('regSenha').value;
-      const telefone = document.getElementById('regTelefone').value.trim();
-      const apartamento = document.getElementById('regUnidade').value.trim();
+      const nomeInput = document.getElementById('regNome');
+      const emailInput = document.getElementById('regEmail');
+      const senhaInput = document.getElementById('regSenha');
+      const telefoneInput = document.getElementById('regTelefone');
+      const unidadeInput = document.getElementById('regUnidade');
+
+      if (!nomeInput || !emailInput || !senhaInput || !telefoneInput || !unidadeInput) {
+        return;
+      }
+
+      const nome = nomeInput.value.trim();
+      const email = emailInput.value.trim();
+      const senha = senhaInput.value;
+      const telefone = telefoneInput.value.trim();
+      const apartamento = unidadeInput.value.trim();
+
+      if (!nome || !email || !senha || !telefone || !apartamento) {
+        App.showToast('⚠️ Por favor, preencha todos os campos do formulário.', 'error');
+        return;
+      }
 
       const result = window.CondoStore.addMorador({
         nome,
@@ -345,8 +362,8 @@ window.AuthComponent = {
     if (existing) existing.remove();
 
     const modalHtml = `
-      <div class="modal-overlay active" id="modalEsqueciSenha" style="z-index: 999999; display: flex !important; position: fixed; inset: 0; background: rgba(0,0,0,0.65);">
-        <div class="modal-card" style="max-width: 460px; width: 95%; margin: auto; background: var(--bg-surface); border-radius: 12px;">
+      <div class="modal-overlay active" id="modalEsqueciSenha" style="z-index: 999999; display: flex !important; position: fixed; inset: 0; background: rgba(0,0,0,0.65); align-items: center; justify-content: center; padding: 1rem;">
+        <div class="modal-card" style="max-width: 460px; width: 100%; background: var(--bg-surface); border-radius: 12px; overflow: hidden;">
           <div class="modal-header" style="background: var(--primary-dark); color: white; padding: 1rem;">
             <div class="modal-title" style="color: white; font-weight: 700;">🔑 Recuperação de Senha do Morador</div>
             <button class="modal-close" style="color: white; background: none; border: none; font-size: 1.3rem;" onclick="document.getElementById('modalEsqueciSenha').remove()">✕</button>
