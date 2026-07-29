@@ -1,13 +1,15 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Recuperação Automática de Cadastros + Preservação de Dados de Moradores
+   NENHUM Cadastro Fictício + Exclusão Permanente de Moradores (Sem Ressurreição)
    Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos, Documentos e Recados)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V38';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V38';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V39';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V39';
+const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_V1';
 
 const INITIAL_DATA = {
+  // SOMENTE OS USUÁRIOS REAIS DE OPERAÇÃO DO CONDOMÍNIO (SEM CADASTROS FICTÍCIOS)
   moradores: [
     {
       id: 'usr_sindico',
@@ -33,66 +35,6 @@ const INITIAL_DATA = {
       status: 'Aprovado',
       role: 'Portaria',
       dataCadastro: '2025-01-10'
-    },
-    {
-      id: 'usr_morador_01',
-      nome: 'Carlos Eduardo Santos',
-      apartamento: '101 - Bloco A',
-      cpf: '123.456.789-00',
-      telefone: '27998887766',
-      email: 'carlos.santos@gmail.com',
-      senha: '123456',
-      status: 'Aprovado',
-      role: 'Morador',
-      dataCadastro: '2025-02-01'
-    },
-    {
-      id: 'usr_morador_02',
-      nome: 'Mariana Oliveira Costa',
-      apartamento: '202 - Bloco A',
-      cpf: '234.567.890-11',
-      telefone: '27997776655',
-      email: 'mariana.costa@gmail.com',
-      senha: '123456',
-      status: 'Aprovado',
-      role: 'Morador',
-      dataCadastro: '2025-02-05'
-    },
-    {
-      id: 'usr_morador_03',
-      nome: 'Roberto Mendes Ferreira',
-      apartamento: '304 - Bloco B',
-      cpf: '345.678.901-22',
-      telefone: '27996665544',
-      email: 'roberto.mendes@gmail.com',
-      senha: '123456',
-      status: 'Aprovado',
-      role: 'Morador',
-      dataCadastro: '2025-02-10'
-    },
-    {
-      id: 'usr_morador_04',
-      nome: 'Juliana Alencar Lima',
-      apartamento: '402 - Bloco B',
-      cpf: '456.789.012-33',
-      telefone: '27995554433',
-      email: 'juliana.alencar@gmail.com',
-      senha: '123456',
-      status: 'Aprovado',
-      role: 'Morador',
-      dataCadastro: '2025-02-15'
-    },
-    {
-      id: 'usr_morador_05',
-      nome: 'Patricia Vasconcelos',
-      apartamento: '501 - Bloco B',
-      cpf: '567.890.123-44',
-      telefone: '27994443322',
-      email: 'patricia.v@gmail.com',
-      senha: '123456',
-      status: 'Pendente',
-      role: 'Morador',
-      dataCadastro: '2025-03-01'
     }
   ],
 
@@ -277,6 +219,31 @@ class StoreEngine {
     this.startCloudSyncLoop();
   }
 
+  getDeletedMoradores() {
+    try {
+      const raw = localStorage.getItem(DELETED_MORADORES_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  registerDeletedMorador(id, email) {
+    try {
+      const list = this.getDeletedMoradores();
+      if (id && !list.includes(id)) list.push(id);
+      if (email && !list.includes(email.toLowerCase().trim())) list.push(email.toLowerCase().trim());
+      localStorage.setItem(DELETED_MORADORES_KEY, JSON.stringify(list));
+    } catch (e) {}
+  }
+
+  isMoradorDeleted(id, email) {
+    const list = this.getDeletedMoradores();
+    if (id && list.includes(id)) return true;
+    if (email && list.includes(email.toLowerCase().trim())) return true;
+    return false;
+  }
+
   ensureSindicoMaster() {
     if (!this.data || !this.data.moradores) return;
 
@@ -313,14 +280,15 @@ class StoreEngine {
   loadData() {
     let loadedData = null;
 
-    // 1. Tentar chave atual V38
+    // 1. Tentar chave atual V39
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) loadedData = JSON.parse(raw);
     } catch (e) {}
 
-    // 2. Escanear e mesclar de todas as chaves legadas anteriores para nunca perder moradores
+    // 2. Escanear e mesclar de todas as chaves legadas anteriores
     const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V38',
       'MODERN_LIFE_CONDO_DATA_V37',
       'MODERN_LIFE_CONDO_DATA_V36',
       'MODERN_LIFE_CONDO_DATA_V35',
@@ -341,10 +309,12 @@ class StoreEngine {
             if (!loadedData) {
               loadedData = old;
             } else {
-              // Resgata e mescla moradores antigos que não estejam na lista
+              // Resgata e mescla moradores antigos reais que não foram excluídos
               old.moradores.forEach(m => {
-                if (m.email && !loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
-                  loadedData.moradores.push(m);
+                if (m.email && !this.isMoradorDeleted(m.id, m.email) && !m.id.startsWith('usr_morador_')) {
+                  if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
+                    loadedData.moradores.push(m);
+                  }
                 }
               });
             }
@@ -357,12 +327,22 @@ class StoreEngine {
       loadedData = INITIAL_DATA;
     }
 
-    // 3. Garantir que os moradores padrão da INITIAL_DATA estejam todos presentes
-    INITIAL_DATA.moradores.forEach(m => {
-      if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
-        loadedData.moradores.push(m);
-      }
-    });
+    // Purga total de qualquer usuário excluído pelo Síndico ou de cadastros fictícios antigos
+    if (loadedData.moradores) {
+      loadedData.moradores = loadedData.moradores.filter(m => {
+        if (!m || !m.email) return false;
+        if (m.id.startsWith('usr_morador_')) return false; // Remove moradores fictícios
+        if (this.isMoradorDeleted(m.id, m.email)) return false; // Impede ressurreição de excluídos
+        return true;
+      });
+
+      // Garante apenas os usuários oficiais de operação (Síndico e Portaria)
+      INITIAL_DATA.moradores.forEach(m => {
+        if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
+          loadedData.moradores.push(m);
+        }
+      });
+    }
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedData));
@@ -440,9 +420,12 @@ class StoreEngine {
         if (supaData) {
           let updatedSupa = false;
 
-          // 1. Moradores - Preservação e Mesclagem Total
+          // 1. Moradores - Respeitando estritamente os excluídos e sem fictícios
           if (supaData.moradores && supaData.moradores.length > 0) {
             supaData.moradores.forEach(m => {
+              // Se o morador foi excluído pelo Síndico ou é fictício, ignora!
+              if (this.isMoradorDeleted(m.id, m.email) || (m.id && m.id.startsWith('usr_morador_'))) return;
+
               const idx = this.data.moradores.findIndex(item => item.id === m.id || (item.email && m.email && item.email.toLowerCase().trim() === m.email.toLowerCase().trim()));
               if (idx === -1) {
                 this.data.moradores.push(m);
@@ -763,9 +746,15 @@ class StoreEngine {
     }
 
     const deleteId = target ? target.id : id;
+    const deleteEmail = target ? (target.email || '').toLowerCase().trim() : '';
 
-    this.data.moradores = this.data.moradores.filter(m => m.id !== deleteId && (m.email ? m.email.toLowerCase() !== deleteId.toLowerCase() : true));
+    // 1. Registrar na lista de excluídos permanentes (impede retorno por sync ou keys legadas)
+    this.registerDeletedMorador(deleteId, deleteEmail);
 
+    // 2. Remover da lista local
+    this.data.moradores = this.data.moradores.filter(m => m.id !== deleteId && (m.email ? m.email.toLowerCase().trim() !== deleteId.toLowerCase().trim() : true));
+
+    // 3. Deslogar se o usuário excluído estiver logado no momento
     if (this.currentUser && (this.currentUser.id === deleteId || (target && target.email && this.currentUser.email && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
       this.setCurrentUser(null);
     } else {
