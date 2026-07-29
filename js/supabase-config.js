@@ -58,7 +58,7 @@ window.SupabaseConfig = {
           senha_temporaria: !!m.senhaTemporaria,
           data_cadastro: m.dataCadastro || new Date().toISOString().split('T')[0]
         })));
-        await this.client.from('moradores').upsert(rowsMoradores, { onConflict: 'email' }).catch(() => {});
+        await this.client.from('moradores').upsert(rowsMoradores, { onConflict: 'id' }).catch(() => {});
 
         // Backup no cofre de ocorrências para moradores pendentes (Garantia de Entrega Infalível ao Síndico)
         const pendentes = data.moradores.filter(m => m && (m.status === 'Pendente' || m.status === 'Em Análise'));
