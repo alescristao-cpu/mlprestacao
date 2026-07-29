@@ -119,46 +119,6 @@ window.App = {
           token = await window.SessionTokenManager.generateToken(user);
           if (token) localStorage.setItem('MODERN_LIFE_SESSION_TOKEN_V2', token);
         }
-      } else {
-        this.showToast('🔑 Por favor, faça login com a conta do Síndico Administrador.', 'info');
-        if (window.AuthComponent) {
-          window.AuthComponent.activeTab = 'login';
-          window.AuthComponent.loginStep = 1;
-          window.AuthComponent.verifiedMorador = null;
-
-          const modalExisting = document.getElementById('modalAuth');
-          if (modalExisting) modalExisting.remove();
-
-          const modalHtml = `
-            <div class="modal-overlay active" id="modalAuth" style="z-index: 999999; display: flex !important; position: fixed; inset: 0; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 1rem;">
-              <div class="modal-card" style="max-width: 500px; width: 100%; z-index: 1000000; background: var(--bg-surface); border-radius: 14px; overflow: hidden; box-shadow: 0 12px 35px rgba(0,0,0,0.3);">
-                <div class="modal-header" style="background: var(--primary-dark); color: white; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between;">
-                  <div style="display: flex; align-items: center; gap: 0.6rem;">
-                    <span class="material-symbols-outlined">admin_panel_settings</span>
-                    <span style="font-weight: 700; font-size: 1.05rem; color: white;">Acesso ao Painel do Síndico</span>
-                  </div>
-                  <button class="modal-close" style="color: white; background: none; border: none; font-size: 1.4rem; cursor: pointer;" onclick="document.getElementById('modalAuth').remove()">✕</button>
-                </div>
-                <div class="modal-body" style="padding: 1.35rem;">
-                  <div style="background: #E8F5E9; border: 1px solid #C8E6C9; padding: 1rem; border-radius: 8px; font-size: 0.9rem; color: #1F4D30; margin-bottom: 1.25rem; line-height: 1.5;">
-                    🔑 Digite o e-mail oficial do Síndico (<code>alecristao@hotmail.com</code>) para acessar o painel de administração do condomínio.
-                  </div>
-                  <form onsubmit="event.preventDefault(); const inp = document.getElementById('loginEmailSindico'); const email = inp ? inp.value.trim() : 'alecristao@hotmail.com'; AuthComponent.verifiedMorador = null; AuthComponent.loginStep = 1; AuthComponent.irParaSenhaComEmail(email);">
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                      <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">E-mail do Síndico</label>
-                      <input type="email" id="loginEmailSindico" class="form-control" value="alecristao@hotmail.com" required style="font-weight: 700; font-size: 1.05rem; padding: 0.85rem;">
-                    </div>
-                    <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.95rem; font-weight: 800; font-size: 1.05rem; background: #2E6B42; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                      <span class="material-symbols-outlined">login</span> AVANÇAR PARA A SENHA DO SÍNDICO
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          `;
-          document.body.insertAdjacentHTML('beforeend', modalHtml);
-        }
-        route = 'dashboard';
       }
     }
 
