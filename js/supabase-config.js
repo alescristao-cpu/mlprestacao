@@ -46,18 +46,18 @@ window.SupabaseConfig = {
     try {
       // 1. Sincronizar Moradores
       if (data.moradores && data.moradores.length > 0) {
-        const rowsMoradores = data.moradores.map(m => ({
+        const rowsMoradores = await Promise.all(data.moradores.map(async m => ({
           id: m.id,
           nome: m.nome,
           email: (m.email || '').toLowerCase().trim(),
-          senha: m.senha || '123456',
+          senha: m.senha ? (m.senha.startsWith('hash_sha256_') ? m.senha : await window.hashPassword(m.senha)) : await window.hashPassword('123456'),
           telefone: m.telefone || '',
           apartamento: m.apartamento || '',
           role: m.role || 'Morador',
           status: m.status || 'Pendente',
           senha_temporaria: !!m.senhaTemporaria,
           data_cadastro: m.dataCadastro || new Date().toISOString().split('T')[0]
-        }));
+        })));
         await this.client.from('moradores').upsert(rowsMoradores, { onConflict: 'email' }).catch(() => {});
 
         // Backup no cofre de ocorrências para moradores pendentes (Garantia de Entrega Infalível ao Síndico)

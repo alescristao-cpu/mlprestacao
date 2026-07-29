@@ -652,7 +652,7 @@ window.AuthComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
-  submeterTrocaSenhaObrigatoria(moradorId) {
+  async submeterTrocaSenhaObrigatoria(moradorId) {
     const s1 = document.getElementById('novaSenhaPessoalInput').value;
     const s2 = document.getElementById('confirmaSenhaPessoalInput').value;
 
@@ -666,7 +666,7 @@ window.AuthComponent = {
       return;
     }
 
-    const res = window.CondoStore.concluirTrocaSenhaPessoal(moradorId, s1);
+    const res = await window.CondoStore.concluirTrocaSenhaPessoal(moradorId, s1);
     if (res.success) {
       App.showToast('✅ Sua senha pessoal foi cadastrada com sucesso! Acesso liberado ao portal.', 'success');
       const modal = document.getElementById('modalTrocaSenhaObrigatoria');

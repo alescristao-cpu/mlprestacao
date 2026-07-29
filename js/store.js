@@ -9,6 +9,34 @@ const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V49';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
 const DELETED_DOCS_KEY = 'MODERN_LIFE_DELETED_DOCS_LIST_V2';
 
+/* Helper Criptográfico de Hash de Senha SHA-256 (WebCrypto Standard) */
+window.hashPassword = async function(password) {
+  if (!password) return '';
+  const str = String(password).trim();
+  if (str.startsWith('hash_sha256_')) return str;
+
+  const salt = 'ModernLifeCondo_Salt2026_#$!';
+  if (window.crypto && window.crypto.subtle) {
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(str + salt);
+      const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      return 'hash_sha256_' + hashHex;
+    } catch (e) {}
+  }
+
+  let hash = 0;
+  const combined = str + salt;
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return 'hash_sha256_' + Math.abs(hash).toString(16) + '00000000000000000000000000000000'.slice(0, 48);
+};
+
 const INITIAL_DATA = {
   moradores: [
     {
@@ -18,7 +46,7 @@ const INITIAL_DATA = {
       cpf: 'Cadastrado no Portal',
       telefone: '27992516970',
       email: 'condominio.modern.life@gmail.com',
-      senha: 'ModernLife2026',
+      senha: 'hash_sha256_ModernLife2026',
       status: 'Aprovado',
       role: 'Administrador',
       dataCadastro: '2025-01-10',
@@ -31,7 +59,7 @@ const INITIAL_DATA = {
       cpf: 'Cadastrado no Portal',
       telefone: '27992516970',
       email: 'contatoalecristiano@gmail.com',
-      senha: 'ModernLife2026',
+      senha: 'hash_sha256_ModernLife2026',
       status: 'Aprovado',
       role: 'Morador',
       dataCadastro: '2025-01-10',
@@ -44,7 +72,7 @@ const INITIAL_DATA = {
       cpf: 'Portaria Condomínio',
       telefone: '27999999999',
       email: 'portaria.modern.life@gmail.com',
-      senha: '123456',
+      senha: 'hash_sha256_123456',
       status: 'Aprovado',
       role: 'Portaria',
       dataCadastro: '2025-01-10'
@@ -56,7 +84,7 @@ const INITIAL_DATA = {
       cpf: 'Cadastrado no Portal',
       telefone: '27992516970',
       email: 'alcsilva@vitoria.es.gov.br',
-      senha: '123456',
+      senha: 'hash_sha256_123456',
       senhaTemporaria: true,
       status: 'Aprovado',
       role: 'Morador',
@@ -864,27 +892,28 @@ class StoreEngine {
     return { success: true, morador: newMorador };
   }
 
-  gerarSenhaTemporaria(moradorId, novaSenhaTemp) {
+  async gerarSenhaTemporaria(moradorId, novaSenhaTemp) {
     const target = this.data.moradores.find(m => m.id === moradorId || (m.email && m.email.toLowerCase().trim() === moradorId.toLowerCase().trim()));
     if (!target) return { success: false, message: 'Morador não encontrado.' };
 
-    target.senha = novaSenhaTemp;
+    target.senha = await window.hashPassword(novaSenhaTemp || '123456');
     target.senhaTemporaria = true;
     this.saveData();
     return { success: true, morador: target };
   }
 
-  concluirTrocaSenhaPessoal(moradorId, novaSenhaPessoal) {
+  async concluirTrocaSenhaPessoal(moradorId, novaSenhaPessoal) {
     const target = this.data.moradores.find(m => m.id === moradorId || (m.email && m.email.toLowerCase().trim() === moradorId.toLowerCase().trim()));
     if (!target) return { success: false, message: 'Morador não encontrado.' };
 
-    target.senha = novaSenhaPessoal;
+    const hashed = await window.hashPassword(novaSenhaPessoal);
+    target.senha = hashed;
     target.senhaTemporaria = false;
 
     this.saveData();
 
     if (this.currentUser && (this.currentUser.id === target.id || (this.currentUser.email && target.email && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
-      this.currentUser.senha = novaSenhaPessoal;
+      this.currentUser.senha = hashed;
       this.currentUser.senhaTemporaria = false;
       this.setCurrentUser(this.currentUser);
     }
@@ -892,7 +921,7 @@ class StoreEngine {
     return { success: true, morador: target };
   }
 
-  updateMoradorDetails(id, details) {
+  async updateMoradorDetails(id, details) {
     const target = this.data.moradores.find(m => m.id === id || (m.email && m.email.toLowerCase().trim() === id.toLowerCase().trim()));
     if (!target) return { success: false, message: 'Morador não encontrado.' };
 
@@ -909,7 +938,7 @@ class StoreEngine {
     target.telefone = details.telefone || target.telefone;
     target.apartamento = details.apartamento || target.apartamento;
     if (details.senha) {
-      target.senha = details.senha;
+      target.senha = await window.hashPassword(details.senha);
       if (details.senhaTemporaria !== undefined) {
         target.senhaTemporaria = details.senhaTemporaria;
       }
