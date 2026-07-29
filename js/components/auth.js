@@ -123,7 +123,7 @@ window.AuthComponent = {
     `;
   },
 
-  verificarEmailLogin() {
+  async verificarEmailLogin() {
     const emailInput = document.getElementById('loginEmail');
     if (!emailInput) return;
     const email = emailInput.value.trim().toLowerCase();
@@ -134,11 +134,52 @@ window.AuthComponent = {
       return;
     }
 
+    if (feedbackDiv) {
+      feedbackDiv.innerHTML = `
+        <div style="background: #E8F5E9; border: 1px solid #C8E6C9; padding: 0.75rem; border-radius: 8px; font-size: 0.84rem; color: #2E6B42; text-align: center; display: flex; align-items: center; justify-content: center; gap: 0.4rem; margin-top: 0.5rem;">
+          <span class="material-symbols-outlined" style="font-size: 1.1rem; color: #2E6B42;">sync</span>
+          🔍 Verificando autorização no banco de dados...
+        </div>
+      `;
+    }
+
+    // 1. Forçar sincronização imediata com a nuvem Supabase
+    try {
+      if (window.CondoStore) {
+        window.CondoStore.isSyncing = false;
+        await window.CondoStore.pullFromCloudSilently();
+      }
+    } catch(e) {}
+
     const dataMoradores = (window.CondoStore && window.CondoStore.data && window.CondoStore.data.moradores) 
       ? window.CondoStore.data.moradores 
       : [];
 
     let morador = dataMoradores.find(m => m && m.email && m.email.toLowerCase().trim() === email);
+
+    // 2. Se ainda não achou localmente, consultar a nuvem Supabase em tempo real diretamente!
+    if (!morador && window.SupabaseConfig && window.SupabaseConfig.client) {
+      try {
+        const { data: supaMoradores } = await window.SupabaseConfig.client.from('moradores').select('*').eq('email', email);
+        if (supaMoradores && supaMoradores[0]) {
+          const sm = supaMoradores[0];
+          morador = {
+            id: sm.id,
+            nome: sm.nome,
+            email: sm.email,
+            senha: sm.senha,
+            telefone: sm.telefone,
+            apartamento: sm.apartamento,
+            role: sm.role,
+            status: sm.status,
+            senhaTemporaria: sm.senha_temporaria,
+            dataCadastro: sm.data_cadastro
+          };
+          window.CondoStore.data.moradores.push(morador);
+          window.CondoStore.saveData();
+        }
+      } catch(e) {}
+    }
 
     // Fallback mestre para o Síndico Administrador
     if (!morador && email === 'condominio.modern.life@gmail.com') {

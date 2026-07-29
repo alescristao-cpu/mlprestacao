@@ -50,6 +50,19 @@ const INITIAL_DATA = {
       dataCadastro: '2025-01-10'
     },
     {
+      id: 'usr_alcsilva',
+      nome: 'Alessandro Cristiano',
+      apartamento: 'Autorizado',
+      cpf: 'Cadastrado no Portal',
+      telefone: '27992516970',
+      email: 'alcsilva@vitoria.es.gov.br',
+      senha: '123456',
+      senhaTemporaria: true,
+      status: 'Aprovado',
+      role: 'Morador',
+      dataCadastro: '2026-07-29'
+    },
+    {
       id: 'usr_pedro_ferro',
       nome: 'Pedro Ferro',
       apartamento: '302 - Bloco A',
