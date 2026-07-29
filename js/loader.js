@@ -8,6 +8,7 @@
   const scripts = [
     'js/supabase-config.js',
     'js/store.js',
+    'js/components/modal-service.js',
     'js/components/auth.js',
     'js/components/dashboard.js',
     'js/components/prestacao.js',
