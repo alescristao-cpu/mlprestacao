@@ -523,7 +523,7 @@ class StoreEngine {
     this.pullFromCloudSilently();
     setInterval(() => {
       this.pullFromCloudSilently();
-    }, 3000);
+    }, 2000);
   }
 
   async pullFromCloudSilently() {
@@ -624,7 +624,19 @@ class StoreEngine {
             });
           }
 
-          // 7. Recados
+          // 7. Fotos da Galeria (Multi-dispositivo)
+          if (supaData.galeria && supaData.galeria.length > 0) {
+            if (!this.data.galeria) this.data.galeria = [];
+            supaData.galeria.forEach(g => {
+              const idx = this.data.galeria.findIndex(item => item.id === g.id);
+              if (idx === -1) {
+                this.data.galeria.unshift(g);
+                updatedSupa = true;
+              }
+            });
+          }
+
+          // 8. Recados
           if (supaData.recados && supaData.recados.length > 0) {
             if (!this.data.recados) this.data.recados = [];
             supaData.recados.forEach(r => {

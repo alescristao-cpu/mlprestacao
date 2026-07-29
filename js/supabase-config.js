@@ -1,6 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Supabase Cloud Database Client
-   Conexão Oficial PostgreSQL Supabase (Sincronização Total de Documentos & Manuais no Banco)
+   Sincronização Multi-Dispositivo & Multi-Navegador em Tempo Real (Realtime WebSockets)
+   Conexão PostgreSQL Supabase para Celulares e Computadores
    ---------------------------------------------------- */
 
 const SUPABASE_URL = 'https://lqguxjtczcxbnraoklem.supabase.co';
@@ -14,10 +15,25 @@ window.SupabaseConfig = {
       try {
         this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log('✅ Supabase Cloud Database inicializado com sucesso.');
+        this.subscribeRealtime();
       } catch (err) {
         console.warn('⚠️ Erro ao inicializar cliente Supabase:', err);
       }
     }
+  },
+
+  subscribeRealtime() {
+    if (!this.client) return;
+    try {
+      this.client
+        .channel('modern-life-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+          if (window.CondoStore) {
+            window.CondoStore.pullFromCloudSilently();
+          }
+        })
+        .subscribe();
+    } catch (e) {}
   },
 
   isConfigured() {
@@ -117,7 +133,6 @@ window.SupabaseConfig = {
 
       // 6. Sincronizar Documentos (Com garantia de salvamento total no PostgreSQL Supabase Cloud)
       if (data.documentos && data.documentos.length > 0) {
-        // A) Tabela dedicada 'documentos'
         const rowsDoc = data.documentos.map(d => ({
           id: d.id,
           nome: d.nome || '',
@@ -129,7 +144,6 @@ window.SupabaseConfig = {
         }));
         await this.client.from('documentos').upsert(rowsDoc, { onConflict: 'id' }).catch(() => {});
 
-        // B) Cofre de Backup de Documentos no Banco PostgreSQL Supabase
         const rowsDocVault = data.documentos.map(d => ({
           id: d.id.startsWith('doc_') ? d.id : 'doc_' + d.id,
           morador_id: 'usr_sindico',
@@ -152,7 +166,25 @@ window.SupabaseConfig = {
         await this.client.from('ocorrencias').upsert(rowsDocVault, { onConflict: 'id' }).catch(() => {});
       }
 
-      // 7. Sincronizar Recados
+      // 7. Sincronizar Fotos da Galeria no Banco PostgreSQL Supabase
+      if (data.galeria && data.galeria.length > 0) {
+        const rowsGaleria = data.galeria.map(g => ({
+          id: g.id.startsWith('gal_') ? g.id : 'gal_' + g.id,
+          morador_id: 'usr_sindico',
+          morador_nome: 'Galeria Oficial',
+          morador_email: 'condominio.modern.life@gmail.com',
+          apartamento: 'Administração',
+          categoria: 'GaleriaVault_' + (g.categoria || 'Geral'),
+          assunto: g.titulo || 'Foto sem título',
+          descricao: g.imagem || '',
+          status: 'Publicado',
+          respostas: [{ dataUpload: g.dataUpload || new Date().toISOString().split('T')[0] }],
+          data: g.dataUpload || new Date().toISOString().split('T')[0]
+        }));
+        await this.client.from('ocorrencias').upsert(rowsGaleria, { onConflict: 'id' }).catch(() => {});
+      }
+
+      // 8. Sincronizar Recados
       if (data.recados && data.recados.length > 0) {
         const rowsRec = data.recados.map(r => ({
           id: r.id,
@@ -183,10 +215,10 @@ window.SupabaseConfig = {
       const resContratos = await this.client.from('contratos').select('*').catch(() => ({ data: null }));
       const resDocumentos = await this.client.from('documentos').select('*').catch(() => ({ data: null }));
       const resDocVault = await this.client.from('ocorrencias').select('*').like('categoria', 'DocVault_%').catch(() => ({ data: null }));
+      const resGaleriaVault = await this.client.from('ocorrencias').select('*').like('categoria', 'GaleriaVault_%').catch(() => ({ data: null }));
       const resRecados = await this.client.from('recados').select('*').catch(() => ({ data: null }));
 
       let docsFromCloud = [];
-
       if (resDocumentos && resDocumentos.data && resDocumentos.data.length > 0) {
         resDocumentos.data.forEach(d => {
           docsFromCloud.push({
@@ -220,9 +252,24 @@ window.SupabaseConfig = {
         });
       }
 
-      // Filtrar ocorrências reais (removendo as entradas do cofre de documentos)
+      let galeriaFromCloud = [];
+      if (resGaleriaVault && resGaleriaVault.data && resGaleriaVault.data.length > 0) {
+        resGaleriaVault.data.forEach(v => {
+          const catClean = (v.categoria || '').replace('GaleriaVault_', '');
+          const meta = (v.respostas && v.respostas[0]) ? v.respostas[0] : {};
+          galeriaFromCloud.push({
+            id: v.id,
+            titulo: v.assunto,
+            categoria: catClean,
+            imagem: v.descricao,
+            dataUpload: meta.dataUpload || v.data
+          });
+        });
+      }
+
+      // Filtrar ocorrências reais (removendo as entradas do cofre)
       const ocorrenciasReais = (resOcorrencias && resOcorrencias.data)
-        ? resOcorrencias.data.filter(o => !o.categoria || !o.categoria.startsWith('DocVault_'))
+        ? resOcorrencias.data.filter(o => !o.categoria || (!o.categoria.startsWith('DocVault_') && !o.categoria.startsWith('GaleriaVault_')))
         : null;
 
       return {
@@ -294,6 +341,7 @@ window.SupabaseConfig = {
         })) : null,
 
         documentos: docsFromCloud.length > 0 ? docsFromCloud : null,
+        galeria: galeriaFromCloud.length > 0 ? galeriaFromCloud : null,
 
         recados: resRecados && resRecados.data ? resRecados.data.map(r => ({
           id: r.id,
@@ -341,6 +389,16 @@ window.SupabaseConfig = {
       await this.client.from('ocorrencias').delete().eq('id', id).catch(() => {});
       if (!id.startsWith('doc_')) {
         await this.client.from('ocorrencias').delete().eq('id', 'doc_' + id).catch(() => {});
+      }
+    } catch (err) {}
+  },
+
+  async deleteFotoFromSupabase(id) {
+    if (!this.client || !id) return;
+    try {
+      await this.client.from('ocorrencias').delete().eq('id', id).catch(() => {});
+      if (!id.startsWith('gal_')) {
+        await this.client.from('ocorrencias').delete().eq('id', 'gal_' + id).catch(() => {});
       }
     } catch (err) {}
   }
