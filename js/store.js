@@ -331,6 +331,7 @@ class StoreEngine {
     this.currentUser = this.loadUser();
     
     this.ensureSindicoMaster();
+    this.validateStoredSessionToken();
 
     setTimeout(() => {
       if (window.SupabaseConfig) {
@@ -550,21 +551,12 @@ class StoreEngine {
     }
   }
 
-  async loadUser() {
+  loadUser() {
     try {
-      const token = localStorage.getItem(SESSION_TOKEN_KEY);
-      const tokenPayload = await window.SessionTokenManager.verifyToken(token);
-
-      if (!tokenPayload) {
-        localStorage.removeItem(CURRENT_USER_KEY);
-        localStorage.removeItem(SESSION_TOKEN_KEY);
-        return null;
-      }
-
       const raw = localStorage.getItem(CURRENT_USER_KEY);
       if (raw) {
         const u = JSON.parse(raw);
-        if (u && u.email && u.email.toLowerCase().trim() === tokenPayload.email) {
+        if (u && u.email) {
           if (this.data && this.data.moradores) {
             const fresh = this.data.moradores.find(m => m.id === u.id || (m.email && u.email && m.email.toLowerCase().trim() === u.email.toLowerCase().trim()));
             return fresh || u;
@@ -574,6 +566,17 @@ class StoreEngine {
       }
     } catch (e) {}
     return null;
+  }
+
+  async validateStoredSessionToken() {
+    try {
+      const token = localStorage.getItem(SESSION_TOKEN_KEY);
+      const tokenPayload = await window.SessionTokenManager.verifyToken(token);
+      if (!tokenPayload && this.currentUser) {
+        console.warn('⛔ Token de sessão inválido ou expirado. Efetuando logout de segurança...');
+        await this.setCurrentUser(null);
+      }
+    } catch (e) {}
   }
 
   async setCurrentUser(user, isAuthValidation = false) {
