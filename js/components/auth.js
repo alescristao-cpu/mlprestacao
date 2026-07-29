@@ -259,6 +259,20 @@ window.AuthComponent = {
     }
   },
 
+  async irParaSenhaComEmail(email) {
+    this.activeTab = 'login';
+    this.verifiedMorador = null;
+    this.loginStep = 1;
+    this.renderAuthModal();
+    setTimeout(async () => {
+      const emailInput = document.getElementById('loginEmail');
+      if (emailInput) {
+        emailInput.value = email || 'condominio.modern.life@gmail.com';
+        await this.verificarEmailLogin();
+      }
+    }, 150);
+  },
+
   voltarPasso1Email() {
     this.loginStep = 1;
     this.verifiedMorador = null;
