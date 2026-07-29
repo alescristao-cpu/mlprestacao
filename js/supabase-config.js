@@ -311,5 +311,13 @@ window.SupabaseConfig = {
         })
         .subscribe();
     } catch (e) {}
+  },
+
+  async deleteMoradorFromSupabase(id, email) {
+    if (!this.client) return;
+    try {
+      if (id) await this.client.from('moradores').delete().eq('id', id).catch(() => {});
+      if (email) await this.client.from('moradores').delete().eq('email', email.toLowerCase().trim()).catch(() => {});
+    } catch (err) {}
   }
 };
