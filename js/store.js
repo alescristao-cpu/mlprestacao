@@ -1,11 +1,11 @@
-//* ----------------------------------------------------
+/* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
    Recuperação Automática de Cadastros + Preservação de Dados de Moradores
    Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos, Documentos e Recados)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V37';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V37';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V38';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V38';
 
 const INITIAL_DATA = {
   moradores: [
@@ -260,10 +260,10 @@ const INITIAL_DATA = {
 
 class StoreEngine {
   constructor() {
-    this.data = this.loadData();
-    this.currentUser = this.loadUser();
     this.listeners = [];
     this.isSyncing = false;
+    this.data = this.loadData();
+    this.currentUser = this.loadUser();
     
     this.ensureSindicoMaster();
 
@@ -278,7 +278,9 @@ class StoreEngine {
   }
 
   ensureSindicoMaster() {
-    let sindico = this.data.moradores.find(m => m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!this.data || !this.data.moradores) return;
+
+    let sindico = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
     if (!sindico) {
       sindico = {
         id: 'usr_sindico',
@@ -303,13 +305,15 @@ class StoreEngine {
       this.data.documentos = this.data.documentos.filter(d => d.id !== 'doc_sistema_md');
     }
 
-    this.saveData();
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+    } catch (e) {}
   }
 
   loadData() {
     let loadedData = null;
 
-    // 1. Tentar chave atual V37
+    // 1. Tentar chave atual V38
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) loadedData = JSON.parse(raw);
@@ -317,6 +321,7 @@ class StoreEngine {
 
     // 2. Escanear e mesclar de todas as chaves legadas anteriores para nunca perder moradores
     const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V37',
       'MODERN_LIFE_CONDO_DATA_V36',
       'MODERN_LIFE_CONDO_DATA_V35',
       'MODERN_LIFE_CONDO_DATA_V34',
@@ -338,7 +343,7 @@ class StoreEngine {
             } else {
               // Resgata e mescla moradores antigos que não estejam na lista
               old.moradores.forEach(m => {
-                if (!loadedData.moradores.some(x => x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
+                if (m.email && !loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
                   loadedData.moradores.push(m);
                 }
               });
@@ -354,12 +359,15 @@ class StoreEngine {
 
     // 3. Garantir que os moradores padrão da INITIAL_DATA estejam todos presentes
     INITIAL_DATA.moradores.forEach(m => {
-      if (!loadedData.moradores.some(x => x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
+      if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
         loadedData.moradores.push(m);
       }
     });
 
-    this.saveData(loadedData);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(loadedData));
+    } catch (e) {}
+
     return loadedData;
   }
 
@@ -377,8 +385,11 @@ class StoreEngine {
       const raw = localStorage.getItem(CURRENT_USER_KEY);
       if (raw) {
         const u = JSON.parse(raw);
-        const fresh = this.data.moradores.find(m => m.id === u.id || m.email.toLowerCase() === u.email.toLowerCase());
-        return fresh || u;
+        if (this.data && this.data.moradores) {
+          const fresh = this.data.moradores.find(m => m.id === u.id || (m.email && u.email && m.email.toLowerCase() === u.email.toLowerCase()));
+          return fresh || u;
+        }
+        return u;
       }
     } catch (e) {}
     return null;
@@ -386,15 +397,18 @@ class StoreEngine {
 
   setCurrentUser(user) {
     this.currentUser = user;
-    if (user) {
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(CURRENT_USER_KEY);
-    }
+    try {
+      if (user) {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      } else {
+        localStorage.removeItem(CURRENT_USER_KEY);
+      }
+    } catch (e) {}
     this.notify();
   }
 
   subscribe(listener) {
+    if (!this.listeners) this.listeners = [];
     this.listeners.push(listener);
     return () => {
       this.listeners = this.listeners.filter(l => l !== listener);
@@ -402,7 +416,11 @@ class StoreEngine {
   }
 
   notify() {
-    this.listeners.forEach(l => l(this.data, this.currentUser));
+    if (this.listeners && Array.isArray(this.listeners)) {
+      this.listeners.forEach(l => {
+        try { l(this.data, this.currentUser); } catch (err) {}
+      });
+    }
   }
 
   startCloudSyncLoop() {
@@ -425,7 +443,7 @@ class StoreEngine {
           // 1. Moradores - Preservação e Mesclagem Total
           if (supaData.moradores && supaData.moradores.length > 0) {
             supaData.moradores.forEach(m => {
-              const idx = this.data.moradores.findIndex(item => item.id === m.id || item.email.toLowerCase().trim() === m.email.toLowerCase().trim());
+              const idx = this.data.moradores.findIndex(item => item.id === m.id || (item.email && m.email && item.email.toLowerCase().trim() === m.email.toLowerCase().trim()));
               if (idx === -1) {
                 this.data.moradores.push(m);
                 updatedSupa = true;
@@ -640,7 +658,7 @@ class StoreEngine {
   addMorador(morador) {
     const emailNormalizado = (morador.email || '').toLowerCase().trim();
 
-    const emailExistente = this.data.moradores.find(m => m.email.toLowerCase().trim() === emailNormalizado);
+    const emailExistente = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === emailNormalizado);
     if (emailExistente) {
       return { 
         success: false, 
@@ -664,7 +682,7 @@ class StoreEngine {
   }
 
   gerarSenhaTemporaria(moradorId, novaSenhaTemp) {
-    const target = this.data.moradores.find(m => m.id === moradorId || m.email.toLowerCase().trim() === moradorId.toLowerCase().trim());
+    const target = this.data.moradores.find(m => m.id === moradorId || (m.email && m.email.toLowerCase().trim() === moradorId.toLowerCase().trim()));
     if (!target) return { success: false, message: 'Morador não encontrado.' };
 
     target.senha = novaSenhaTemp;
@@ -674,7 +692,7 @@ class StoreEngine {
   }
 
   concluirTrocaSenhaPessoal(moradorId, novaSenhaPessoal) {
-    const target = this.data.moradores.find(m => m.id === moradorId || m.email.toLowerCase().trim() === moradorId.toLowerCase().trim());
+    const target = this.data.moradores.find(m => m.id === moradorId || (m.email && m.email.toLowerCase().trim() === moradorId.toLowerCase().trim()));
     if (!target) return { success: false, message: 'Morador não encontrado.' };
 
     target.senha = novaSenhaPessoal;
@@ -682,7 +700,7 @@ class StoreEngine {
 
     this.saveData();
 
-    if (this.currentUser && (this.currentUser.id === target.id || this.currentUser.email.toLowerCase() === target.email.toLowerCase())) {
+    if (this.currentUser && (this.currentUser.id === target.id || (this.currentUser.email && target.email && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
       this.currentUser.senha = novaSenhaPessoal;
       this.currentUser.senhaTemporaria = false;
       this.setCurrentUser(this.currentUser);
@@ -692,12 +710,12 @@ class StoreEngine {
   }
 
   updateMoradorDetails(id, details) {
-    const target = this.data.moradores.find(m => m.id === id || m.email.toLowerCase().trim() === id.toLowerCase().trim());
+    const target = this.data.moradores.find(m => m.id === id || (m.email && m.email.toLowerCase().trim() === id.toLowerCase().trim()));
     if (!target) return { success: false, message: 'Morador não encontrado.' };
 
     if (details.email) {
       const emailNorm = details.email.toLowerCase().trim();
-      const outro = this.data.moradores.find(m => m.id !== id && m.email.toLowerCase().trim() === emailNorm);
+      const outro = this.data.moradores.find(m => m.id !== id && m.email && m.email.toLowerCase().trim() === emailNorm);
       if (outro) {
         return { success: false, message: `O e-mail "${details.email}" já está em uso por outro morador.` };
       }
@@ -717,7 +735,7 @@ class StoreEngine {
 
     this.saveData();
 
-    if (this.currentUser && (this.currentUser.id === target.id || this.currentUser.email.toLowerCase() === target.email.toLowerCase())) {
+    if (this.currentUser && (this.currentUser.id === target.id || (this.currentUser.email && target.email && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
       this.setCurrentUser(target);
     }
 
@@ -725,12 +743,12 @@ class StoreEngine {
   }
 
   updateMoradorStatus(id, newStatus) {
-    const item = this.data.moradores.find(m => m.id === id || m.email.toLowerCase().trim() === id.toLowerCase().trim());
+    const item = this.data.moradores.find(m => m.id === id || (m.email && m.email.toLowerCase().trim() === id.toLowerCase().trim()));
     if (item) {
       item.status = newStatus;
       this.saveData();
 
-      if (this.currentUser && (this.currentUser.id === item.id || this.currentUser.email.toLowerCase() === item.email.toLowerCase())) {
+      if (this.currentUser && (this.currentUser.id === item.id || (this.currentUser.email && item.email && this.currentUser.email.toLowerCase() === item.email.toLowerCase()))) {
         this.currentUser.status = newStatus;
         this.setCurrentUser(this.currentUser);
       }
@@ -738,17 +756,17 @@ class StoreEngine {
   }
 
   deleteMorador(id) {
-    const target = this.data.moradores.find(m => m.id === id || m.email.toLowerCase().trim() === id.toLowerCase().trim());
+    const target = this.data.moradores.find(m => m.id === id || (m.email && m.email.toLowerCase().trim() === id.toLowerCase().trim()));
     
-    if (target && (target.role === 'Administrador' || target.id === 'usr_sindico' || target.email.toLowerCase() === 'condominio.modern.life@gmail.com')) {
+    if (target && (target.role === 'Administrador' || target.id === 'usr_sindico' || (target.email && target.email.toLowerCase() === 'condominio.modern.life@gmail.com'))) {
       return { success: false, message: 'O cadastro do Administrador Master (Síndico) não pode ser excluído por razões de segurança do sistema.' };
     }
 
     const deleteId = target ? target.id : id;
 
-    this.data.moradores = this.data.moradores.filter(m => m.id !== deleteId && m.email.toLowerCase() !== deleteId.toLowerCase());
+    this.data.moradores = this.data.moradores.filter(m => m.id !== deleteId && (m.email ? m.email.toLowerCase() !== deleteId.toLowerCase() : true));
 
-    if (this.currentUser && (this.currentUser.id === deleteId || (target && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
+    if (this.currentUser && (this.currentUser.id === deleteId || (target && target.email && this.currentUser.email && this.currentUser.email.toLowerCase() === target.email.toLowerCase()))) {
       this.setCurrentUser(null);
     } else {
       this.saveData();
@@ -820,4 +838,9 @@ class StoreEngine {
   }
 }
 
-window.CondoStore = new StoreEngine();
+// Inicialização segura com proteção de escopo global
+try {
+  window.CondoStore = new StoreEngine();
+} catch (err) {
+  console.error('Erro na inicialização da Store:', err);
+}
