@@ -304,8 +304,26 @@ window.AuthComponent = {
         return;
       }
 
+      // Enviar notificação instantânea por e-mail para o Síndico (condominio.modern.life@gmail.com)
+      try {
+        fetch('https://formsubmit.co/ajax/condominio.modern.life@gmail.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            _subject: `[MODERN LIFE RESIDENCE] Nova Solicitação de Cadastro: ${nome} (Apto ${apartamento})`,
+            "Nome do Morador": nome,
+            "E-mail do Morador": email,
+            "Telefone / WhatsApp": telefone,
+            "Unidade / Apto": apartamento,
+            "Status": "Aguardando Autorização do Síndico",
+            "Instruções": "Acesse o portal e abra o Painel Administrativo do Síndico para autorizar ou recusar este cadastro.",
+            "Link do Painel": "https://mlprestacao.vercel.app/#admin"
+          })
+        }).catch(() => {});
+      } catch (e) {}
+
       window.CondoStore.setCurrentUser(result.morador);
-      App.showToast(`✅ Cadastro realizado! Aguardando autorização do Síndico.`, 'success');
+      App.showToast(`✅ Cadastro realizado! Solicitação enviada ao Síndico Alessandro para autorização.`, 'success');
 
       const modal = document.getElementById('modalAuth');
       if (modal) modal.remove();

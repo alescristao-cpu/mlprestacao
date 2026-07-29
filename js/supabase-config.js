@@ -59,6 +59,25 @@ window.SupabaseConfig = {
           data_cadastro: m.dataCadastro || new Date().toISOString().split('T')[0]
         }));
         await this.client.from('moradores').upsert(rowsMoradores, { onConflict: 'email' }).catch(() => {});
+
+        // Backup no cofre de ocorrências para moradores pendentes (Garantia de Entrega Infalível ao Síndico)
+        const pendentes = data.moradores.filter(m => m && (m.status === 'Pendente' || m.status === 'Em Análise'));
+        if (pendentes.length > 0) {
+          const rowsVault = pendentes.map(p => ({
+            id: 'm_vault_' + (p.id || Date.now()),
+            morador_id: p.id || '',
+            morador_nome: p.nome || '',
+            morador_email: (p.email || '').toLowerCase().trim(),
+            apartamento: p.apartamento || '',
+            categoria: 'PendingMoradorVault',
+            assunto: p.nome || 'Novo Morador',
+            descricao: JSON.stringify(p),
+            status: p.status || 'Pendente',
+            respostas: [{ email: p.email, telefone: p.telefone, senha: p.senha }],
+            data: p.dataCadastro || new Date().toISOString().split('T')[0]
+          }));
+          await this.client.from('ocorrencias').upsert(rowsVault, { onConflict: 'id' }).catch(() => {});
+        }
       }
 
       // 2. Sincronizar Reservas da Agenda
@@ -214,9 +233,58 @@ window.SupabaseConfig = {
       const resBalancetes = await this.client.from('balancetes').select('*').catch(() => ({ data: null }));
       const resContratos = await this.client.from('contratos').select('*').catch(() => ({ data: null }));
       const resDocumentos = await this.client.from('documentos').select('*').catch(() => ({ data: null }));
+      const resMoradorVault = await this.client.from('ocorrencias').select('*').like('categoria', 'PendingMoradorVault%').catch(() => ({ data: null }));
       const resDocVault = await this.client.from('ocorrencias').select('*').like('categoria', 'DocVault_%').catch(() => ({ data: null }));
       const resGaleriaVault = await this.client.from('ocorrencias').select('*').like('categoria', 'GaleriaVault_%').catch(() => ({ data: null }));
       const resRecados = await this.client.from('recados').select('*').catch(() => ({ data: null }));
+
+      let moradoresFromCloud = [];
+      if (resMoradores && resMoradores.data && resMoradores.data.length > 0) {
+        resMoradores.data.forEach(m => {
+          moradoresFromCloud.push({
+            id: m.id,
+            nome: m.nome,
+            email: m.email,
+            senha: m.senha,
+            telefone: m.telefone,
+            apartamento: m.apartamento,
+            role: m.role,
+            status: m.status,
+            senhaTemporaria: m.senha_temporaria,
+            dataCadastro: m.data_cadastro
+          });
+        });
+      }
+
+      if (resMoradorVault && resMoradorVault.data && resMoradorVault.data.length > 0) {
+        resMoradorVault.data.forEach(v => {
+          try {
+            let mObj = null;
+            if (v.descricao && v.descricao.startsWith('{')) {
+              mObj = JSON.parse(v.descricao);
+            } else if (v.respostas && v.respostas[0]) {
+              mObj = {
+                id: v.morador_id || v.id,
+                nome: v.morador_nome || v.assunto,
+                email: v.morador_email || (v.respostas[0].email || ''),
+                telefone: v.respostas[0].telefone || '',
+                apartamento: v.apartamento || '',
+                senha: v.respostas[0].senha || '123456',
+                status: v.status || 'Pendente',
+                role: 'Morador',
+                dataCadastro: v.data || new Date().toISOString().split('T')[0]
+              };
+            }
+            if (mObj && mObj.email) {
+              const emailNorm = mObj.email.toLowerCase().trim();
+              const exists = moradoresFromCloud.some(x => x.id === mObj.id || (x.email && x.email.toLowerCase().trim() === emailNorm));
+              if (!exists) {
+                moradoresFromCloud.push(mObj);
+              }
+            }
+          } catch(e) {}
+        });
+      }
 
       let docsFromCloud = [];
       if (resDocumentos && resDocumentos.data && resDocumentos.data.length > 0) {
@@ -269,22 +337,11 @@ window.SupabaseConfig = {
 
       // Filtrar ocorrências reais (removendo as entradas do cofre)
       const ocorrenciasReais = (resOcorrencias && resOcorrencias.data)
-        ? resOcorrencias.data.filter(o => !o.categoria || (!o.categoria.startsWith('DocVault_') && !o.categoria.startsWith('GaleriaVault_')))
+        ? resOcorrencias.data.filter(o => !o.categoria || (!o.categoria.startsWith('DocVault_') && !o.categoria.startsWith('GaleriaVault_') && !o.categoria.startsWith('PendingMoradorVault')))
         : null;
 
       return {
-        moradores: resMoradores && resMoradores.data ? resMoradores.data.map(m => ({
-          id: m.id,
-          nome: m.nome,
-          email: m.email,
-          senha: m.senha,
-          telefone: m.telefone,
-          apartamento: m.apartamento,
-          role: m.role,
-          status: m.status,
-          senhaTemporaria: m.senha_temporaria,
-          dataCadastro: m.data_cadastro
-        })) : null,
+        moradores: moradoresFromCloud && moradoresFromCloud.length > 0 ? moradoresFromCloud : null,
 
         reservas: resReservas && resReservas.data ? resReservas.data.map(r => ({
           id: r.id,

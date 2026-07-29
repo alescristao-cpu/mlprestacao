@@ -30,10 +30,31 @@ window.AdminComponent = {
     }
 
     const moradores = data.moradores || [];
-    const pendentes = moradores.filter(m => m.status === 'Pendente');
-    const aprovados = moradores.filter(m => m.status === 'Aprovado');
-    const recusados = moradores.filter(m => m.status === 'Recusado' || m.status === 'Não Autorizado');
+    let pendentes = moradores.filter(m => m && (m.status === 'Pendente' || m.status === 'Em Análise'));
     const ocorrencias = data.ocorrencias || [];
+
+    // Garantia total: Resgatar solicitações pendentes registradas no canal de ocorrências / vault
+    ocorrencias.forEach(o => {
+      if (o && (o.categoria === 'Solicitação de Cadastro' || o.categoria === 'PendingMoradorVault') && (o.status === 'Pendente' || o.status === 'Pendente de Aprovação')) {
+        const emailNorm = (o.moradorEmail || '').toLowerCase().trim();
+        const existsInPendentes = pendentes.some(p => (p.email && p.email.toLowerCase().trim() === emailNorm) || p.id === o.moradorId);
+        const alreadyApproved = moradores.some(m => (m.email && m.email.toLowerCase().trim() === emailNorm && m.status === 'Aprovado'));
+        if (!existsInPendentes && !alreadyApproved) {
+          pendentes.push({
+            id: o.moradorId || o.id,
+            nome: o.moradorNome || o.assunto || 'Morador Solicitante',
+            email: o.moradorEmail || '',
+            telefone: (o.respostas && o.respostas[0] && o.respostas[0].telefone) || '',
+            apartamento: o.apartamento || '',
+            status: 'Pendente',
+            dataCadastro: o.data || new Date().toISOString().split('T')[0]
+          });
+        }
+      }
+    });
+
+    const aprovados = moradores.filter(m => m && m.status === 'Aprovado');
+    const recusados = moradores.filter(m => m && (m.status === 'Recusado' || m.status === 'Não Autorizado'));
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.25rem;">
