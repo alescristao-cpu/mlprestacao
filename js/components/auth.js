@@ -1,7 +1,7 @@
 /* ----------------------------------------------------
    Modern Life Residence - Autenticação & Cadastro com Senha
    Abertura Garantida do Modal de Login & Perfil (z-index supremo)
-   Notificação Dupla Infalível de Novo Cadastro para o Síndico
+   Entrada por E-mail + Senha e Suporte Direto com Fallback para o Síndico
    ---------------------------------------------------- */
 
 window.AuthComponent = {
@@ -98,7 +98,7 @@ window.AuthComponent = {
           <input type="password" id="loginSenha" class="form-control" placeholder="Digite sua senha de acesso" required autocomplete="current-password">
         </div>
 
-        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;">
+        <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-weight: 700;" onclick="AuthComponent.handleLogin()">
           <span class="material-symbols-outlined">login</span> Entrar com E-mail e Senha
         </button>
       </form>
@@ -170,7 +170,7 @@ window.AuthComponent = {
     return `
       <div style="text-align: center; margin-bottom: 1.25rem;">
         <div class="user-avatar" style="width: 70px; height: 70px; font-size: 1.8rem; margin: 0 auto 0.75rem auto; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700;">
-          ${user.nome.charAt(0)}
+          ${user.nome ? user.nome.charAt(0) : 'U'}
         </div>
         <h3 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.2rem;">${user.nome}</h3>
         <span class="badge ${isApproved ? 'badge-success' : 'badge-warning'}" style="margin-top: 4px;">
@@ -244,56 +244,97 @@ window.AuthComponent = {
   },
 
   handleLogin() {
-    const email = document.getElementById('loginEmail').value.trim();
-    const senha = document.getElementById('loginSenha').value;
+    try {
+      const emailInput = document.getElementById('loginEmail');
+      const senhaInput = document.getElementById('loginSenha');
 
-    const emailNorm = email.toLowerCase();
-    const morador = window.CondoStore.data.moradores.find(m => m.email.toLowerCase().trim() === emailNorm);
+      if (!emailInput || !senhaInput) {
+        alert('Por favor, informe seu e-mail e senha.');
+        return;
+      }
 
-    if (!morador) {
-      App.showToast('❌ E-mail não encontrado no sistema do condomínio.', 'error');
-      return;
+      const email = emailInput.value.trim().toLowerCase();
+      const senha = senhaInput.value;
+
+      if (!email) {
+        App.showToast('⚠️ Por favor, digite seu e-mail cadastrado.', 'error');
+        return;
+      }
+
+      const moradores = (window.CondoStore && window.CondoStore.data) ? window.CondoStore.data.moradores : [];
+      let morador = moradores.find(m => m.email && m.email.toLowerCase().trim() === email);
+
+      // Fallback infalível para o Síndico Master
+      if (!morador && email === 'condominio.modern.life@gmail.com') {
+        morador = {
+          id: 'usr_sindico',
+          nome: 'Alessandro Cristiano da Silva',
+          apartamento: 'Administração',
+          cpf: 'Cadastrado no Portal',
+          telefone: '27992516970',
+          email: 'condominio.modern.life@gmail.com',
+          senha: 'ModernLife2026',
+          status: 'Aprovado',
+          role: 'Administrador',
+          dataCadastro: '2025-01-10'
+        };
+      }
+
+      if (!morador) {
+        App.showToast(`❌ O e-mail "${email}" não foi encontrado. Clique na aba Cadastrar-se.`, 'error');
+        return;
+      }
+
+      if (morador.senha && morador.senha !== senha) {
+        App.showToast('❌ Senha incorreta. Caso tenha esquecido sua senha, utilize a opção de recuperação.', 'error');
+        return;
+      }
+
+      window.CondoStore.setCurrentUser(morador);
+      App.showToast(`👋 Olá, ${morador.nome}! Acesso realizado com sucesso.`, 'success');
+
+      const modal = document.getElementById('modalAuth');
+      if (modal) modal.remove();
+
+      App.render();
+    } catch (err) {
+      console.error('Erro no handleLogin:', err);
+      alert('Erro ao tentar logar: ' + err.message);
     }
-
-    if (morador.senha && morador.senha !== senha) {
-      App.showToast('❌ Senha incorreta. Caso tenha esquecido sua senha, utilize a opção de recuperação.', 'error');
-      return;
-    }
-
-    window.CondoStore.setCurrentUser(morador);
-    App.showToast(`👋 Olá, ${morador.nome}! Acesso realizado com sucesso.`, 'success');
-    const modal = document.getElementById('modalAuth');
-    if (modal) modal.remove();
-    App.render();
   },
 
   handleRegisterSubmit() {
-    const nome = document.getElementById('regNome').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
-    const senha = document.getElementById('regSenha').value;
-    const telefone = document.getElementById('regTelefone').value.trim();
-    const apartamento = document.getElementById('regUnidade').value.trim();
+    try {
+      const nome = document.getElementById('regNome').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+      const senha = document.getElementById('regSenha').value;
+      const telefone = document.getElementById('regTelefone').value.trim();
+      const apartamento = document.getElementById('regUnidade').value.trim();
 
-    const result = window.CondoStore.addMorador({
-      nome,
-      email,
-      senha,
-      telefone,
-      apartamento,
-      role: 'Morador'
-    });
+      const result = window.CondoStore.addMorador({
+        nome,
+        email,
+        senha,
+        telefone,
+        apartamento,
+        role: 'Morador'
+      });
 
-    if (!result.success) {
-      App.showToast(`⚠️ ${result.message}`, 'error');
-      return;
+      if (!result.success) {
+        App.showToast(`⚠️ ${result.message}`, 'error');
+        return;
+      }
+
+      window.CondoStore.setCurrentUser(result.morador);
+      App.showToast(`✅ Cadastro realizado! Aguardando autorização do Síndico.`, 'success');
+
+      const modal = document.getElementById('modalAuth');
+      if (modal) modal.remove();
+      App.render();
+    } catch (err) {
+      console.error('Erro no handleRegisterSubmit:', err);
+      alert('Erro no cadastro: ' + err.message);
     }
-
-    window.CondoStore.setCurrentUser(result.morador);
-    App.showToast(`✅ Cadastro realizado! Aguardando autorização do Síndico.`, 'success');
-
-    const modal = document.getElementById('modalAuth');
-    if (modal) modal.remove();
-    App.render();
   },
 
   openEsqueciSenhaModal() {
