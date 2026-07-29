@@ -237,13 +237,33 @@ window.App = {
     const topHeaderUserText = document.getElementById('topHeaderUserText');
     const topHeaderUserBtn = document.getElementById('topHeaderUserBtn');
 
+    // Atualizar Badge de Pedidos de Aprovação Pendentes para o Síndico
+    const pendentesCount = (data.moradores || []).filter(m => m.status === 'Pendente').length;
+    const adminNavItem = document.querySelector('.nav-item[data-route="admin"]');
+    if (adminNavItem) {
+      let badgeEl = adminNavItem.querySelector('.nav-pending-badge');
+      if (pendentesCount > 0 && user && user.role === 'Administrador') {
+        if (!badgeEl) {
+          badgeEl = document.createElement('span');
+          badgeEl.className = 'nav-pending-badge';
+          badgeEl.style.cssText = 'background: #E65100; color: white; border-radius: 12px; padding: 2px 7px; font-size: 0.75rem; font-weight: 800; margin-left: auto; border: 1px solid #FFD54F;';
+          adminNavItem.appendChild(badgeEl);
+        }
+        badgeEl.innerText = `${pendentesCount} Pendente${pendentesCount > 1 ? 's' : ''}`;
+      } else if (badgeEl) {
+        badgeEl.remove();
+      }
+    }
+
     if (user) {
       if (topHeaderUserText) {
-        topHeaderUserText.innerText = user.nome;
+        topHeaderUserText.innerText = pendentesCount > 0 && user.role === 'Administrador' 
+          ? `${user.nome} (${pendentesCount} 🔔)` 
+          : user.nome;
       }
       if (topHeaderUserBtn) {
         topHeaderUserBtn.title = `Conectado como: ${user.nome} (Apto ${user.apartamento})`;
-        topHeaderUserBtn.style.background = 'var(--primary-dark)';
+        topHeaderUserBtn.style.background = pendentesCount > 0 && user.role === 'Administrador' ? '#E65100' : 'var(--primary-dark)';
       }
     } else {
       if (topHeaderUserText) {

@@ -811,6 +811,23 @@ class StoreEngine {
     };
 
     this.data.moradores.push(newMorador);
+
+    // Notificação imediata para a Central de Aprovações do Síndico
+    if (!this.data.ocorrencias) this.data.ocorrencias = [];
+    this.data.ocorrencias.unshift({
+      id: 'solic_' + Date.now(),
+      moradorId: newMorador.id,
+      moradorNome: newMorador.nome,
+      moradorEmail: newMorador.email,
+      apartamento: newMorador.apartamento,
+      categoria: 'Solicitação de Cadastro',
+      assunto: `Novo Cadastro de Morador: ${newMorador.nome} (Apto ${newMorador.apartamento})`,
+      descricao: `O morador ${newMorador.nome} (E-mail: ${newMorador.email}, Telefone: ${newMorador.telefone || 'Não informado'}) solicitou autorização de acesso ao portal para o Apto ${newMorador.apartamento}.`,
+      status: 'Pendente de Aprovação',
+      data: new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}),
+      respostas: []
+    });
+
     this.saveData();
     return { success: true, morador: newMorador };
   }
@@ -880,6 +897,15 @@ class StoreEngine {
     const item = this.data.moradores.find(m => m.id === id || (m.email && m.email.toLowerCase().trim() === id.toLowerCase().trim()));
     if (item) {
       item.status = newStatus;
+
+      if (this.data.ocorrencias) {
+        this.data.ocorrencias.forEach(o => {
+          if (o.categoria === 'Solicitação de Cadastro' && (o.moradorId === item.id || (o.moradorEmail && item.email && o.moradorEmail.toLowerCase().trim() === item.email.toLowerCase().trim()))) {
+            o.status = newStatus === 'Aprovado' ? 'Aprovado pelo Síndico' : 'Recusado pelo Síndico';
+          }
+        });
+      }
+
       this.saveData();
 
       if (this.currentUser && (this.currentUser.id === item.id || (this.currentUser.email && item.email && this.currentUser.email.toLowerCase() === item.email.toLowerCase()))) {
