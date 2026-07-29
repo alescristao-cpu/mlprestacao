@@ -366,72 +366,53 @@ class StoreEngine {
     if (!loadedData.balancetes) loadedData.balancetes = [];
     if (!loadedData.galeria) loadedData.galeria = [];
 
-    // 2. Escanear e RESGATAR moradores de TODAS as chaves anteriores salvas no navegador
-    const legacyKeys = [
-      'MODERN_LIFE_CONDO_DATA_V48',
-      'MODERN_LIFE_CONDO_DATA_V47',
-      'MODERN_LIFE_CONDO_DATA_V46',
-      'MODERN_LIFE_CONDO_DATA_V45',
-      'MODERN_LIFE_CONDO_DATA_V44',
-      'MODERN_LIFE_CONDO_DATA_V43',
-      'MODERN_LIFE_CONDO_DATA_V42',
-      'MODERN_LIFE_CONDO_DATA_V41',
-      'MODERN_LIFE_CONDO_DATA_V40',
-      'MODERN_LIFE_CONDO_DATA_V39',
-      'MODERN_LIFE_CONDO_DATA_V38',
-      'MODERN_LIFE_CONDO_DATA_V37',
-      'MODERN_LIFE_CONDO_DATA_V36',
-      'MODERN_LIFE_CONDO_DATA_V35',
-      'MODERN_LIFE_CONDO_DATA_V34',
-      'MODERN_LIFE_CONDO_DATA_V33',
-      'MODERN_LIFE_CONDO_DATA_V32',
-      'MODERN_LIFE_CONDO_DATA_V31',
-      'MODERN_LIFE_CONDO_DATA_V30',
-      'MODERN_LIFE_CONDO_DATA_V2',
-      'MODERN_LIFE_CONDO_DATA'
-    ];
-
-    legacyKeys.forEach(k => {
-      try {
-        const rawOld = localStorage.getItem(k);
-        if (rawOld) {
-          const old = JSON.parse(rawOld);
-          if (old && old.moradores && old.moradores.length > 0) {
-            old.moradores.forEach(m => {
-              if (m && m.email && !mockFakeIds.includes(m.id) && !this.isMoradorDeleted(m.id, m.email)) {
-                const normEmail = m.email.toLowerCase().trim();
-                const exists = loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === normEmail);
-                if (!exists) {
-                  loadedData.moradores.push(m);
+    // 2. Escanear DINAMICAMENTE TODAS as chaves de versões anteriores salvas no navegador (V1 a V99)
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith('MODERN_LIFE_CONDO_DATA')) {
+          const rawOld = localStorage.getItem(k);
+          if (rawOld) {
+            const old = JSON.parse(rawOld);
+            if (old && old.moradores && Array.isArray(old.moradores)) {
+              old.moradores.forEach(m => {
+                if (m && m.email && !mockFakeIds.includes(m.id) && !this.isMoradorDeleted(m.id, m.email)) {
+                  const normEmail = m.email.toLowerCase().trim();
+                  const idx = loadedData.moradores.findIndex(x => x.email && x.email.toLowerCase().trim() === normEmail);
+                  if (idx === -1) {
+                    loadedData.moradores.push(m);
+                  } else if (m.status === 'Pendente' && loadedData.moradores[idx].status !== 'Aprovado') {
+                    loadedData.moradores[idx] = m;
+                  }
                 }
-              }
-            });
-          }
+              });
+            }
 
-          if (old && old.documentos && old.documentos.length > 0) {
-            old.documentos.forEach(d => {
-              if (d && d.id && d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome)) {
-                const exists = loadedData.documentos.some(x => x.id === d.id);
-                if (!exists) {
-                  loadedData.documentos.push(d);
+            if (old && old.documentos && Array.isArray(old.documentos)) {
+              old.documentos.forEach(d => {
+                if (d && d.id && d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome)) {
+                  const exists = loadedData.documentos.some(x => x.id === d.id);
+                  if (!exists) {
+                    loadedData.documentos.push(d);
+                  }
                 }
-              }
-            });
-          }
+              });
+            }
 
-          if (old && old.galeria && old.galeria.length > 0) {
-            old.galeria.forEach(g => {
-              if (g && g.id) {
-                const exists = loadedData.galeria.some(x => x.id === g.id);
-                if (!exists) {
-                  loadedData.galeria.push(g);
+            if (old && old.galeria && Array.isArray(old.galeria)) {
+              old.galeria.forEach(g => {
+                if (g && g.id) {
+                  const exists = loadedData.galeria.some(x => x.id === g.id);
+                  if (!exists) {
+                    loadedData.galeria.push(g);
+                  }
                 }
-              }
-            });
+              });
+            }
           }
         }
-      } catch (err) {}
-    });
+      }
+    } catch (err) {}
 
     // Purga de moradores e documentos excluídos pelo Síndico
     loadedData.moradores = loadedData.moradores.filter(m => {
