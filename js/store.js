@@ -504,29 +504,136 @@ class StoreEngine {
     this.broadcastToCloud();
   }
 
-  loadUser() {
+const SESSION_TOKEN_KEY = 'MODERN_LIFE_SESSION_TOKEN_V2';
+
+/* Gerador e Validador de Tokens de Sessão Assinados (HMAC-SHA256) */
+window.SessionTokenManager = {
+  SECRET_KEY: 'ModernLife_HMAC_SecretKey_2026_!@#$%^&*',
+
+  async generateToken(user) {
+    if (!user || !user.email) return null;
+    const now = Date.now();
+    const payload = {
+      id: user.id,
+      email: (user.email || '').toLowerCase().trim(),
+      role: user.role || 'Morador',
+      nome: user.nome,
+      apartamento: user.apartamento,
+      iat: now,
+      exp: now + (8 * 60 * 60 * 1000) // TTL 8 horas
+    };
+
+    const payloadStr = btoa(JSON.stringify(payload));
+    const signature = await this.signPayload(payloadStr);
+    return `${payloadStr}.${signature}`;
+  },
+
+  async signPayload(payloadStr) {
+    if (window.crypto && window.crypto.subtle) {
+      try {
+        const encoder = new TextEncoder();
+        const keyData = encoder.encode(this.SECRET_KEY);
+        const cryptoKey = await window.crypto.subtle.importKey(
+          'raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+        );
+        const signatureBuffer = await window.crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(payloadStr));
+        const hashArray = Array.from(new Uint8Array(signatureBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch (e) {}
+    }
+
+    let hash = 0;
+    const str = payloadStr + this.SECRET_KEY;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(16) + '00000000000000000000000000000000'.slice(0, 48);
+  },
+
+  async verifyToken(tokenStr) {
+    if (!tokenStr || typeof tokenStr !== 'string' || !tokenStr.includes('.')) return null;
     try {
+      const [payloadStr, signature] = tokenStr.split('.');
+      const expectedSignature = await this.signPayload(payloadStr);
+
+      if (signature !== expectedSignature) {
+        console.warn('⛔ Alerta de Segurança: Assinatura do token de sessão é inválida ou foi adulterada!');
+        return null;
+      }
+
+      const payload = JSON.parse(atob(payloadStr));
+      if (Date.now() > payload.exp) {
+        console.warn('⚠️ Sessão expirada.');
+        return null;
+      }
+      return payload;
+    } catch (e) {
+      return null;
+    }
+  }
+};
+
+  async loadUser() {
+    try {
+      const token = localStorage.getItem(SESSION_TOKEN_KEY);
+      const tokenPayload = await window.SessionTokenManager.verifyToken(token);
+
+      if (!tokenPayload) {
+        localStorage.removeItem(CURRENT_USER_KEY);
+        localStorage.removeItem(SESSION_TOKEN_KEY);
+        return null;
+      }
+
       const raw = localStorage.getItem(CURRENT_USER_KEY);
       if (raw) {
         const u = JSON.parse(raw);
-        if (this.data && this.data.moradores) {
-          const fresh = this.data.moradores.find(m => m.id === u.id || (m.email && u.email && m.email.toLowerCase() === u.email.toLowerCase()));
-          return fresh || u;
+        if (u && u.email && u.email.toLowerCase().trim() === tokenPayload.email) {
+          if (this.data && this.data.moradores) {
+            const fresh = this.data.moradores.find(m => m.id === u.id || (m.email && u.email && m.email.toLowerCase().trim() === u.email.toLowerCase().trim()));
+            return fresh || u;
+          }
+          return u;
         }
-        return u;
       }
     } catch (e) {}
     return null;
   }
 
-  setCurrentUser(user) {
+  async setCurrentUser(user, isAuthValidation = false) {
+    if (!user) {
+      this.currentUser = null;
+      try {
+        localStorage.removeItem(CURRENT_USER_KEY);
+        localStorage.removeItem(SESSION_TOKEN_KEY);
+      } catch (e) {}
+      this.notify();
+      return;
+    }
+
+    let token = localStorage.getItem(SESSION_TOKEN_KEY);
+    let tokenPayload = await window.SessionTokenManager.verifyToken(token);
+
+    if (isAuthValidation || !tokenPayload || tokenPayload.email !== (user.email || '').toLowerCase().trim()) {
+      token = await window.SessionTokenManager.generateToken(user);
+      tokenPayload = await window.SessionTokenManager.verifyToken(token);
+    }
+
+    if (!tokenPayload) {
+      console.warn('⛔ Tentativa de atribuição de usuário sem token de sessão assinado válido!');
+      this.currentUser = null;
+      try {
+        localStorage.removeItem(CURRENT_USER_KEY);
+        localStorage.removeItem(SESSION_TOKEN_KEY);
+      } catch (e) {}
+      this.notify();
+      return;
+    }
+
     this.currentUser = user;
     try {
-      if (user) {
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-      } else {
-        localStorage.removeItem(CURRENT_USER_KEY);
-      }
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      if (token) localStorage.setItem(SESSION_TOKEN_KEY, token);
     } catch (e) {}
     this.notify();
   }

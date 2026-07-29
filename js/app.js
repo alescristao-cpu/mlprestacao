@@ -100,9 +100,18 @@ window.App = {
     });
   },
 
-  navigateTo(route) {
+  async navigateTo(route) {
     const user = window.CondoStore.currentUser;
     const isPortaria = user && user.role === 'Portaria';
+
+    if (route === 'admin') {
+      const token = localStorage.getItem('MODERN_LIFE_SESSION_TOKEN_V2');
+      const tokenPayload = await window.SessionTokenManager.verifyToken(token);
+      if (!tokenPayload || tokenPayload.role !== 'Administrador') {
+        this.showToast('⛔ Acesso Negado: Sessão de Administrador não possui assinatura criptográfica válida!', 'error');
+        route = 'dashboard';
+      }
+    }
 
     if (isPortaria && !['portaria', 'utilidades', 'agenda'].includes(route)) {
       route = 'portaria';

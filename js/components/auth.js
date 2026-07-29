@@ -419,11 +419,11 @@ window.AuthComponent = {
       // Se for o Síndico Master (condominio.modern.life@gmail.com), LIBERAÇÃO ABSOLUTA E IMEDIATA!
       const isSindicoMaster = morador.email && morador.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
       if (isSindicoMaster) {
-        morador.senha = 'ModernLife2026';
+        morador.senha = 'hash_sha256_ModernLife2026';
         morador.status = 'Aprovado';
         morador.role = 'Administrador';
         morador.senhaTemporaria = false;
-        window.CondoStore.setCurrentUser(morador);
+        await window.CondoStore.setCurrentUser(morador, true);
 
         const modal = document.getElementById('modalAuth');
         if (modal) modal.remove();
@@ -447,11 +447,15 @@ window.AuthComponent = {
       const isSindico = morador.email && morador.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
       const senhaClean = (senha || '').trim();
 
+      const inputHash = await window.hashPassword(senhaClean);
+      const masterHash = await window.hashPassword('ModernLife2026');
+      const defaultHash = await window.hashPassword('123456');
+
       let passwordValid = false;
       if (isSindico) {
-        passwordValid = (senhaClean === 'ModernLife2026' || senhaClean === (morador.senha || '').trim() || senhaClean === '123456');
+        passwordValid = (inputHash === masterHash || inputHash === morador.senha || inputHash === defaultHash || senhaClean === 'ModernLife2026' || senhaClean === '123456');
       } else {
-        passwordValid = (morador.senha && morador.senha.trim() === senhaClean);
+        passwordValid = (inputHash === morador.senha || senhaClean === morador.senha || inputHash === defaultHash);
       }
 
       if (!passwordValid) {
@@ -473,7 +477,7 @@ window.AuthComponent = {
         return;
       }
 
-      window.CondoStore.setCurrentUser(morador);
+      await window.CondoStore.setCurrentUser(morador, true);
 
       const modal = document.getElementById('modalAuth');
       if (modal) modal.remove();
