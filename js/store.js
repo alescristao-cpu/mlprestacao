@@ -1,12 +1,13 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Garantia Total de Preservação de Documentos Anexados no Supabase Cloud
-   Sincronização 100% Automática de Arquivos, Contratos, Balancetes e Recados
+   Exclusão DEFINITIVA de Documentos (Sem Ressurreição por Chaves Legadas ou Cloud Sync)
+   Garantia Total de Preservação de Documentos Ativos no Supabase Cloud
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V44';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V44';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V45';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V45';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
+const DELETED_DOCS_KEY = 'MODERN_LIFE_DELETED_DOCS_LIST_V2';
 
 const INITIAL_DATA = {
   moradores: [
@@ -279,6 +280,31 @@ class StoreEngine {
     return false;
   }
 
+  getDeletedDocsList() {
+    try {
+      const raw = localStorage.getItem(DELETED_DOCS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  registerDeletedDoc(id, nome) {
+    try {
+      const list = this.getDeletedDocsList();
+      if (id && !list.includes(id)) list.push(id);
+      if (nome && !list.includes(nome.trim())) list.push(nome.trim());
+      localStorage.setItem(DELETED_DOCS_KEY, JSON.stringify(list));
+    } catch (e) {}
+  }
+
+  isDocDeleted(id, nome) {
+    const list = this.getDeletedDocsList();
+    if (id && list.includes(id)) return true;
+    if (nome && list.includes(nome.trim())) return true;
+    return false;
+  }
+
   ensureSindicoMaster() {
     if (!this.data || !this.data.moradores) return;
 
@@ -325,7 +351,7 @@ class StoreEngine {
     }
 
     if (this.data.documentos) {
-      this.data.documentos = this.data.documentos.filter(d => d.id !== 'doc_sistema_md');
+      this.data.documentos = this.data.documentos.filter(d => d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome));
     }
 
     try {
@@ -345,6 +371,7 @@ class StoreEngine {
 
     // 2. Escanear e restaurar moradores, documentos, contratos e balancetes de TODAS as chaves salvas no navegador
     const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V44',
       'MODERN_LIFE_CONDO_DATA_V43',
       'MODERN_LIFE_CONDO_DATA_V42',
       'MODERN_LIFE_CONDO_DATA_V41',
@@ -391,10 +418,10 @@ class StoreEngine {
               });
             }
 
-            // Mesclar Documentos Anexados
+            // Mesclar Documentos Anexados (Respeitando estritamente a lixeira permanente de documentos)
             if (old.documentos && old.documentos.length > 0) {
               old.documentos.forEach(d => {
-                if (d && d.id && d.id !== 'doc_sistema_md') {
+                if (d && d.id && d.id !== 'doc_sistema_md' && !this.isDocDeleted(d.id, d.nome)) {
                   const exists = loadedData.documentos.some(x => x.id === d.id);
                   if (!exists) {
                     loadedData.documentos.push(d);
@@ -431,11 +458,17 @@ class StoreEngine {
       } catch (err) {}
     });
 
-    // Purga de moradores excluídos e fictícios
+    // Purga de moradores e documentos excluídos
     loadedData.moradores = loadedData.moradores.filter(m => {
       if (!m || !m.email) return false;
       if (mockFakeIds.includes(m.id)) return false;
       if (this.isMoradorDeleted(m.id, m.email)) return false;
+      return true;
+    });
+
+    loadedData.documentos = loadedData.documentos.filter(d => {
+      if (!d || d.id === 'doc_sistema_md') return false;
+      if (this.isDocDeleted(d.id, d.nome)) return false;
       return true;
     });
 
@@ -593,13 +626,15 @@ class StoreEngine {
             });
           }
 
-          // 6. Documentos Anexados (Preservando conteúdo Base64 / URL)
+          // 6. Documentos Anexados (Respeitando a lixeira permanente do Síndico)
           if (supaData.documentos && supaData.documentos.length > 0) {
             if (!this.data.documentos) this.data.documentos = [];
             supaData.documentos.forEach(d => {
+              if (!d || !d.id || d.id === 'doc_sistema_md' || this.isDocDeleted(d.id, d.nome)) return;
+
               const idx = this.data.documentos.findIndex(item => item.id === d.id);
               if (idx === -1) {
-                this.data.documentos.unshift(d);
+                this.data.documentos.push(d);
                 updatedSupa = true;
               } else if (d.arquivo && d.arquivo !== this.data.documentos[idx].arquivo) {
                 this.data.documentos[idx].arquivo = d.arquivo;
@@ -727,28 +762,6 @@ class StoreEngine {
     return true;
   }
 
-  getDeletedDocsList() {
-    try {
-      const raw = localStorage.getItem('MODERN_LIFE_DELETED_DOCS_LIST_V1');
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  registerDeletedDoc(id) {
-    try {
-      const list = this.getDeletedDocsList();
-      if (id && !list.includes(id)) list.push(id);
-      localStorage.setItem('MODERN_LIFE_DELETED_DOCS_LIST_V1', JSON.stringify(list));
-    } catch (e) {}
-  }
-
-  isDocDeleted(id) {
-    const list = this.getDeletedDocsList();
-    return id && list.includes(id);
-  }
-
   addDocumento(doc) {
     if (!this.data.documentos) this.data.documentos = [];
     const newDoc = {
@@ -766,12 +779,49 @@ class StoreEngine {
 
   deleteDocumento(id) {
     if (!this.data.documentos) return false;
-    this.registerDeletedDoc(id);
+    const target = this.data.documentos.find(d => d.id === id);
+    const docNome = target ? target.nome : '';
+
+    // 1. Grava no registro de exclusão permanente de documentos
+    this.registerDeletedDoc(id, docNome);
+
+    // 2. Remove da memória atual
     this.data.documentos = this.data.documentos.filter(d => d.id !== id);
+
+    // 3. Remove das chaves legadas no localStorage do navegador para evitar ressurreição
+    const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V44',
+      'MODERN_LIFE_CONDO_DATA_V43',
+      'MODERN_LIFE_CONDO_DATA_V42',
+      'MODERN_LIFE_CONDO_DATA_V41',
+      'MODERN_LIFE_CONDO_DATA_V40',
+      'MODERN_LIFE_CONDO_DATA_V39',
+      'MODERN_LIFE_CONDO_DATA_V38',
+      'MODERN_LIFE_CONDO_DATA_V37',
+      'MODERN_LIFE_CONDO_DATA_V36',
+      'MODERN_LIFE_CONDO_DATA_V35'
+    ];
+    legacyKeys.forEach(k => {
+      try {
+        const rawOld = localStorage.getItem(k);
+        if (rawOld) {
+          const old = JSON.parse(rawOld);
+          if (old && old.documentos) {
+            old.documentos = old.documentos.filter(d => d.id !== id && (docNome ? d.nome !== docNome : true));
+            localStorage.setItem(k, JSON.stringify(old));
+          }
+        }
+      } catch (e) {}
+    });
+
+    // 4. Salva no estado atual
     this.saveData();
+
+    // 5. Deleta da nuvem Supabase
     if (window.SupabaseConfig && window.SupabaseConfig.deleteDocumentoFromSupabase) {
       window.SupabaseConfig.deleteDocumentoFromSupabase(id);
     }
+
     return true;
   }
 
