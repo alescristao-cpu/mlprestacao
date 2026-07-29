@@ -1,7 +1,8 @@
 /* ----------------------------------------------------
    Modern Life Residence - Módulo & Dashboard de Gestão de Contratos
    Importador Inteligente 100% Automático de Contratos em PDF, DOC, TXT e CSV
-   Sem digitação manual ou edição de texto/valores: Selecionou o arquivo -> Lê e cadastra automaticamente
+   Suporte a Carregamento de MÚLTIPLOS ARQUIVOS SIMULTANEAMENTE (Batch Upload)
+   Sem digitação manual ou edição de texto/valores: Selecionou os arquivos -> Lê e cadastra tudo na hora
    ---------------------------------------------------- */
 
 window.ContratosComponent = {
@@ -75,13 +76,13 @@ window.ContratosComponent = {
                 Dashboard de Contratos &amp; Prestadores de Serviços
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.8; color: #94A3B8; margin-top: 0.2rem;">
-                Importação 100% automática. Selecione o arquivo em PDF ou DOC e o sistema lê os dados sem exigir digitação.
+                Importação em lote de múltiplos arquivos em PDF/DOC. O sistema lê e grava todos de uma vez sem pedir digitação.
               </p>
             </div>
 
             ${isSindico ? `
               <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);" onclick="ContratosComponent.openImportModal()">
-                <span class="material-symbols-outlined" style="font-size: 1.3rem;">cloud_upload</span> 📄 Importar Contrato (PDF / DOC)
+                <span class="material-symbols-outlined" style="font-size: 1.3rem;">cloud_upload</span> 📄 Importar Vários Contratos (PDF / DOC)
               </button>
             ` : ''}
           </div>
@@ -318,27 +319,27 @@ window.ContratosComponent = {
 
     const modalHtml = `
       <div class="modal-overlay active" id="modalImportContrato" style="z-index: 999999;">
-        <div class="modal-card" style="max-width: 550px; border: 2px solid #10B981; border-radius: 12px;">
+        <div class="modal-card" style="max-width: 580px; border: 2px solid #10B981; border-radius: 12px;">
           <div class="modal-header" style="background: #0F172A; color: #34D399;">
             <div class="modal-title" style="color: #34D399; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
-              <span class="material-symbols-outlined">cloud_upload</span> 📄 Importar Contrato em PDF / DOC
+              <span class="material-symbols-outlined">cloud_upload</span> 📄 Importar Vários Contratos (PDF / DOC)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalImportContrato').remove()">✕</button>
           </div>
           <div class="modal-body" style="padding: 1.75rem 1.5rem; text-align: center;">
             
-            <div style="background: #F0FDF4; border: 2px dashed #34D399; padding: 2rem 1.25rem; border-radius: 12px;">
+            <div style="background: #F0FDF4; border: 2px dashed #34D399; padding: 2.2rem 1.25rem; border-radius: 12px;">
               <label for="ctrFileSelector" style="cursor: pointer; display: block;">
-                <span class="material-symbols-outlined" style="font-size: 3.5rem; color: #059669; display: block; margin-bottom: 0.5rem;">picture_as_pdf</span>
-                <strong style="color: #0F172A; font-size: 1.1rem; display: block; margin-bottom: 0.3rem;">
-                  Selecione o Contrato em PDF ou DOC
+                <span class="material-symbols-outlined" style="font-size: 3.8rem; color: #059669; display: block; margin-bottom: 0.5rem;">folder_open</span>
+                <strong style="color: #0F172A; font-size: 1.15rem; display: block; margin-bottom: 0.3rem;">
+                  Clique para selecionar 1 ou VÁRIOS contratos em PDF / DOC
                 </strong>
                 <span style="display: block; font-size: 0.85rem; color: #64748B;">
-                  O leitor inteligente interpreta a empresa, valores e obrigações do arquivo e realiza o cadastro automático sem solicitar digitação (.pdf, .doc, .docx, .txt)
+                  Você pode selecionar múltiplos arquivos simultaneamente. O leitor lê e cadastra todos automaticamente no sistema e banco de dados.
                 </span>
               </label>
 
-              <input type="file" id="ctrFileSelector" accept=".pdf,.doc,.docx,.txt,.csv" style="display: none;" onchange="ContratosComponent.manipularArquivoContrato(event)">
+              <input type="file" id="ctrFileSelector" accept=".pdf,.doc,.docx,.txt,.csv" multiple style="display: none;" onchange="ContratosComponent.manipularArquivosContratosMulti(event)">
 
               <div id="ctrFileInfo" style="margin-top: 1rem; font-weight: 700; font-size: 0.9rem; color: #065F46; display: none; background: white; padding: 0.75rem; border-radius: 8px; border: 1px solid #A7F3D0;">
               </div>
@@ -352,22 +353,34 @@ window.ContratosComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
-  manipularArquivoContrato(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+  manipularArquivosContratosMulti(event) {
+    const files = Array.from(event.target.files);
+    if (!files || files.length === 0) return;
 
     const info = document.getElementById('ctrFileInfo');
     if (info) {
       info.style.display = 'block';
-      info.innerHTML = `⚙️ Lendo contrato <strong>${file.name}</strong> e extraindo dados...`;
+      info.innerHTML = `⚙️ Lendo <strong>${files.length} contrato(s)</strong> e extraindo dados em lote...`;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      this.parseEProcessarContratoAuto(text, file.name);
-    };
-    reader.readAsText(file);
+    let processados = 0;
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        this.parseEProcessarContratoAuto(text, file.name);
+        processados++;
+
+        if (processados === files.length) {
+          App.showToast(`🚀 ${files.length} contrato(s) lidos e cadastrados com sucesso!`, 'success');
+          const modal = document.getElementById('modalImportContrato');
+          if (modal) modal.remove();
+          App.render();
+        }
+      };
+      reader.readAsText(file);
+    });
   },
 
   parseEProcessarContratoAuto(text, fileName = '') {
@@ -427,13 +440,6 @@ window.ContratosComponent = {
       obrigacoes: obrigacoesFinal,
       arquivoNome: fileName || 'CONTRATO_IMPORTADO.pdf'
     });
-
-    App.showToast(`🚀 Contrato "${empresaFinal}" lido e cadastrado automaticamente!`, 'success');
-
-    const modal = document.getElementById('modalImportContrato');
-    if (modal) modal.remove();
-
-    App.render();
   },
 
   verObrigacoes(id) {
