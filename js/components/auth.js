@@ -264,15 +264,15 @@ window.AuthComponent = {
       const moradores = (window.CondoStore && window.CondoStore.data) ? window.CondoStore.data.moradores : [];
       let morador = moradores.find(m => m.email && m.email.toLowerCase().trim() === email);
 
-      // Fallback infalível para o Síndico Master
-      if (!morador && email === 'condominio.modern.life@gmail.com') {
+      // Fallback infalível para o Síndico Master (Suporte aos dois e-mails do Síndico)
+      if (!morador && (email === 'condominio.modern.life@gmail.com' || email === 'contatoalecristiano@gmail.com')) {
         morador = {
-          id: 'usr_sindico',
+          id: email === 'contatoalecristiano@gmail.com' ? 'usr_sindico_pessoal' : 'usr_sindico',
           nome: 'Alessandro Cristiano da Silva',
           apartamento: 'Administração',
           cpf: 'Cadastrado no Portal',
           telefone: '27992516970',
-          email: 'condominio.modern.life@gmail.com',
+          email: email,
           senha: 'ModernLife2026',
           status: 'Aprovado',
           role: 'Administrador',

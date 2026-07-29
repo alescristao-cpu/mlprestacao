@@ -1,15 +1,14 @@
 /* ----------------------------------------------------
    Modern Life Residence - Global Data Store & Cloud Sync Engine
-   Preservação & Restauração de 100% dos Moradores Reais Cadastrados
-   Filtro Exclusivo Apenas para os 5 Registros de Teste Fictícios
+   Suporte a Ambos os E-mails do Síndico (condominio.modern.life@gmail.com e contatoalecristiano@gmail.com)
    Sincronização Cloud Completa (Moradores, Reservas, Ocorrências, Balancetes, Contratos, Documentos e Recados)
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V40';
-const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V40';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V41';
+const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V41';
 
 const INITIAL_DATA = {
-  // SOMENTE OS USUÁRIOS REAIS DE OPERAÇÃO DO CONDOMÍNIO
+  // USUÁRIOS DE OPERAÇÃO DO CONDOMÍNIO (INCLUINDO AMBOS OS E-MAILS DO SÍNDICO)
   moradores: [
     {
       id: 'usr_sindico',
@@ -18,6 +17,19 @@ const INITIAL_DATA = {
       cpf: 'Cadastrado no Portal',
       telefone: '27992516970',
       email: 'condominio.modern.life@gmail.com',
+      senha: 'ModernLife2026',
+      status: 'Aprovado',
+      role: 'Administrador',
+      dataCadastro: '2025-01-10',
+      photoURL: 'https://lh3.googleusercontent.com/a/default-user'
+    },
+    {
+      id: 'usr_sindico_pessoal',
+      nome: 'Alessandro Cristiano da Silva',
+      apartamento: 'Administração',
+      cpf: 'Cadastrado no Portal',
+      telefone: '27992516970',
+      email: 'contatoalecristiano@gmail.com',
       senha: 'ModernLife2026',
       status: 'Aprovado',
       role: 'Administrador',
@@ -222,9 +234,10 @@ class StoreEngine {
   ensureSindicoMaster() {
     if (!this.data || !this.data.moradores) return;
 
-    let sindico = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
-    if (!sindico) {
-      sindico = {
+    // E-mail oficial do condomínio
+    let sindicoOficial = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com');
+    if (!sindicoOficial) {
+      sindicoOficial = {
         id: 'usr_sindico',
         nome: 'Alessandro Cristiano da Silva',
         apartamento: 'Administração',
@@ -236,11 +249,33 @@ class StoreEngine {
         role: 'Administrador',
         dataCadastro: '2025-01-10'
       };
-      this.data.moradores.unshift(sindico);
+      this.data.moradores.unshift(sindicoOficial);
     } else {
-      sindico.role = 'Administrador';
-      sindico.status = 'Aprovado';
-      if (!sindico.senha) sindico.senha = 'ModernLife2026';
+      sindicoOficial.role = 'Administrador';
+      sindicoOficial.status = 'Aprovado';
+      if (!sindicoOficial.senha) sindicoOficial.senha = 'ModernLife2026';
+    }
+
+    // E-mail pessoal do Síndico Alessandro
+    let sindicoPessoal = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com');
+    if (!sindicoPessoal) {
+      sindicoPessoal = {
+        id: 'usr_sindico_pessoal',
+        nome: 'Alessandro Cristiano da Silva',
+        apartamento: 'Administração',
+        cpf: 'Cadastrado no Portal',
+        telefone: '27992516970',
+        email: 'contatoalecristiano@gmail.com',
+        senha: 'ModernLife2026',
+        status: 'Aprovado',
+        role: 'Administrador',
+        dataCadastro: '2025-01-10'
+      };
+      this.data.moradores.unshift(sindicoPessoal);
+    } else {
+      sindicoPessoal.role = 'Administrador';
+      sindicoPessoal.status = 'Aprovado';
+      if (!sindicoPessoal.senha) sindicoPessoal.senha = 'ModernLife2026';
     }
 
     if (this.data.documentos) {
@@ -266,6 +301,7 @@ class StoreEngine {
 
     // 2. Escanear e restaurar moradores de TODAS as chaves salvas no navegador
     const legacyKeys = [
+      'MODERN_LIFE_CONDO_DATA_V40',
       'MODERN_LIFE_CONDO_DATA_V39',
       'MODERN_LIFE_CONDO_DATA_V38',
       'MODERN_LIFE_CONDO_DATA_V37',
@@ -713,7 +749,7 @@ class StoreEngine {
   deleteMorador(id) {
     const target = this.data.moradores.find(m => m.id === id || (m.email && m.email.toLowerCase().trim() === id.toLowerCase().trim()));
     
-    if (target && (target.role === 'Administrador' || target.id === 'usr_sindico' || (target.email && target.email.toLowerCase() === 'condominio.modern.life@gmail.com'))) {
+    if (target && (target.role === 'Administrador' || target.id === 'usr_sindico' || target.id === 'usr_sindico_pessoal' || (target.email && (target.email.toLowerCase() === 'condominio.modern.life@gmail.com' || target.email.toLowerCase() === 'contatoalecristiano@gmail.com')))) {
       return { success: false, message: 'O cadastro do Administrador Master (Síndico) não pode ser excluído por razões de segurança do sistema.' };
     }
 
