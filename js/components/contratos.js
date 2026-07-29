@@ -1,12 +1,13 @@
 /* ----------------------------------------------------
    Modern Life Residence - Módulo & Dashboard de Gestão de Contratos
-   Importador Inteligente 100% Automático e Exclusão Total de Contratos
-   Suporte a Carregamento de MÚLTIPLOS ARQUIVOS e Exclusão Direta com Confirmação
+   Títulos Genéricos de Serviços sem Nomes de Empresas ou Pessoas
+   Suporte Completo a EDIÇÃO ✏️ e EXCLUSÃO 🗑️ de Contratos com Sincronização Cloud
    ---------------------------------------------------- */
 
 window.ContratosComponent = {
   filtroStatus: 'Todos',
   termoBusca: '',
+  editingContractId: null,
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
@@ -24,7 +25,7 @@ window.ContratosComponent = {
             Acesso Restrito: Contratos de Prestação de Serviços
           </h2>
           <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem; line-height: 1.6;">
-            Por determinação da convenção condominial, o acesso aos contratos firmados com fornecedores terceirizados (elevadores, portaria, limpeza e manutenção) é sigiloso e exclusivo para moradores cadastrados.
+            Por determinação da convenção condominial, o acesso aos contratos firmados com serviços terceirizados (elevadores, portaria, limpeza e manutenção) é sigiloso e exclusivo para moradores cadastrados.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
             <span class="material-symbols-outlined">login</span> Entrar / Cadastrar para Solicitar Acesso
@@ -35,6 +36,16 @@ window.ContratosComponent = {
     }
 
     const contratos = data.contratos || [];
+
+    // Sanitização para garantir que nenhum nome de empresa/pessoa apareça nos contratos existentes
+    contratos.forEach(c => {
+      if (c.empresa) {
+        if (c.empresa.toLowerCase().includes('otis')) c.empresa = 'Manutenção de Elevadores';
+        if (c.empresa.toLowerCase().includes('servis')) c.empresa = 'Portaria & Limpeza Terceirizada';
+        if (c.empresa.toLowerCase().includes('aquaclean')) c.empresa = 'Manutenção de Piscinas & Paisagismo';
+        if (c.empresa.toLowerCase().includes('garantia')) c.empresa = 'Assessoria Contábil & Gestão';
+      }
+    });
 
     // Cálculo das métricas do Dashboard
     const totalContratos = contratos.length;
@@ -69,13 +80,13 @@ window.ContratosComponent = {
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
             <div>
               <span class="badge" style="background: rgba(255,255,255,0.12); color: #38BDF8; font-weight: 600; margin-bottom: 0.4rem; padding: 4px 10px; border-radius: 20px;">
-                <span class="material-symbols-outlined" style="font-size: 0.85rem;">description</span> GESTÃO DE CONTRATOS TERCEIRIZADOS
+                <span class="material-symbols-outlined" style="font-size: 0.85rem;">description</span> GESTÃO DE CONTRATOS &amp; SERVIÇOS
               </span>
               <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #F8FAFC; margin-top: 0.2rem;">
-                Dashboard de Contratos &amp; Prestadores de Serviços
+                Dashboard de Contratos &amp; Serviços Terceirizados
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.8; color: #94A3B8; margin-top: 0.2rem;">
-                Importação em lote de múltiplos contratos em PDF/DOC com opção de exclusão e controle total.
+                Leitura e acompanhamento de contratos por serviço com opções de edição ✏️ e exclusão 🗑️.
               </p>
             </div>
 
@@ -98,7 +109,7 @@ window.ContratosComponent = {
               </div>
             </div>
             <div style="font-size: 1.45rem; font-weight: 800; color: #0F172A; margin-top: 0.4rem;">
-              ${totalContratos} Fornecedores
+              ${totalContratos} Serviços
             </div>
             <div style="font-size: 0.75rem; color: #2563EB; margin-top: 4px; font-weight: 600;">
               🔷 Contratos Ativos no Condomínio
@@ -160,7 +171,7 @@ window.ContratosComponent = {
                 Vigência &amp; Progresso dos Contratos
               </h3>
               <p style="font-size: 0.82rem; color: #64748B; margin-top: 2px;">
-                Linha de tempo visual do período contratual decorrido de cada prestador.
+                Linha de tempo visual do período contratual decorrido de cada serviço.
               </p>
             </div>
           </div>
@@ -191,10 +202,13 @@ window.ContratosComponent = {
                       <strong style="color: #0F172A; font-size: 0.95rem;">${c.empresa}</strong>
                       <span style="font-size: 0.8rem; color: #64748B; margin-left: 8px;">(${c.objeto})</span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <strong style="color: #059669; font-size: 0.95rem;">R$ ${(c.valorMensal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}/mês</strong>
                       ${statusBadge}
                       ${isSindico ? `
+                        <button class="btn-secondary btn-sm" style="background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="ContratosComponent.openEditModal('${c.id}')" title="Editar Contrato">
+                          <span class="material-symbols-outlined" style="font-size: 0.85rem;">edit</span> Editar
+                        </button>
                         <button class="btn-secondary btn-sm btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA; padding: 0.2rem 0.5rem; font-size: 0.75rem;" onclick="ContratosComponent.excluirContrato('${c.id}', '${c.empresa}')" title="Excluir Contrato">
                           <span class="material-symbols-outlined" style="font-size: 0.85rem;">delete</span> Excluir
                         </button>
@@ -217,18 +231,18 @@ window.ContratosComponent = {
           </div>
         </div>
 
-        <!-- Tabela Completa de Contratos com Filtro e Busca -->
+        <!-- Tabela Completa de Contratos com Opções de Edição ✏️ e Exclusão 🗑️ -->
         <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
           
           <div class="card-header" style="margin-bottom: 1.25rem;">
             <div class="card-title" style="font-size: 1.15rem; color: #0F172A; font-weight: 700;">
-              <span class="material-symbols-outlined" style="color: var(--primary);">description</span> Relação Detalhada de Contratos
+              <span class="material-symbols-outlined" style="color: var(--primary);">description</span> Relação Detalhada de Contratos de Serviços
             </div>
 
             <!-- Filtros e Busca -->
             <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
               <div style="position: relative; min-width: 220px;">
-                <input type="text" class="form-control" placeholder="🔍 Buscar contrato ou serviço..." value="${this.termoBusca}" oninput="ContratosComponent.buscarContratos(this.value)" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
+                <input type="text" class="form-control" placeholder="🔍 Buscar por serviço..." value="${this.termoBusca}" oninput="ContratosComponent.buscarContratos(this.value)" style="padding: 0.5rem 0.75rem; font-size: 0.85rem;">
               </div>
 
               <select class="form-control" style="width: auto; font-size: 0.85rem; font-weight: 600;" onchange="ContratosComponent.filtrarStatus(this.value)">
@@ -244,7 +258,7 @@ window.ContratosComponent = {
             <table class="custom-table" style="border-collapse: separate; border-spacing: 0;">
               <thead>
                 <tr style="background: #F8FAFC;">
-                  <th style="color: #475569; font-weight: 700;">Contrato / Serviço</th>
+                  <th style="color: #475569; font-weight: 700;">Título do Serviço / Contrato</th>
                   <th style="color: #475569; font-weight: 700;">Objeto / Descrição</th>
                   <th style="text-align: right; color: #059669; font-weight: 700;">Valor Mensal (R$)</th>
                   <th style="color: #475569; font-weight: 700;">Vigência Contratual</th>
@@ -289,6 +303,9 @@ window.ContratosComponent = {
                           <span class="material-symbols-outlined" style="font-size: 0.95rem;">visibility</span> Obrigações
                         </button>
                         ${isSindico ? `
+                          <button class="btn-secondary btn-sm" style="background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; padding: 0.35rem 0.6rem; font-weight: 700;" onclick="ContratosComponent.openEditModal('${c.id}')" title="Editar Contrato">
+                            <span class="material-symbols-outlined" style="font-size: 0.95rem;">edit</span> Editar
+                          </button>
                           <button class="btn-secondary btn-sm btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA; padding: 0.35rem 0.6rem; font-weight: 700;" onclick="ContratosComponent.excluirContrato('${c.id}', '${c.empresa}')" title="Excluir Contrato">
                             <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> Excluir
                           </button>
@@ -326,7 +343,7 @@ window.ContratosComponent = {
         <div class="modal-card" style="max-width: 580px; border: 2px solid #10B981; border-radius: 12px;">
           <div class="modal-header" style="background: #0F172A; color: #34D399;">
             <div class="modal-title" style="color: #34D399; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
-              <span class="material-symbols-outlined">cloud_upload</span> 📄 Importar Vários Contratos (PDF / DOC)
+              <span class="material-symbols-outlined">cloud_upload</span> 📄 Importar Contratos (PDF / DOC)
             </div>
             <button class="modal-close" style="color: white;" onclick="document.getElementById('modalImportContrato').remove()">✕</button>
           </div>
@@ -339,7 +356,7 @@ window.ContratosComponent = {
                   Clique para selecionar 1 ou VÁRIOS contratos em PDF / DOC
                 </strong>
                 <span style="display: block; font-size: 0.85rem; color: #64748B;">
-                  Você pode selecionar múltiplos arquivos simultaneamente. O leitor lê e cadastra todos automaticamente no sistema e banco de dados.
+                  Você pode selecionar múltiplos arquivos simultaneamente. O leitor lê e cadastra todos com nomes de serviços genéricos sem expor nomes de pessoas ou marcas.
                 </span>
               </label>
 
@@ -398,13 +415,6 @@ window.ContratosComponent = {
       const clean = line.toLowerCase().trim();
       if (!clean) return;
 
-      if (clean.includes('contratada') || clean.includes('empresa') || clean.includes('razão social') || clean.includes('contratado')) {
-        const parts = line.split(/[:;\-]/);
-        if (parts.length >= 2 && parts[1].trim().length > 3) {
-          empresaDetectada = parts[1].trim();
-        }
-      }
-
       if (clean.includes('valor') || clean.includes('mensalidade') || clean.includes('r$') || clean.includes('preço')) {
         const matches = line.match(/\d+[\.,]?\d*/g);
         if (matches && matches.length > 0) {
@@ -425,7 +435,22 @@ window.ContratosComponent = {
       }
     });
 
-    const empresaFinal = empresaDetectada || (fileName ? fileName.replace(/\.[^/.]+$/, "").replace(/contrato/i, "").replace(/_/g, " ").trim() : 'Nova Prestadora Terceirizada');
+    // Sanitização de nomes de empresas ou pessoas para títulos descritivos de serviços
+    let empresaFinal = 'Serviço Terceirizado Especializado';
+    const nameLow = fileName.toLowerCase();
+
+    if (nameLow.includes('elevador') || text.toLowerCase().includes('elevador')) {
+      empresaFinal = 'Manutenção de Elevadores';
+    } else if (nameLow.includes('portaria') || nameLow.includes('limpeza') || text.toLowerCase().includes('portaria')) {
+      empresaFinal = 'Portaria & Limpeza Terceirizada';
+    } else if (nameLow.includes('piscina') || nameLow.includes('jardim') || text.toLowerCase().includes('piscina')) {
+      empresaFinal = 'Manutenção de Piscinas & Paisagismo';
+    } else if (nameLow.includes('contabil') || nameLow.includes('gestao') || text.toLowerCase().includes('contábil')) {
+      empresaFinal = 'Assessoria Contábil & Gestão';
+    } else if (fileName) {
+      empresaFinal = `Contrato de ${fileName.replace(/\.[^/.]+$/, "").replace(/contrato/i, "").replace(/_/g, " ").trim()}`;
+    }
+
     const valorFinal = valorDetectado > 0 ? valorDetectado : 1250.00;
     const objetoFinal = objetoDetectado || `Prestação de Serviços Terceirizados para o Condomínio (${fileName})`;
     const obrigacoesFinal = obrigacoesDetectadas.length > 0
@@ -442,6 +467,110 @@ window.ContratosComponent = {
       obrigacoes: obrigacoesFinal,
       arquivoNome: fileName || 'CONTRATO_IMPORTADO.pdf'
     });
+  },
+
+  openEditModal(id) {
+    const contratos = window.CondoStore.data.contratos || [];
+    const target = contratos.find(c => c.id === id);
+    if (!target) return;
+
+    this.editingContractId = id;
+    const existing = document.getElementById('modalEditContrato');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalEditContrato" style="z-index: 999999;">
+        <div class="modal-card" style="max-width: 580px; border: 2px solid #2563EB; border-radius: 12px;">
+          <div class="modal-header" style="background: #0F172A; color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined" style="color: #60A5FA;">edit</span> Editar Contrato de Serviço
+            </div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalEditContrato').remove()">✕</button>
+          </div>
+          <div class="modal-body" style="padding: 1.5rem;">
+            <form onsubmit="ContratosComponent.salvarEdicaoContrato(event)">
+              
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">Título do Serviço / Contrato</label>
+                <input type="text" id="editCtrEmpresa" class="form-control" value="${target.empresa}" required style="font-weight: 700;">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">Objeto / Descrição dos Serviços</label>
+                <input type="text" id="editCtrObjeto" class="form-control" value="${target.objeto}" required style="font-weight: 600;">
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700; color: #059669;">Valor Mensal (R$)</label>
+                  <input type="number" step="0.01" id="editCtrValor" class="form-control" value="${target.valorMensal}" required style="font-weight: 700; color: #059669;">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">Status do Contrato</label>
+                  <select id="editCtrStatus" class="form-control" style="font-weight: 600;">
+                    <option value="Ativo" ${target.status === 'Ativo' ? 'selected' : ''}>🟢 Ativo</option>
+                    <option value="A Vencer" ${target.status === 'A Vencer' ? 'selected' : ''}>⚠️ A Vencer</option>
+                    <option value="Encerrado" ${target.status === 'Encerrado' ? 'selected' : ''}>🔴 Encerrado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">Data Início Vigência</label>
+                  <input type="date" id="editCtrInicio" class="form-control" value="${target.vigenciaInicio}" required style="font-weight: 600;">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" style="font-weight: 700;">Data Término Vigência</label>
+                  <input type="date" id="editCtrFim" class="form-control" value="${target.vigenciaFim}" required style="font-weight: 600;">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">Obrigações &amp; Termos do Serviço</label>
+                <textarea id="editCtrObrigacoes" class="form-control" rows="3" style="font-size: 0.88rem;">${target.obrigacoes || ''}</textarea>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem;">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('modalEditContrato').remove()">Cancelar</button>
+                <button type="submit" class="btn-primary" style="background: #2563EB; color: white; padding: 0.75rem 1.4rem; font-weight: 700;">
+                  <span class="material-symbols-outlined">save</span> Salvar Alterações
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  salvarEdicaoContrato(e) {
+    e.preventDefault();
+    const contratos = window.CondoStore.data.contratos || [];
+    const target = contratos.find(c => c.id === this.editingContractId);
+    if (!target) return;
+
+    target.empresa = document.getElementById('editCtrEmpresa').value.trim();
+    target.objeto = document.getElementById('editCtrObjeto').value.trim();
+    target.valorMensal = parseFloat(document.getElementById('editCtrValor').value);
+    target.status = document.getElementById('editCtrStatus').value;
+    target.vigenciaInicio = document.getElementById('editCtrInicio').value;
+    target.vigenciaFim = document.getElementById('editCtrFim').value;
+    target.obrigacoes = document.getElementById('editCtrObrigacoes').value.trim();
+    target.valorTotalAnual = target.valorMensal * 12;
+
+    window.CondoStore.saveData();
+    App.showToast(`✏️ Contrato "${target.empresa}" atualizado com sucesso!`, 'success');
+
+    const modal = document.getElementById('modalEditContrato');
+    if (modal) modal.remove();
+
+    App.render();
   },
 
   verObrigacoes(id) {
@@ -485,13 +614,16 @@ window.ContratosComponent = {
               </div>
             </div>
 
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
               <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="document.getElementById('modalVerObrigacoes').remove()">
                 Fechar Visualizador
               </button>
               ${isSindico ? `
-                <button class="btn-secondary btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA; font-weight: 700; padding: 0.6rem 1.1rem;" onclick="document.getElementById('modalVerObrigacoes').remove(); ContratosComponent.excluirContrato('${target.id}', '${target.empresa}');">
-                  <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span> Excluir Este Contrato
+                <button class="btn-secondary" style="background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; font-weight: 700;" onclick="document.getElementById('modalVerObrigacoes').remove(); ContratosComponent.openEditModal('${target.id}');">
+                  <span class="material-symbols-outlined" style="font-size: 1rem;">edit</span> Editar
+                </button>
+                <button class="btn-secondary btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA; font-weight: 700;" onclick="document.getElementById('modalVerObrigacoes').remove(); ContratosComponent.excluirContrato('${target.id}', '${target.empresa}');">
+                  <span class="material-symbols-outlined" style="font-size: 1rem;">delete</span> Excluir
                 </button>
               ` : ''}
             </div>
