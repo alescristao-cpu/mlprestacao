@@ -72,13 +72,13 @@ window.AdminComponent = {
           <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
               <span class="badge" style="background: rgba(255,255,255,0.2); color: white; margin-bottom: 0.4rem;">
-                <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL ADMINISTRATIVO MASTER
+                <span class="material-symbols-outlined" style="font-size: 0.85rem;">verified</span> PAINEL DE ATRIBUIÇÕES ADMINISTRATIVAS MASTER
               </span>
-              <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700;">
+              <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800;">
                 Gestão do Síndico Alessandro Cristiano da Silva
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 2px;">
-                E-mail oficial: <code>condominio.modern.life@gmail.com</code>
+                E-mail oficial: <code>alecristao@hotmail.com</code>
               </p>
             </div>
 
