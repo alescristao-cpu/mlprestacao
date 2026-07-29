@@ -491,8 +491,12 @@ window.AdminComponent = {
             "Instruções": "Seu acesso ao portal oficial foi aprovado pelo Síndico Alessandro. Você já pode entrar utilizando o seu e-mail e a senha cadastrada.",
             "Link do Portal": "https://mlprestacao.vercel.app"
           })
-        }).catch(() => {});
-      } catch (e) {}
+        }).catch(err => {
+          console.warn('[FormSubmit Error] Falha ao enviar e-mail de autorização:', err);
+        });
+      } catch (e) {
+        console.error('[Email Dispatch Error]:', e);
+      }
     }
 
     App.showToast(`Acesso do morador "${nome}" AUTORIZADO com sucesso!`, 'success');
@@ -516,8 +520,12 @@ window.AdminComponent = {
           "Link do Portal": "https://mlprestacao.vercel.app",
           "Data da Solicitação": new Date().toLocaleString("pt-BR")
         })
-      }).catch(() => {});
-    } catch (e) {}
+      }).catch(err => {
+        console.warn('[FormSubmit Error] Falha ao enviar e-mail com senha temporária:', err);
+      });
+    } catch (e) {
+      console.error('[Email Dispatch Error]:', e);
+    }
 
     try {
       fetch(`https://formsubmit.co/ajax/condominio.modern.life@gmail.com`, {
