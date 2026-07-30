@@ -443,7 +443,19 @@ window.App = {
   }
 };
 
-// Inicializar a Aplicação assim que a página estiver pronta
+// Alias global de escopo de janela para garantir que onclick="App...." funcione em 100% dos navegadores
+var App = window.App;
+
+// Inicializar a Aplicação assim que o DOM ou os scripts estiverem prontos
 document.addEventListener('DOMContentLoaded', () => {
-  window.App.init();
+  if (window.App && typeof window.App.init === 'function') {
+    window.App.init();
+  }
 });
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  setTimeout(() => {
+    if (window.App && typeof window.App.init === 'function') {
+      window.App.init();
+    }
+  }, 50);
+}
