@@ -43,7 +43,8 @@ window.SupabaseConfig = {
   async pushDataToSupabase(data) {
     if (!this.client || !data) return;
 
-       // 1. Sincronizar Moradores
+    try {
+      // 1. Sincronizar Moradores
       if (data.moradores && data.moradores.length > 0) {
         const rowsMoradores = await Promise.all(data.moradores.map(async m => ({
           id: m.id,
