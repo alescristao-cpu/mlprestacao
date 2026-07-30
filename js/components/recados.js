@@ -156,7 +156,7 @@ window.RecadosComponent = {
                   <span style="font-size: 0.78rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">Clique para escolher uma imagem temática pré-definida:</span>
                   <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
                     <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('./assets/images/IMG_2909.JPG')">💡 Iluminação/LED</button>
-                    <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('./assets/images/IMG_2956.jpg')">🏢 Fachada Torre</button>
+                    <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('./assets/images/IMG_2956.JPG')">🏢 Fachada Torre</button>
                     <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800')">🏊 Piscina</button>
                     <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800')">🏋️ Academia</button>
                     <button type="button" class="btn-outline-primary btn-sm" onclick="RecadosComponent.selectPresetImage('https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800')">🧹 Limpeza/Obras</button>
