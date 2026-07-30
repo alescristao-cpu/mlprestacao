@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "/assets/images/:file*.jpg",
+      "destination": "/assets/images/:file*.JPG"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
