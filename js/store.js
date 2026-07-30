@@ -369,9 +369,11 @@ class StoreEngine {
     } catch (e) {}
   }
 
-  isMoradorDeleted(id, email) {
-    if (id === 'usr_pedro_ferro' || (email && email.toLowerCase().includes('pedro.ferro'))) return false;
+  markMoradorDeleted(id, email) {
+    this.registerDeletedMorador(id, email);
+  }
 
+  isMoradorDeleted(id, email) {
     const list = this.getDeletedMoradoresList();
     if (id && list.includes(id)) return true;
     if (email && list.includes(email.toLowerCase().trim())) return true;
@@ -473,10 +475,13 @@ class StoreEngine {
       return true;
     });
 
-    // Garantir moradores padrão
+    // Garantir moradores padrão (respeitando exclusão de moradores)
     INITIAL_DATA.moradores.forEach(m => {
-      if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
-        loadedData.moradores.push(m);
+      const isMasterSindico = m.email && m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
+      if (isMasterSindico || !this.isMoradorDeleted(m.id, m.email)) {
+        if (!loadedData.moradores.some(x => x.email && x.email.toLowerCase().trim() === m.email.toLowerCase().trim())) {
+          loadedData.moradores.push(m);
+        }
       }
     });
 
@@ -674,11 +679,14 @@ class StoreEngine {
             });
           }
 
-          // Garantir logins mestres do Síndico
+          // Garantir login mestre do Síndico (respeitando exclusão de moradores)
           INITIAL_DATA.moradores.forEach(mMaster => {
-            if (!this.data.moradores.some(x => x.email && x.email.toLowerCase().trim() === mMaster.email.toLowerCase().trim())) {
-              this.data.moradores.unshift(mMaster);
-              updatedSupa = true;
+            const isMasterSindico = mMaster.email && mMaster.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
+            if (isMasterSindico || !this.isMoradorDeleted(mMaster.id, mMaster.email)) {
+              if (!this.data.moradores.some(x => x.email && x.email.toLowerCase().trim() === mMaster.email.toLowerCase().trim())) {
+                this.data.moradores.unshift(mMaster);
+                updatedSupa = true;
+              }
             }
           });
 
@@ -1054,7 +1062,12 @@ class StoreEngine {
     const deleteEmail = target ? (target.email || '').toLowerCase().trim() : (typeof id === 'string' && id.includes('@') ? id.toLowerCase().trim() : '');
 
     this.registerDeletedMorador(deleteId, deleteEmail);
-    this.data.moradores = this.data.moradores.filter(m => m.id !== deleteId && (m.email ? m.email.toLowerCase().trim() !== deleteId : true));
+    this.data.moradores = this.data.moradores.filter(m => {
+      if (!m) return false;
+      if (deleteId && m.id === deleteId) return false;
+      if (deleteEmail && m.email && m.email.toLowerCase().trim() === deleteEmail) return false;
+      return true;
+    });
     this.saveData();
 
     if (window.SupabaseConfig && window.SupabaseConfig.deleteMoradorFromSupabase) {
