@@ -105,8 +105,7 @@ window.App = {
     const isPortaria = user && user.role === 'Portaria';
 
     if (route === 'admin') {
-      const adminEmails = ['alecristao@hotmail.com', 'condominio.modern.life@gmail.com', 'contatoalecristiano@gmail.com'];
-      const isSindicoUser = user && (user.role === 'Administrador' || (user.email && adminEmails.includes(user.email.toLowerCase().trim())));
+      const isSindicoUser = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
 
       if (isSindicoUser) {
         user.role = 'Administrador';

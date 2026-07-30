@@ -9,7 +9,7 @@ window.AdminComponent = {
 
   render(container, data) {
     const user = window.CondoStore ? window.CondoStore.currentUser : null;
-    const isMasterAdmin = user && (user.role === 'Administrador' || (user.email && ['alecristao@hotmail.com', 'condominio.modern.life@gmail.com', 'contatoalecristiano@gmail.com'].includes(user.email.toLowerCase().trim())));
+    const isMasterAdmin = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
 
     if (!user || !isMasterAdmin) {
       container.innerHTML = `
@@ -19,13 +19,13 @@ window.AdminComponent = {
             Painel do Síndico Administrador
           </h2>
           <p style="color: var(--text-muted); font-size: 0.95rem; margin: 0.85rem 0 1.35rem 0; line-height: 1.5;">
-            Para gerenciar moradores, aprovar novos cadastros, responder aos condôminos e fazer a gestão do condomínio, clique abaixo para entrar com a conta de Síndico (<code>alecristao@hotmail.com</code>).
+            Para gerenciar moradores, aprovar novos cadastros, responder aos condôminos e fazer a gestão do condomínio, clique abaixo para entrar com a conta oficial de Síndico (<code>condominio.modern.life@gmail.com</code>).
           </p>
 
-          <form onsubmit="event.preventDefault(); AuthComponent.verifiedMorador = null; AuthComponent.loginStep = 1; AuthComponent.irParaSenhaComEmail('alecristao@hotmail.com');" style="display: flex; flex-direction: column; gap: 1rem; text-align: left;">
+          <form onsubmit="event.preventDefault(); AuthComponent.verifiedMorador = null; AuthComponent.loginStep = 1; AuthComponent.irParaSenhaComEmail('condominio.modern.life@gmail.com');" style="display: flex; flex-direction: column; gap: 1rem; text-align: left;">
             <div class="form-group">
               <label class="form-label" style="font-weight: 700; color: var(--primary-dark);">E-mail Oficial do Síndico Master</label>
-              <input type="email" id="embeddedSindicoEmail" class="form-control" value="alecristao@hotmail.com" readonly style="font-weight: 700; font-size: 1.05rem; padding: 0.85rem; background: #F5F5F5;">
+              <input type="email" id="embeddedSindicoEmail" class="form-control" value="condominio.modern.life@gmail.com" readonly style="font-weight: 700; font-size: 1.05rem; padding: 0.85rem; background: #F5F5F5;">
             </div>
 
             <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 1rem; font-weight: 800; font-size: 1.05rem; background: linear-gradient(135deg, #2E6B42 0%, #1F4D30 100%); color: white; border: none; border-radius: 8px; cursor: pointer;">
@@ -78,7 +78,7 @@ window.AdminComponent = {
                 Gestão do Síndico Alessandro Cristiano da Silva
               </h2>
               <p style="font-size: 0.85rem; opacity: 0.9; margin-top: 2px;">
-                E-mail oficial: <code>alecristao@hotmail.com</code>
+                E-mail oficial: <code>condominio.modern.life@gmail.com</code>
               </p>
             </div>
 
