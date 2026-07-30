@@ -203,7 +203,7 @@ window.SupabaseConfig = {
         try { await this.client.from('ocorrencias').upsert(rowsGaleria, { onConflict: 'id' }); } catch (err) { console.error('[Supabase Upsert Error - GaleriaVault]:', err); }
       }
 
-      // 8. Sincronizar Recados
+      // 8. Sincronizar Recados (Com garantia dupla: Tabela recados + Cofre em Ocorrências RecadosVault)
       if (data.recados && data.recados.length > 0) {
         const rowsRec = data.recados.map(r => ({
           id: r.id,
@@ -215,7 +215,35 @@ window.SupabaseConfig = {
           resumo: r.resumo || '',
           texto: r.texto || ''
         }));
-        try { await this.client.from('recados').upsert(rowsRec, { onConflict: 'id' }); } catch (err) { console.error('[Supabase Upsert Error - recados]:', err); }
+        try {
+          const { error: errRec } = await this.client.from('recados').upsert(rowsRec, { onConflict: 'id' });
+          if (errRec) {
+            // Em caso de tabela recados inexistente no SQL Editor do cliente, salva automaticamente no Vault de Ocorrências
+          }
+        } catch (err) {}
+
+        const rowsRecVault = data.recados.map(r => ({
+          id: r.id.startsWith('rec_') ? r.id : 'rec_' + r.id,
+          morador_id: 'usr_sindico',
+          morador_nome: r.autor || 'Síndico',
+          morador_email: 'condominio.modern.life@gmail.com',
+          apartamento: 'Administração',
+          categoria: 'RecadosVault_Informe',
+          assunto: r.titulo || 'Informe Oficial',
+          descricao: r.texto || r.resumo || '',
+          status: 'Publicado',
+          respostas: [
+            {
+              visibilidade: r.visibilidade || 'Publico',
+              imagem: r.imagem || '',
+              resumo: r.resumo || '',
+              texto: r.texto || '',
+              data: r.data || new Date().toISOString().split('T')[0]
+            }
+          ],
+          data: r.data || new Date().toISOString().split('T')[0]
+        }));
+        try { await this.client.from('ocorrencias').upsert(rowsRecVault, { onConflict: 'id' }); } catch (err) {}
       }
 
     } catch (e) {
@@ -229,7 +257,7 @@ window.SupabaseConfig = {
     try {
       let resMoradores = null, resReservas = null, resOcorrencias = null;
       let resBalancetes = null, resContratos = null, resDocumentos = null;
-      let resMoradorVault = null, resDocVault = null, resGaleriaVault = null, resRecados = null;
+      let resMoradorVault = null, resDocVault = null, resGaleriaVault = null, resRecados = null, resRecadosVault = null;
 
       try { resMoradores = await this.client.from('moradores').select('*'); } catch (e) {}
       try { resReservas = await this.client.from('reservas').select('*'); } catch (e) {}
@@ -240,6 +268,7 @@ window.SupabaseConfig = {
       try { resMoradorVault = await this.client.from('ocorrencias').select('*').like('categoria', 'PendingMoradorVault%'); } catch (e) {}
       try { resDocVault = await this.client.from('ocorrencias').select('*').like('categoria', 'DocVault_%'); } catch (e) {}
       try { resGaleriaVault = await this.client.from('ocorrencias').select('*').like('categoria', 'GaleriaVault_%'); } catch (e) {}
+      try { resRecadosVault = await this.client.from('ocorrencias').select('*').like('categoria', 'RecadosVault_%'); } catch (e) {}
       try { resRecados = await this.client.from('recados').select('*'); } catch (e) {}
 
       let moradoresFromCloud = [];
