@@ -3,7 +3,7 @@
    Carregamento Modular Sequencial de Componentes com Controle Automatizado de Cache
    ==================================================== */
 (function() {
-  const BUILD_VERSION = '20260729_v65_' + Date.now();
+  const BUILD_VERSION = '20260730_v70_' + Date.now();
 
   const scripts = [
     'js/supabase-config.js',
