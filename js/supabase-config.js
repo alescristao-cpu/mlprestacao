@@ -11,15 +11,24 @@ window.SupabaseConfig = {
   client: null,
 
   init() {
+    if (this.client) return this.client;
+
     if (window.supabase && typeof window.supabase.createClient === 'function') {
       try {
-        this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        this.client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+          }
+        });
         console.log('✅ Supabase Cloud Database inicializado com sucesso.');
         this.subscribeRealtime();
       } catch (err) {
         console.warn('⚠️ Erro ao inicializar cliente Supabase:', err);
       }
     }
+    return this.client;
   },
 
   subscribeRealtime() {
