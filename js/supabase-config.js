@@ -212,25 +212,8 @@ window.SupabaseConfig = {
         try { await this.client.from('ocorrencias').upsert(rowsGaleria, { onConflict: 'id' }); } catch (err) { console.error('[Supabase Upsert Error - GaleriaVault]:', err); }
       }
 
-      // 8. Sincronizar Recados (Com garantia dupla: Tabela recados + Cofre em Ocorrências RecadosVault)
+      // 8. Sincronizar Recados (Garantia de salvamento infalível via RecadosVault no PostgreSQL Supabase Cloud)
       if (data.recados && data.recados.length > 0) {
-        const rowsRec = data.recados.map(r => ({
-          id: r.id,
-          titulo: r.titulo || '',
-          data: r.data || new Date().toISOString().split('T')[0],
-          autor: r.autor || 'Síndico',
-          visibilidade: r.visibilidade || 'Publico',
-          imagem: r.imagem || '',
-          resumo: r.resumo || '',
-          texto: r.texto || ''
-        }));
-        try {
-          const { error: errRec } = await this.client.from('recados').upsert(rowsRec, { onConflict: 'id' });
-          if (errRec) {
-            // Em caso de tabela recados inexistente no SQL Editor do cliente, salva automaticamente no Vault de Ocorrências
-          }
-        } catch (err) {}
-
         const rowsRecVault = data.recados.map(r => ({
           id: r.id.startsWith('rec_') ? r.id : 'rec_' + r.id,
           morador_id: 'usr_sindico',
@@ -402,9 +385,42 @@ window.SupabaseConfig = {
         });
       }
 
+      let recadosFromCloud = [];
+      if (resRecadosVault && resRecadosVault.data && resRecadosVault.data.length > 0) {
+        resRecadosVault.data.forEach(v => {
+          const meta = (v.respostas && v.respostas[0]) ? v.respostas[0] : {};
+          recadosFromCloud.push({
+            id: v.id,
+            titulo: v.assunto || 'Mural de Recados',
+            data: meta.data || v.data,
+            autor: v.morador_nome || 'Síndico',
+            visibilidade: meta.visibilidade || 'Publico',
+            imagem: meta.imagem || '',
+            resumo: meta.resumo || '',
+            texto: meta.texto || v.descricao || ''
+          });
+        });
+      }
+      if (resRecados && resRecados.data && resRecados.data.length > 0) {
+        resRecados.data.forEach(r => {
+          if (!recadosFromCloud.some(x => x.id === r.id)) {
+            recadosFromCloud.push({
+              id: r.id,
+              titulo: r.titulo,
+              data: r.data,
+              autor: r.autor,
+              visibilidade: r.visibilidade,
+              imagem: r.imagem,
+              resumo: r.resumo,
+              texto: r.texto
+            });
+          }
+        });
+      }
+
       // Filtrar ocorrências reais (removendo as entradas do cofre)
       const ocorrenciasReais = (resOcorrencias && resOcorrencias.data)
-        ? resOcorrencias.data.filter(o => !o.categoria || (!o.categoria.startsWith('DocVault_') && !o.categoria.startsWith('GaleriaVault_') && !o.categoria.startsWith('PendingMoradorVault')))
+        ? resOcorrencias.data.filter(o => !o.categoria || (!o.categoria.startsWith('DocVault_') && !o.categoria.startsWith('GaleriaVault_') && !o.categoria.startsWith('PendingMoradorVault') && !o.categoria.startsWith('RecadosVault_')))
         : null;
 
       return {
@@ -467,16 +483,7 @@ window.SupabaseConfig = {
         documentos: docsFromCloud.length > 0 ? docsFromCloud : null,
         galeria: galeriaFromCloud.length > 0 ? galeriaFromCloud : null,
 
-        recados: resRecados && resRecados.data ? resRecados.data.map(r => ({
-          id: r.id,
-          titulo: r.titulo,
-          data: r.data,
-          autor: r.autor,
-          visibilidade: r.visibilidade,
-          imagem: r.imagem,
-          resumo: r.resumo,
-          texto: r.texto
-        })) : null
+        recados: recadosFromCloud.length > 0 ? recadosFromCloud : null
       };
     } catch (e) {
       console.warn('Erro ao puxar dados do Supabase:', e);
