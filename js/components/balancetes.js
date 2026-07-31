@@ -8,8 +8,15 @@ window.BalancetesComponent = {
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
-    const isApproved = user && user.status === 'Aprovado';
-    const isSindico = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
+    const isApproved = user && (user.status === 'Aprovado' || (user.email && (user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' || user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com')));
+    const isSindico = user && (
+      user.role === 'Administrador' ||
+      user.role === 'Síndico' ||
+      (user.email && (
+        user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' ||
+        user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com'
+      ))
+    );
 
     // Restrição de acesso para visitantes não autorizados
     if (!user || !isApproved) {
@@ -598,10 +605,31 @@ window.BalancetesComponent = {
 
     const modal = document.getElementById('modalImportBalancete');
     if (modal) modal.remove();
+    // Garantir que a prestacaoContas sincronize o mês correspondente no Dashboard
+    if (!window.CondoStore.data.prestacaoContas) window.CondoStore.data.prestacaoContas = [];
+    const pIndex = window.CondoStore.data.prestacaoContas.findIndex(p => p.mesAno && p.mesAno.toLowerCase().includes(mesFinal.toLowerCase()));
+    if (pIndex !== -1) {
+      window.CondoStore.data.prestacaoContas[pIndex] = {
+        mesAno: `${mesFinal}/${anoFinal}`,
+        receitas: receitaFinal,
+        despesas: despesaFinal,
+        saldoInicial: saldoAntFinal,
+        saldoAtual
+      };
+    } else {
+      window.CondoStore.data.prestacaoContas.unshift({
+        mesAno: `${mesFinal}/${anoFinal}`,
+        receitas: receitaFinal,
+        despesas: despesaFinal,
+        saldoInicial: saldoAntFinal,
+        saldoAtual
+      });
+    }
+    window.CondoStore.saveData();
 
     if (shouldGoToTransp) {
       App.showToast(`🚀 Planilha lida pelo Síndico! Dashboard de ${mesFinal}/${anoFinal} publicado no Portal de Transparência.`, 'success');
-      App.navigateTo('transparencia');
+      App.navigateTo('prestacao');
     } else {
       App.showToast(`🚀 Planilha lida com sucesso pelo Síndico! Balancete de ${mesFinal}/${anoFinal} gerado.`, 'success');
       App.render();

@@ -156,6 +156,9 @@ Object.assign(window.App, {
     } else if (route === 'contratos' && window.PrestacaoComponent) {
       window.PrestacaoComponent.activeTab = 'contratos';
       route = 'prestacao';
+    } else if (route === 'transparencia' && window.PrestacaoComponent) {
+      window.PrestacaoComponent.activeTab = 'prestacao';
+      route = 'prestacao';
     }
 
     this.currentRoute = route;

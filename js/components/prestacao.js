@@ -53,19 +53,19 @@ window.PrestacaoComponent = {
             <button class="btn-secondary ${this.activeTab === 'prestacao' ? 'btn-primary' : ''}" 
                     style="flex: 1; min-width: 180px; justify-content: center; padding: 0.75rem 1rem; font-weight: 700; border-radius: 8px;"
                     onclick="PrestacaoComponent.trocarAba('prestacao')">
-              <span class="material-symbols-outlined">analytics</span> 📑 Prestação de Contas
+              <span class="material-symbols-outlined">analytics</span> 📊 Dashboard &amp; Prestação (por Mês)
             </button>
 
             <button class="btn-secondary ${this.activeTab === 'balancetes' ? 'btn-primary' : ''}" 
                     style="flex: 1; min-width: 180px; justify-content: center; padding: 0.75rem 1rem; font-weight: 700; border-radius: 8px;"
                     onclick="PrestacaoComponent.trocarAba('balancetes')">
-              <span class="material-symbols-outlined">account_balance_wallet</span> 📊 Balancetes &amp; Planilhas
+              <span class="material-symbols-outlined">folder_open</span> 📁 Arquivos &amp; Demonstrativos (Subir, Editar, Excluir)
             </button>
 
             <button class="btn-secondary ${this.activeTab === 'contratos' ? 'btn-primary' : ''}" 
                     style="flex: 1; min-width: 180px; justify-content: center; padding: 0.75rem 1rem; font-weight: 700; border-radius: 8px;"
                     onclick="PrestacaoComponent.trocarAba('contratos')">
-              <span class="material-symbols-outlined">description</span> 📄 Contratos &amp; Terceirizações
+              <span class="material-symbols-outlined">description</span> 📜 Contratos do Edifício
             </button>
           </div>
         </div>
@@ -114,6 +114,15 @@ window.PrestacaoComponent = {
       });
     } else {
       App.render();
+    }
+  },
+
+  trocarPeriodoPorMes(idxStr) {
+    this.selectedPeriodIndex = parseInt(idxStr, 10) || 0;
+    const container = document.getElementById('unifiedTabContent');
+    const data = (window.CondoStore && window.CondoStore.data) ? window.CondoStore.data : {};
+    if (container) {
+      this.renderPrestacaoInterna(container, data);
     }
   },
 
