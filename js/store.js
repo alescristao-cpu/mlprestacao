@@ -4,7 +4,7 @@
    Resgate de Moradores de Todas as Versões Anteriores + Backup Direto no Supabase Cloud Database
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V49';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V50';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V49';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
 const DELETED_DOCS_KEY = 'MODERN_LIFE_DELETED_DOCS_LIST_V2';
@@ -173,69 +173,8 @@ const INITIAL_DATA = {
     }
   ],
 
-  prestacaoContas: [
-    {
-      id: 'pc_2026_05',
-      mesAno: 'Maio 2026',
-      mes: 'Maio',
-      ano: 2026,
-      saldoInicial: 498438.09,
-      receitas: 90351.01,
-      despesas: 69866.77,
-      saldoAtual: 518922.33,
-      status: 'Aprovado',
-      receitasDetalhadas: [
-        { categoria: 'Taxa de Condomínio Ordinária', valor: 53017.98 },
-        { categoria: 'Fundo de Reserva Regulamentar', valor: 2612.57 },
-        { categoria: 'Água & Esgoto (Leitura Individual)', valor: 7787.45 },
-        { categoria: 'Gás Encanado (Consumo Individual)', valor: 2164.37 },
-        { categoria: 'Taxa Extra / Obras Aprovadas', valor: 19055.25 },
-        { categoria: 'Rendimentos de Aplicações Financeiras', valor: 3797.93 },
-        { categoria: 'Uso de Salão de Festas & Churrasqueiras', valor: 502.78 },
-        { categoria: 'Energia Áreas Comuns', valor: 419.58 }
-      ],
-      categoriasDespesa: [
-        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza Geral)', valor: 28933.49 },
-        { nome: 'Consumo de Água & Esgoto Concessionária', valor: 9404.63 },
-        { nome: 'Consumo de Gás Encanado', valor: 2592.73 },
-        { nome: 'Manutenção Preventiva de Elevadores', valor: 1050.00 },
-        { nome: 'Manutenção de Piscina & Produtos', valor: 435.00 },
-        { nome: 'Jardinagem & Conservação Verde', valor: 365.00 },
-        { nome: 'Manutenção de CFTV, Portão & Interfonia', valor: 485.00 },
-        { nome: 'Limpeza, Desinsetização & Reservatórios', valor: 200.00 },
-        { nome: 'Reposição de Peças de Elevadores & Equipamentos', valor: 1425.57 },
-        { nome: 'Compras de Materiais de Limpeza & Insumos', valor: 1125.30 },
-        { nome: 'Honorários de Gestão Administrativa & Contábil', valor: 2450.03 },
-        { nome: 'Seguro Predial e Placas Solares', valor: 1512.95 },
-        { nome: 'Impostos & Retenções (ISS, Imposto Unificado)', valor: 4305.34 }
-      ]
-    }
-  ],
-
-  balancetes: [
-    {
-      id: 'bal_2026_05',
-      titulo: 'Demonstrativo Consolidado - Maio 2026',
-      ano: 2026,
-      mes: 'Maio',
-      dataPublicacao: '2026-05-31',
-      receitaBruta: 90351.01,
-      despesaBruta: 69866.77,
-      saldoAnterior: 498438.09,
-      saldoMes: 20484.24,
-      saldoAtual: 518922.33,
-      categoriasDespesa: [
-        { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49, corGradiente: 'linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%)', corSolida: '#3B82F6' },
-        { nome: 'Consumo de Água & Esgoto', valor: 9404.63, corGradiente: 'linear-gradient(90deg, #14B8A6 0%, #2DD4BF 100%)', corSolida: '#14B8A6' },
-        { nome: 'Consumo de Gás Encanado', valor: 2592.73, corGradiente: 'linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%)', corSolida: '#F59E0B' },
-        { nome: 'Manutenção de Elevadores & CFTV', valor: 1535.00, corGradiente: 'linear-gradient(90deg, #8B5CF6 0%, #A78BFA 100%)', corSolida: '#8B5CF6' },
-        { nome: 'Honorários de Gestão & Contábil', valor: 2450.03, corGradiente: 'linear-gradient(90deg, #6366F1 0%, #818CF8 100%)', corSolida: '#6366F1' },
-        { nome: 'Seguro Predial & Placas Solares', valor: 1512.95, corGradiente: 'linear-gradient(90deg, #0284C7 0%, #38BDF8 100%)', corSolida: '#0284C7' },
-        { nome: 'Impostos & Retenções Tributárias', valor: 4305.34, corGradiente: 'linear-gradient(90deg, #EC4899 0%, #F472B6 100%)', corSolida: '#EC4899' },
-        { nome: 'Manutenção Predial & Materiais', valor: 1912.60, corGradiente: 'linear-gradient(90deg, #10B981 0%, #34D399 100%)', corSolida: '#10B981' }
-      ]
-    }
-  ],
+  prestacaoContas: [],
+  balancetes: [],
 
   contratos: [
     {
