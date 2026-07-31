@@ -38,8 +38,14 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignorar chamadas em tempo real da API do Supabase para garantir dados ao vivo
-  if (event.request.method !== 'GET' || event.request.url.includes('supabase.co')) {
+  // Ignorar APIs externas, Supabase, Google Fonts e CDNs para evitar bloqueios de CORS/CSP no Service Worker
+  if (
+    event.request.method !== 'GET' || 
+    event.request.url.includes('supabase.co') || 
+    event.request.url.includes('googleapis.com') || 
+    event.request.url.includes('gstatic.com') ||
+    event.request.url.includes('jsdelivr.net')
+  ) {
     return;
   }
 
