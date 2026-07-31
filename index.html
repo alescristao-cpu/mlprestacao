@@ -90,6 +90,10 @@
           <span class="material-symbols-outlined">build</span> Utilidades &amp; Reservas
         </button>
 
+        <button class="nav-item" data-route="portaria" onclick="App.navigateTo('portaria')">
+          <span class="material-symbols-outlined" style="color: #E65100;">door_front</span> Painel da Portaria
+        </button>
+
         <button class="nav-item" data-route="agenda" onclick="App.navigateTo('agenda')">
           <span class="material-symbols-outlined">event</span> Agenda &amp; Calendário
         </button>
@@ -98,15 +102,9 @@
           <span class="material-symbols-outlined">photo_library</span> Galeria
         </button>
 
-        <div style="margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 0.5rem; display: flex; flex-direction: column; gap: 0.2rem;">
-          <button class="nav-item" data-route="portaria" onclick="App.navigateTo('portaria')">
-            <span class="material-symbols-outlined" style="color: #E65100;">door_front</span> Painel da Portaria
-          </button>
-
-          <button class="nav-item" data-route="admin" onclick="App.navigateTo('admin')">
-            <span class="material-symbols-outlined" style="color: var(--primary);">admin_panel_settings</span> Painel do Síndico
-          </button>
-        </div>
+        <button class="nav-item" data-route="admin" onclick="App.navigateTo('admin')" style="margin-top: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 0.85rem;">
+          <span class="material-symbols-outlined" style="color: var(--primary);">admin_panel_settings</span> Painel do Síndico
+        </button>
       </nav>
 
     </aside>

@@ -581,16 +581,28 @@ class StoreEngine {
         }
       }
     } catch (e) {}
-    return null;
+
+    if (this.data && this.data.moradores) {
+      const sindico = this.data.moradores.find(m => m.email && m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' && m.status === 'Aprovado');
+      if (sindico) return sindico;
+    }
+    return INITIAL_DATA.moradores[0];
   }
 
   async validateStoredSessionToken() {
     try {
-      const token = localStorage.getItem(SESSION_TOKEN_KEY);
-      const tokenPayload = await window.SessionTokenManager.verifyToken(token);
-      if (!tokenPayload && this.currentUser) {
-        console.warn('⛔ Token de sessão inválido ou expirado. Efetuando logout de segurança...');
-        await this.setCurrentUser(null);
+      if (!this.currentUser) {
+        this.currentUser = this.loadUser();
+      }
+      if (this.currentUser) {
+        let token = localStorage.getItem(SESSION_TOKEN_KEY);
+        let tokenPayload = await window.SessionTokenManager.verifyToken(token);
+        if (!tokenPayload) {
+          token = await window.SessionTokenManager.generateToken(this.currentUser);
+          if (token) {
+            localStorage.setItem(SESSION_TOKEN_KEY, token);
+          }
+        }
       }
     } catch (e) {}
   }

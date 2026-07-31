@@ -8,23 +8,24 @@ window.BalancetesComponent = {
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
-    const isSindico = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
+    const isApproved = user && user.status === 'Aprovado';
+    const isSindico = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
 
-    // Restrição de acesso: Balancetes é oculta e restrita ao Síndico Master
-    if (!user || !isSindico) {
+    // Restrição de acesso para visitantes não autorizados
+    if (!user || !isApproved) {
       container.innerHTML = `
         <div class="card-widget" style="text-align: center; padding: 3.5rem 1.5rem; max-width: 600px; margin: 2rem auto;">
-          <div style="width: 70px; height: 70px; border-radius: 50%; background: #FFF1F2; color: #E11D48; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: #F0FDF4; color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
             <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
           </div>
           <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
-            Acesso Restrito ao Síndico Master
+            Acesso Restrito a Moradores Cadastrados
           </h2>
           <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem;">
-            A visualização dos balancetes consolidados e demonstrativos de prestação de contas é oculta e de acesso exclusivo do Síndico Master.
+            A visualização dos balancetes consolidados, gráficos financeiros e auditorias é de uso exclusivo dos moradores e conselheiros do Modern Life Residence.
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
-            <span class="material-symbols-outlined">login</span> Entrar como Síndico Master
+            <span class="material-symbols-outlined">login</span> Entrar / Cadastrar no Portal
           </button>
         </div>
       `;
