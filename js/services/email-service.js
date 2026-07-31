@@ -6,12 +6,22 @@ window.EmailService = {
   async sendEmail({ to, subject, data }) {
     if (!to) return { success: false, error: 'Sem destinatário' };
 
-    // 1. Tentar Gateway Primário (FormSubmit)
+    // 1. Tentar Gateway Primário (FormSubmit via FormData sem preflight CORS)
     try {
+      const formData = new FormData();
+      formData.append('_subject', subject);
+      formData.append('_captcha', 'false');
+      formData.append('_template', 'table');
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([key, val]) => {
+          formData.append(key, typeof val === 'object' ? JSON.stringify(val) : String(val));
+        });
+      }
+
       const response = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ _subject: subject, ...data })
+        headers: { 'Accept': 'application/json' },
+        body: formData
       });
 
       if (response.ok) {
@@ -21,12 +31,21 @@ window.EmailService = {
       console.warn('[EmailService] Gateway Primário (FormSubmit) indisponível. Ativando fallback...', err);
     }
 
-    // 2. Tentar Gateway Secundário (Formspree Fallback)
+    // 2. Tentar Gateway Secundário (Formspree Fallback via FormData)
     try {
+      const formData2 = new FormData();
+      formData2.append('email', to);
+      formData2.append('_subject', subject);
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([key, val]) => {
+          formData2.append(key, typeof val === 'object' ? JSON.stringify(val) : String(val));
+        });
+      }
+
       const response = await fetch(`https://formspree.io/f/xknlqpye`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ email: to, _subject: subject, ...data })
+        headers: { 'Accept': 'application/json' },
+        body: formData2
       });
 
       if (response.ok) {
