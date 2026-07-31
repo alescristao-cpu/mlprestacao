@@ -36,13 +36,22 @@ window.ContratosComponent = {
 
     const contratos = data.contratos || [];
 
-    // Sanitização para garantir que nenhum nome de empresa/pessoa apareça nos contratos existentes
+    // Sanitização para garantir que nenhum nome de empresa/pessoa ou nome de arquivo bruto apareça nos contratos existentes
     contratos.forEach(c => {
       if (c.empresa) {
         if (c.empresa.toLowerCase().includes('otis')) c.empresa = 'Manutenção de Elevadores';
         if (c.empresa.toLowerCase().includes('servis')) c.empresa = 'Portaria & Limpeza Terceirizada';
         if (c.empresa.toLowerCase().includes('aquaclean')) c.empresa = 'Manutenção de Piscinas & Paisagismo';
         if (c.empresa.toLowerCase().includes('garantia')) c.empresa = 'Assessoria Contábil & Gestão';
+        if (c.empresa.toLowerCase().includes('concrevit')) c.empresa = 'Acordo de Recuperação Estrutural';
+      }
+      if (c.arquivoNome) {
+        if (c.arquivoNome.toLowerCase().includes('concrevit')) c.arquivoNome = 'TERMO_ACORDO_RESSARCIMENTO_ESTRUTURAL.pdf';
+        if (c.arquivoNome.toLowerCase().includes('connex')) c.arquivoNome = 'CONTRATO_MANUTENCAO_ENERGIA_SOLAR.pdf';
+        if (c.arquivoNome.toLowerCase().includes('vix')) c.arquivoNome = 'CONTRATO_ELEVADORES_E_PLATAFORMA.pdf';
+        if (c.arquivoNome.toLowerCase().includes('warions')) c.arquivoNome = 'CONTRATO_SEGURANCA_ELETRONICA.pdf';
+        if (c.arquivoNome.toLowerCase().includes('ebr')) c.arquivoNome = 'CONTRATO_INTERNET_AREAS_COMUNS.pdf';
+        if (c.arquivoNome.toLowerCase().includes('fregonassi')) c.arquivoNome = 'CONTRATO_ASSESSORIA_ENGENHARIA.pdf';
       }
     });
 
