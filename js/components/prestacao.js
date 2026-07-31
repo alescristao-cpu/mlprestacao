@@ -83,6 +83,9 @@ window.PrestacaoComponent = {
   },
 
   renderPrestacaoInterna(container, data) {
+    const user = window.CondoStore.currentUser;
+    const isSindico = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
+
     const prestacoes = data.prestacaoContas || [];
     const atual = prestacoes[this.selectedPeriodIndex] || prestacoes[0] || {};
 
@@ -406,6 +409,7 @@ window.PrestacaoComponent = {
                   <th style="color: #E11D48; font-weight: 700;">Despesas Total</th>
                   <th style="color: #2563EB; font-weight: 700;">Saldo Acumulado Final</th>
                   <th style="color: #475569; font-weight: 700;">Status</th>
+                  ${isSindico ? '<th style="text-align: center; color: #475569; font-weight: 700;">Ações</th>' : ''}
                 </tr>
               </thead>
               <tbody>
@@ -417,6 +421,13 @@ window.PrestacaoComponent = {
                     <td style="color: #E11D48; font-weight: 700;">R$ ${p.despesas.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                     <td><strong style="color: #2563EB;">R$ ${p.saldoAtual.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong></td>
                     <td><span class="badge badge-success" style="background: #DCFCE7; color: #166534; font-weight: 700;">${p.status || 'Concluído'}</span></td>
+                    ${isSindico ? `
+                      <td style="text-align: center;" onclick="event.stopPropagation()">
+                        <button class="btn-secondary btn-sm btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA;" onclick="BalancetesComponent.excluirBalancete('${p.id}', '${p.mesAno}')" title="Excluir Balancete">
+                          <span class="material-symbols-outlined" style="font-size: 0.95rem;">delete</span> 🗑️ Excluir
+                        </button>
+                      </td>
+                    ` : ''}
                   </tr>
                 `).join('')}
               </tbody>

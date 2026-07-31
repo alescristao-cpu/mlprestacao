@@ -89,11 +89,17 @@ window.BalancetesComponent = {
                 `).join('')}
               </select>
 
-              <!-- Botão de Upload VISÍVEL SOMENTE PARA O SÍNDICO -->
+              <!-- Botões de Ação VISÍVEIS SOMENTE PARA O SÍNDICO -->
               ${isSindico ? `
                 <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.8rem 1.1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px;" onclick="BalancetesComponent.openImportModal()">
                   <span class="material-symbols-outlined" style="font-size: 1.2rem;">cloud_upload</span> 📊 Carregar Planilha &amp; Gerar Dash
                 </button>
+
+                ${activeBal ? `
+                  <button class="btn-secondary btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA; font-weight: 700; padding: 0.8rem 1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px;" onclick="BalancetesComponent.excluirBalancete('${activeBal.id}', '${activeBal.mes} ${activeBal.ano}')" title="Excluir o balancete de ${activeBal.mes}/${activeBal.ano}">
+                    <span class="material-symbols-outlined" style="font-size: 1.2rem;">delete</span> 🗑️ Excluir Balancete
+                  </button>
+                ` : ''}
               ` : `
                 <span class="badge" style="background: rgba(255,255,255,0.1); color: #94A3B8; font-size: 0.8rem; padding: 6px 12px;">
                   👁️ Modo Leitura (Morador)

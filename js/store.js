@@ -493,6 +493,20 @@ class StoreEngine {
       return true;
     });
 
+    loadedData.balancetes = loadedData.balancetes.filter(b => {
+      if (!b) return false;
+      if (this.isDocDeleted(b.id, `${b.mes}_${b.ano}`)) return false;
+      return true;
+    });
+
+    if (loadedData.prestacaoContas) {
+      loadedData.prestacaoContas = loadedData.prestacaoContas.filter(p => {
+        if (!p) return false;
+        if (this.isDocDeleted(p.id, `${p.mes}_${p.ano}`) || this.isDocDeleted(p.id, p.mesAno)) return false;
+        return true;
+      });
+    }
+
     // Garantir moradores padrão (respeitando exclusão de moradores)
     INITIAL_DATA.moradores.forEach(m => {
       const isMasterSindico = m.email && m.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
@@ -742,6 +756,7 @@ class StoreEngine {
           if (supaData.balancetes && supaData.balancetes.length > 0) {
             if (!this.data.balancetes) this.data.balancetes = [];
             supaData.balancetes.forEach(b => {
+              if (this.isDocDeleted(b.id, `${b.mes}_${b.ano}`)) return;
               const idx = this.data.balancetes.findIndex(item => item.id === b.id || (item.mes === b.mes && item.ano === b.ano));
               if (idx === -1) {
                 this.data.balancetes.unshift(b);
@@ -903,8 +918,19 @@ class StoreEngine {
 
   deleteBalancete(id) {
     if (!this.data.balancetes) return false;
+    const target = this.data.balancetes.find(b => b.id === id);
+    const mes = target ? target.mes : null;
+    const ano = target ? target.ano : null;
+
+    this.registerDeletedDoc(id, mes ? `${mes}_${ano}` : '');
     this.data.balancetes = this.data.balancetes.filter(b => b.id !== id);
+
+    if (this.data.prestacaoContas) {
+      this.data.prestacaoContas = this.data.prestacaoContas.filter(p => p.id !== id && !(mes && ano && p.mes === mes && p.ano === ano));
+    }
+
     this.saveData();
+
     if (window.SupabaseConfig && window.SupabaseConfig.deleteBalanceteFromSupabase) {
       window.SupabaseConfig.deleteBalanceteFromSupabase(id);
     }
