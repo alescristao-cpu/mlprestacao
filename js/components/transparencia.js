@@ -27,8 +27,23 @@ window.TransparenciaComponent = {
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
-    const isApproved = user && user.status === 'Aprovado';
-    const isSindico = user && (user.role === 'Administrador' || user.email.toLowerCase() === 'condominio.modern.life@gmail.com');
+    const isApproved = user && (
+      user.status === 'Aprovado' ||
+      user.role === 'Administrador' ||
+      user.role === 'Síndico' ||
+      (user.email && (
+        user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' ||
+        user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com'
+      ))
+    );
+    const isSindico = user && (
+      user.role === 'Administrador' ||
+      user.role === 'Síndico' ||
+      (user.email && (
+        user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' ||
+        user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com'
+      ))
+    );
 
     // Tela de Acesso Restrito para Visitantes não autorizados
     if (!user || !isApproved) {
