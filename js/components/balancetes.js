@@ -396,7 +396,41 @@ window.BalancetesComponent = {
               </div>
             </div>
 
+            <!-- Seletor de Mês e Ano de Referência do Balancete -->
             <div style="margin-top: 1.25rem; text-align: left; background: #F8FAFC; padding: 1rem; border-radius: 10px; border: 1px solid #E2E8F0;">
+              <label style="font-weight: 700; color: #0F172A; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.6rem;">
+                <span class="material-symbols-outlined" style="font-size: 1.15rem; color: #059669;">calendar_month</span>
+                <span>Mês de Referência da Conta / Balancete:</span>
+              </label>
+              <div style="display: flex; gap: 0.75rem;">
+                <select id="selectMesBalancete" class="form-control" style="font-weight: 700; color: #0F172A; padding: 0.6rem; border-radius: 8px; border: 1px solid #CBD5E1; background: white; flex: 1;">
+                  <option value="Auto">🤖 Detectar do Arquivo (Automático)</option>
+                  <option value="Janeiro">Janeiro</option>
+                  <option value="Fevereiro">Fevereiro</option>
+                  <option value="Março">Março</option>
+                  <option value="Abril">Abril</option>
+                  <option value="Maio">Maio</option>
+                  <option value="Junho">Junho</option>
+                  <option value="Julho" selected>Julho</option>
+                  <option value="Agosto">Agosto</option>
+                  <option value="Setembro">Setembro</option>
+                  <option value="Outubro">Outubro</option>
+                  <option value="Novembro">Novembro</option>
+                  <option value="Dezembro">Dezembro</option>
+                </select>
+                <select id="selectAnoBalancete" class="form-control" style="font-weight: 700; color: #0F172A; padding: 0.6rem; border-radius: 8px; border: 1px solid #CBD5E1; background: white; width: 110px;">
+                  <option value="2026" selected>2026</option>
+                  <option value="2025">2025</option>
+                  <option value="2024">2024</option>
+                  <option value="2027">2027</option>
+                </select>
+              </div>
+              <span style="display: block; font-size: 0.78rem; color: #64748B; margin-top: 5px;">
+                Escolha o mês a que este relatório pertence para organizar os relatórios e o Portal de Transparência.
+              </span>
+            </div>
+
+            <div style="margin-top: 1rem; text-align: left; background: #F8FAFC; padding: 1rem; border-radius: 10px; border: 1px solid #E2E8F0;">
               <label style="display: flex; align-items: center; gap: 0.65rem; cursor: pointer; font-weight: 700; color: #0F172A;">
                 <input type="checkbox" id="chkPublishTransparencia" checked style="width: 18px; height: 18px; accent-color: #10B981; cursor: pointer;">
                 <span>📊 Publicar automaticamente no Portal de Transparência</span>
@@ -517,8 +551,11 @@ window.BalancetesComponent = {
       }
     });
 
-    const mesFinal = mesDetectado || 'Junho';
-    const anoFinal = anoDetectado || 2026;
+    const selMes = document.getElementById('selectMesBalancete') ? document.getElementById('selectMesBalancete').value : 'Auto';
+    const selAno = document.getElementById('selectAnoBalancete') ? parseInt(document.getElementById('selectAnoBalancete').value, 10) : 2026;
+
+    const mesFinal = (selMes && selMes !== 'Auto') ? selMes : (mesDetectado || 'Julho');
+    const anoFinal = selAno || anoDetectado || 2026;
     const receitaFinal = receitaEncontrada > 0 ? receitaEncontrada : 92500.00;
     const despesaFinal = despesaEncontrada > 0 ? despesaEncontrada : 71200.00;
     const saldoAntFinal = saldoAnteriorEncontrado > 0 ? saldoAnteriorEncontrado : 518922.33;
