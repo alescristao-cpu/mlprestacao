@@ -129,7 +129,11 @@ window.App = {
       }
     }
 
-    if (isPortaria && !['portaria', 'utilidades', 'agenda'].includes(route)) {
+    const isSindicoUser = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
+
+    if (!isSindicoUser && ['prestacao', 'balancetes', 'contratos'].includes(route)) {
+      route = 'dashboard';
+    } else if (isPortaria && !['portaria', 'utilidades', 'agenda'].includes(route)) {
       route = 'portaria';
     } else if (!this.isValidRoute(route)) {
       route = 'dashboard';
@@ -213,6 +217,7 @@ window.App = {
   updateNavigationUI(dataParam) {
     const data = dataParam || (window.CondoStore && window.CondoStore.data ? window.CondoStore.data : {});
     const user = window.CondoStore ? window.CondoStore.currentUser : null;
+    const isSindico = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
     const isPortaria = user && user.role === 'Portaria';
 
     const portariaAllowedRoutes = ['portaria', 'utilidades', 'agenda'];
@@ -220,7 +225,9 @@ window.App = {
     document.querySelectorAll('.nav-item').forEach(item => {
       const route = item.getAttribute('data-route');
 
-      if (isPortaria) {
+      if (['prestacao', 'balancetes', 'contratos'].includes(route)) {
+        item.style.display = isSindico ? 'flex' : 'none';
+      } else if (isPortaria) {
         if (portariaAllowedRoutes.includes(route)) {
           item.style.display = 'flex';
         } else {

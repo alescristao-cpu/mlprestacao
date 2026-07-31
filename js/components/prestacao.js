@@ -9,22 +9,23 @@ window.PrestacaoComponent = {
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
+    const isSindico = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
 
-    // Access Gate para visitantes não aprovados
-    if (!user || user.status !== 'Aprovado') {
+    // Access Gate exclusivo para o Síndico Master
+    if (!user || !isSindico) {
       container.innerHTML = `
         <div class="card-widget" style="text-align: center; padding: 3.5rem 1.5rem; max-width: 600px; margin: 2rem auto;">
-          <div style="width: 70px; height: 70px; border-radius: 50%; background: #F0FDF4; color: #10B981; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: #FFF1F2; color: #E11D48; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
             <span class="material-symbols-outlined" style="font-size: 2.8rem;">lock</span>
           </div>
           <h2 style="font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">
-            Acesso Restrito: Portal Financeiro &amp; Contratos
+            Acesso Restrito: Menu de Contas Exclusivo do Síndico
           </h2>
           <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 1.5rem; line-height: 1.6;">
-            Por determinação da administração e convenção condominial, o acesso aos demonstrativos financeiros, balancetes e contratos de prestação de serviços é exclusivo para moradores cadastrados.
+            O acesso aos demonstrativos de contas, balancetes e contratos é de uso exclusivo da gestão do Síndico Administrador (<code>condominio.modern.life@gmail.com</code>).
           </p>
           <button class="btn-primary" onclick="AuthComponent.renderAuthModal()" style="padding: 0.8rem 1.5rem; font-size: 0.95rem;">
-            <span class="material-symbols-outlined">login</span> Entrar / Cadastrar para Liberar Acesso
+            <span class="material-symbols-outlined">login</span> Entrar como Síndico
           </button>
         </div>
       `;
