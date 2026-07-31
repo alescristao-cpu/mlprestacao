@@ -396,6 +396,16 @@ window.BalancetesComponent = {
               </div>
             </div>
 
+            <div style="margin-top: 1.25rem; text-align: left; background: #F8FAFC; padding: 1rem; border-radius: 10px; border: 1px solid #E2E8F0;">
+              <label style="display: flex; align-items: center; gap: 0.65rem; cursor: pointer; font-weight: 700; color: #0F172A;">
+                <input type="checkbox" id="chkPublishTransparencia" checked style="width: 18px; height: 18px; accent-color: #10B981; cursor: pointer;">
+                <span>📊 Publicar automaticamente no Portal de Transparência</span>
+              </label>
+              <span style="display: block; font-size: 0.8rem; color: #64748B; margin-top: 4px; margin-left: 1.75rem; line-height: 1.4;">
+                Ao enviar a planilha, o sistema lerá os dados e gerará o Dashboard financeiro interativo que ficará visível na aba <strong>Transparência</strong> para os moradores.
+              </span>
+            </div>
+
           </div>
         </div>
       </div>
@@ -544,14 +554,21 @@ window.BalancetesComponent = {
       categoriasDespesa: categoriasFinal
     });
 
-    this.selectedBalanceteId = newBal.id;
+    const chkTransp = document.getElementById('chkPublishTransparencia');
+    const shouldGoToTransp = chkTransp ? chkTransp.checked : true;
 
-    App.showToast(`🚀 Planilha lida com sucesso pelo Síndico! Dashboard e Prestação de Contas de ${mesFinal}/${anoFinal} gerados automaticamente.`, 'success');
+    this.selectedBalanceteId = newBal.id;
 
     const modal = document.getElementById('modalImportBalancete');
     if (modal) modal.remove();
 
-    App.render();
+    if (shouldGoToTransp) {
+      App.showToast(`🚀 Planilha lida pelo Síndico! Dashboard de ${mesFinal}/${anoFinal} publicado no Portal de Transparência.`, 'success');
+      App.navigateTo('transparencia');
+    } else {
+      App.showToast(`🚀 Planilha lida com sucesso pelo Síndico! Balancete de ${mesFinal}/${anoFinal} gerado.`, 'success');
+      App.render();
+    }
   },
 
   excluirBalancete(id, mesAno) {
