@@ -244,10 +244,7 @@ Object.assign(window.App, {
 
     const titleMap = {
       dashboard: 'Página Inicial',
-      prestacao: 'Contas',
-      balancetes: 'Contas',
-      contratos: 'Contas',
-      transparencia: 'Portal de Transparência',
+      dashboardFinanceiro: 'Dashboard Financeiro',
       documentos: 'Documentos & Manuais',
       recados: 'Mural de Recados',
       ocorrencias: 'Reclamações & Elogios',
