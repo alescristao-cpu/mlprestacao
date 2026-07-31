@@ -1,7 +1,7 @@
 /* ====================================================
    Modern Life Residence - PWA Service Worker & Cache
    ==================================================== */
-const CACHE_NAME = 'modern-life-pwa-v1';
+const CACHE_NAME = 'modern-life-pwa-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -38,13 +38,24 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignorar APIs externas, Supabase, Google Fonts e CDNs para evitar bloqueios de CORS/CSP no Service Worker
+  const url = (event.request && event.request.url) ? event.request.url : '';
+
+  // Bypass total para requisições de antivírus (Kaspersky, Avast, etc), extensões e domínios externos
   if (
     event.request.method !== 'GET' || 
-    event.request.url.includes('supabase.co') || 
-    event.request.url.includes('googleapis.com') || 
-    event.request.url.includes('gstatic.com') ||
-    event.request.url.includes('jsdelivr.net')
+    !url.startsWith('http') ||
+    url.includes('kaspersky') ||
+    url.includes('kaspersky-labs.com') ||
+    url.includes('kis.v2.scr') ||
+    url.includes('chrome-extension') ||
+    url.includes('moz-extension') ||
+    url.includes('supabase.co') || 
+    url.includes('googleapis.com') || 
+    url.includes('gstatic.com') ||
+    url.includes('jsdelivr.net') ||
+    url.includes('formsubmit.co') ||
+    url.includes('formspree.io') ||
+    !url.startsWith(self.location.origin)
   ) {
     return;
   }
