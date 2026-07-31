@@ -273,7 +273,7 @@ window.SupabaseConfig = {
 
     try {
       let resMoradores = null, resReservas = null, resOcorrencias = null;
-      let resBalancetes = null, resContratos = null, resDocumentos = null;
+      let resBalancetes = null, resContratos = null, resDocumentos = null, resRecados = null;
       let resMoradorVault = { data: [] }, resDocVault = { data: [] }, resGaleriaVault = { data: [] }, resRecadosVault = { data: [] }, resEncomendasVault = { data: [] };
 
       try { resMoradores = await this.client.from('moradores').select('*'); } catch (e) {}
@@ -282,6 +282,7 @@ window.SupabaseConfig = {
       try { resBalancetes = await this.client.from('balancetes').select('*'); } catch (e) {}
       try { resContratos = await this.client.from('contratos').select('*'); } catch (e) {}
       try { resDocumentos = await this.client.from('documentos').select('*'); } catch (e) {}
+      try { resRecados = await this.client.from('recados').select('*'); } catch (e) {}
 
       if (resOcorrencias && Array.isArray(resOcorrencias.data)) {
         const all = resOcorrencias.data;
