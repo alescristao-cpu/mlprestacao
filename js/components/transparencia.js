@@ -7,6 +7,7 @@
    ---------------------------------------------------- */
 
 window.TransparenciaComponent = {
+  activeTab: 'dashboard', // 'dashboard' ou 'contratos'
   selectedPeriodIndex: 0,
   filterCategory: 'Todas',
   filterType: 'Todos',
@@ -18,6 +19,11 @@ window.TransparenciaComponent = {
   sortColumn: 'valor',
   sortDirection: 'desc',
   chartInstances: {},
+
+  setTab(tabName) {
+    this.activeTab = tabName;
+    App.render();
+  },
 
   render(container, data) {
     const user = window.CondoStore.currentUser;
@@ -157,6 +163,19 @@ window.TransparenciaComponent = {
             </div>
           </div>
         </div>
+
+        <!-- Barra de Abas Internas da Transparência -->
+        <div style="display: flex; gap: 0.75rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem; flex-wrap: wrap;">
+          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; ${this.activeTab === 'dashboard' ? 'background: #2563EB; color: white; border: none; box-shadow: 0 4px 12px rgba(37,99,235,0.25);' : 'background: white; color: #475569; border: 1px solid #CBD5E1;'}" onclick="TransparenciaComponent.setTab('dashboard')">
+            <span class="material-symbols-outlined">analytics</span> 📊 Dashboard Financeiro &amp; Auditoria
+          </button>
+
+          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; ${this.activeTab === 'contratos' ? 'background: #059669; color: white; border: none; box-shadow: 0 4px 12px rgba(5,150,105,0.25);' : 'background: white; color: #475569; border: 1px solid #CBD5E1;'}" onclick="TransparenciaComponent.setTab('contratos')">
+            <span class="material-symbols-outlined">description</span> 📜 Serviços Contratados (${(data.contratos || []).length})
+          </button>
+        </div>
+
+        ${this.activeTab === 'contratos' ? this.renderContratosTab(data) : `
 
         <!-- Resumo Inteligente em Linguagem Natural (IA Natural Language) -->
         <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 5px solid #2563EB; border-radius: 12px; padding: 1.25rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
@@ -405,14 +424,154 @@ window.TransparenciaComponent = {
           </div>
 
         </div>
-
+      `}
       </div>
     `;
 
-    // Renderizar os Gráficos via Chart.js após a montagem do DOM
-    setTimeout(() => {
-      this.initChartJS(activeBal, balancetes, lancamentos);
-    }, 100);
+    if (this.activeTab === 'dashboard') {
+      setTimeout(() => {
+        this.initCharts(balancetes, activeBal);
+      }, 100);
+    }
+  },
+
+  renderContratosTab(data) {
+    const contratos = data.contratos || [];
+    const totalServicos = contratos.length;
+    const custoMensalTotal = contratos.filter(c => c.categoria !== 'Acordo & Ressarcimento').reduce((acc, c) => acc + (c.valorMensal || 0), 0);
+    const custoAnualTotal = custoMensalTotal * 12;
+    const acordoTotal = contratos.filter(c => c.categoria === 'Acordo & Ressarcimento').reduce((acc, c) => acc + (c.valorTotalAnual || 928941.27), 0);
+
+    return `
+      <div style="display: flex; flex-direction: column; gap: 1.35rem;">
+        
+        <!-- Banner Informativo de Privacidade -->
+        <div style="background: #F0FDF4; border: 1px solid #A7F3D0; border-left: 5px solid #10B981; border-radius: 12px; padding: 1.25rem;">
+          <div style="display: flex; align-items: center; gap: 0.65rem;">
+            <span class="material-symbols-outlined" style="color: #059669; font-size: 1.8rem;">shield_lock</span>
+            <div>
+              <h3 style="font-family: var(--font-heading); color: #065F46; font-size: 1.05rem; font-weight: 800; margin: 0;">
+                Transparência de Serviços Contratados
+              </h3>
+              <p style="color: #047857; font-size: 0.88rem; margin-top: 3px; margin-bottom: 0; line-height: 1.45;">
+                Exibição pública dos objetos contratuais, obrigações e valores vigentes no condomínio. Os nomes das empresas e prestadores contratados foram ocultados por diretriz de privacidade.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPI Cards dos Serviços -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+          
+          <div style="background: white; border: 1px solid #E2E8F0; border-top: 4px solid #059669; border-radius: 12px; padding: 1.15rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: #64748B; letter-spacing: 0.5px;">SERVIÇOS VIGENTES</span>
+              <span class="material-symbols-outlined" style="color: #059669; font-size: 1.4rem;">assignment</span>
+            </div>
+            <div style="font-size: 1.45rem; font-weight: 800; color: #0F172A; margin-top: 0.3rem;">
+              ${totalServicos} Contratos
+            </div>
+            <div style="font-size: 0.75rem; color: #047857; font-weight: 600; margin-top: 4px;">
+              ✓ Serviços em execução
+            </div>
+          </div>
+
+          <div style="background: white; border: 1px solid #E2E8F0; border-top: 4px solid #2563EB; border-radius: 12px; padding: 1.15rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: #64748B; letter-spacing: 0.5px;">CUSTO MENSAL FIXO</span>
+              <span class="material-symbols-outlined" style="color: #2563EB; font-size: 1.4rem;">payments</span>
+            </div>
+            <div style="font-size: 1.45rem; font-weight: 800; color: #2563EB; margin-top: 0.3rem;">
+              R$ ${custoMensalTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+            </div>
+            <div style="font-size: 0.75rem; color: #1D4ED8; font-weight: 600; margin-top: 4px;">
+              💳 Comprometimento recorrente
+            </div>
+          </div>
+
+          <div style="background: white; border: 1px solid #E2E8F0; border-top: 4px solid #7C3AED; border-radius: 12px; padding: 1.15rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: #64748B; letter-spacing: 0.5px;">PROJEÇÃO ANUAL</span>
+              <span class="material-symbols-outlined" style="color: #7C3AED; font-size: 1.4rem;">calendar_today</span>
+            </div>
+            <div style="font-size: 1.45rem; font-weight: 800; color: #0F172A; margin-top: 0.3rem;">
+              R$ ${custoAnualTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+            </div>
+            <div style="font-size: 0.75rem; color: #6D28D9; font-weight: 600; margin-top: 4px;">
+              📊 Orçamento anual de serviços
+            </div>
+          </div>
+
+          <div style="background: white; border: 1px solid #E2E8F0; border-top: 4px solid #F59E0B; border-radius: 12px; padding: 1.15rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: #64748B; letter-spacing: 0.5px;">ACORDO DE RESSARCIMENTO</span>
+              <span class="material-symbols-outlined" style="color: #F59E0B; font-size: 1.4rem;">handshake</span>
+            </div>
+            <div style="font-size: 1.45rem; font-weight: 800; color: #D97706; margin-top: 0.3rem;">
+              R$ ${acordoTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+            </div>
+            <div style="font-size: 0.75rem; color: #B45309; font-weight: 600; margin-top: 4px;">
+              🤝 Entradas / Crédito de Obras
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tabela de Serviços Contratados (SEM NOMES DE EMPRESAS/CONTRATADAS) -->
+        <div style="background: white; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.25rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800; color: #0F172A; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-outlined" style="color: #059669;">table_chart</span> Lista de Serviços Contratados &amp; Obrigações
+          </h3>
+
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
+              <thead>
+                <tr style="background: #F8FAFC; border-bottom: 2px solid #E2E8F0; color: #475569;">
+                  <th style="padding: 0.85rem; font-weight: 700;">Serviço / Objeto Contratado</th>
+                  <th style="padding: 0.85rem; font-weight: 700;">Categoria</th>
+                  <th style="padding: 0.85rem; font-weight: 700;">Escopo das Obrigações</th>
+                  <th style="padding: 0.85rem; font-weight: 700; text-align: right;">Valor Mensal</th>
+                  <th style="padding: 0.85rem; font-weight: 700; text-align: center;">Vigência</th>
+                  <th style="padding: 0.85rem; font-weight: 700; text-align: center;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${contratos.map(c => `
+                  <tr style="border-bottom: 1px solid #F1F5F9;">
+                    <td style="padding: 0.85rem; font-weight: 700; color: #0F172A;">
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="material-symbols-outlined" style="color: #059669; font-size: 1.2rem;">build_circle</span>
+                        <span>${c.objeto}</span>
+                      </div>
+                    </td>
+                    <td style="padding: 0.85rem;">
+                      <span class="badge" style="background: #F0FDF4; color: #166534; font-weight: 700; border: 1px solid #BBF7D0;">
+                        ${c.categoria}
+                      </span>
+                    </td>
+                    <td style="padding: 0.85rem; color: #475569; font-size: 0.82rem; max-width: 320px; line-height: 1.4;">
+                      ${c.obrigacoes || 'Prestação contínua de serviços prediais conforme especificações técnicas.'}
+                    </td>
+                    <td style="padding: 0.85rem; text-align: right; font-weight: 800; color: #0F172A;">
+                      R$ ${(c.valorMensal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                    </td>
+                    <td style="padding: 0.85rem; text-align: center; font-size: 0.8rem; color: #64748B;">
+                      📅 ${c.vigenciaInicio || '2025'} a ${c.vigenciaFim || '2027'}
+                    </td>
+                    <td style="padding: 0.85rem; text-align: center;">
+                      <span class="badge" style="background: #DCFCE7; color: #15803D; font-weight: 800;">
+                        ${c.status || 'Ativo'}
+                      </span>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    `;
   },
 
   gerarLancamentosApartirDoBalancete(bal) {
