@@ -110,11 +110,21 @@ window.ContratosComponent = {
               </p>
             </div>
 
-            <!-- Botão de Upload VISÍVEL SOMENTE PARA O SÍNDICO -->
+            <!-- Botões de Ação para Gestão do Síndico -->
             ${isSindico ? `
-              <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.5rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.3);" onclick="ContratosComponent.openImportModal()">
-                <span class="material-symbols-outlined" style="font-size: 1.3rem;">cloud_upload</span> 📄 Importar Contratos (PDF / DOC)
-              </button>
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.75rem 1.1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.openImportModal()">
+                  <span class="material-symbols-outlined" style="font-size: 1.2rem;">cloud_upload</span> 📄 Carregar Contrato
+                </button>
+                ${contratos.length > 0 ? `
+                  <button class="btn-secondary" style="background: #2563EB; color: white; border: none; font-weight: 700; padding: 0.75rem 1.1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.openEditModal('${contratos[0].id}')">
+                    <span class="material-symbols-outlined" style="font-size: 1.2rem;">edit</span> ✏️ Editar Contrato
+                  </button>
+                  <button class="btn-secondary btn-danger" style="background: #E11D48; color: white; border: none; font-weight: 700; padding: 0.75rem 1.1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.excluirContrato('${contratos[0].id}', '${contratos[0].empresa}')">
+                    <span class="material-symbols-outlined" style="font-size: 1.2rem;">delete</span> 🗑️ Excluir Contrato
+                  </button>
+                ` : ''}
+              </div>
             ` : `
               <span class="badge" style="background: rgba(255,255,255,0.1); color: #94A3B8; font-size: 0.8rem; padding: 6px 12px;">
                 👁️ Acesso de Leitura para Moradores

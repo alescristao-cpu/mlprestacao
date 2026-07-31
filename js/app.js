@@ -129,7 +129,14 @@ window.App = {
       }
     }
 
-    const isSindicoUser = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
+    const isSindicoUser = user && (
+      user.role === 'Administrador' ||
+      user.role === 'Síndico' ||
+      (user.email && (
+        user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' ||
+        user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com'
+      ))
+    );
 
     if (!isSindicoUser && ['prestacao', 'balancetes', 'contratos'].includes(route)) {
       route = 'dashboard';

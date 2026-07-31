@@ -8,8 +8,20 @@ window.PrestacaoComponent = {
   selectedPeriodIndex: 0,
 
   render(container, data) {
+    const hash = (window.location.hash || '').replace('#', '');
+    if (hash === 'contratos' || hash === 'balancetes' || hash === 'prestacao') {
+      this.activeTab = hash;
+    }
+
     const user = window.CondoStore.currentUser;
-    const isSindico = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
+    const isSindico = user && (
+      user.role === 'Administrador' ||
+      user.role === 'Síndico' ||
+      (user.email && (
+        user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' ||
+        user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com'
+      ))
+    );
 
     // Access Gate exclusivo para o Síndico Master
     if (!user || !isSindico) {
@@ -85,7 +97,14 @@ window.PrestacaoComponent = {
 
   renderPrestacaoInterna(container, data) {
     const user = window.CondoStore.currentUser;
-    const isSindico = user && user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com';
+    const isSindico = user && (
+      user.role === 'Administrador' ||
+      user.role === 'Síndico' ||
+      (user.email && (
+        user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' ||
+        user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com'
+      ))
+    );
 
     const prestacoes = data.prestacaoContas || [];
     const atual = prestacoes[this.selectedPeriodIndex] || prestacoes[0] || {};
