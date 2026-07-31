@@ -159,9 +159,9 @@ window.App = {
   },
 
   render() {
-    const data = window.CondoStore.data;
+    const data = (window.CondoStore && window.CondoStore.data) ? window.CondoStore.data : {};
 
-    this.updateNavigationUI();
+    this.updateNavigationUI(data);
 
     const pageContainer = document.getElementById('pageContent');
     if (!pageContainer) return;
@@ -210,8 +210,8 @@ window.App = {
     }
   },
 
-  updateNavigationUI() {
-    const data = (window.CondoStore && window.CondoStore.data) ? window.CondoStore.data : {};
+  updateNavigationUI(dataParam) {
+    const data = dataParam || (window.CondoStore && window.CondoStore.data ? window.CondoStore.data : {});
     const user = window.CondoStore ? window.CondoStore.currentUser : null;
     const isPortaria = user && user.role === 'Portaria';
 
