@@ -1279,6 +1279,52 @@ class StoreEngine {
     return false;
   }
 
+  addContrato(contrato) {
+    if (!this.data.contratos) this.data.contratos = [];
+    const newCtr = {
+      id: 'ctr_' + Date.now(),
+      empresa: contrato.empresa || 'Serviço Terceirizado',
+      categoria: contrato.categoria || 'Geral',
+      objeto: contrato.objeto || 'Prestação de Serviços',
+      valorMensal: contrato.valorMensal || 0,
+      valorTotalAnual: (contrato.valorMensal || 0) * 12,
+      vigenciaInicio: contrato.vigenciaInicio || new Date().toISOString().split('T')[0],
+      vigenciaFim: contrato.vigenciaFim || '2027-12-31',
+      obrigacoes: contrato.obrigacoes || '',
+      status: contrato.status || 'Ativo',
+      arquivoNome: contrato.arquivoNome || 'CONTRATO_OFICIAL.pdf'
+    };
+    this.data.contratos.unshift(newCtr);
+    this.saveData();
+    return newCtr;
+  }
+
+  updateContrato(id, updates) {
+    if (!this.data.contratos) return null;
+    const target = this.data.contratos.find(c => c.id === id);
+    if (target) {
+      Object.assign(target, updates);
+      if (updates.valorMensal !== undefined) {
+        target.valorTotalAnual = updates.valorMensal * 12;
+      }
+      this.saveData();
+      return target;
+    }
+    return null;
+  }
+
+  deleteContrato(id) {
+    if (!this.data.contratos) return false;
+    const initialLen = this.data.contratos.length;
+    this.data.contratos = this.data.contratos.filter(c => c.id !== id);
+    if (this.data.contratos.length < initialLen) {
+      this.registerDeletedDoc(id, id);
+      this.saveData();
+      return true;
+    }
+    return false;
+  }
+
   invalidateQueries(queryKeys) {
     if (!queryKeys) queryKeys = ['users', 'moradores'];
     this.isSyncing = false;

@@ -547,8 +547,13 @@ window.ContratosComponent = {
             <form onsubmit="ContratosComponent.salvarEdicaoContrato(event)">
               
               <div class="form-group">
-                <label class="form-label" style="font-weight: 700;">Título do Serviço / Contrato</label>
+                <label class="form-label" style="font-weight: 700;">✏️ Renomear Serviço / Título do Contrato</label>
                 <input type="text" id="editCtrEmpresa" class="form-control" value="${target.empresa}" required style="font-weight: 700;">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" style="font-weight: 700;">📄 Renomear Nome do Arquivo PDF / Documento</label>
+                <input type="text" id="editCtrArquivo" class="form-control" value="${target.arquivoNome || 'CONTRATO_OFICIAL.pdf'}" required style="font-weight: 600;">
               </div>
 
               <div class="form-group">
@@ -614,21 +619,20 @@ window.ContratosComponent = {
       return;
     }
 
-    const contratos = window.CondoStore.data.contratos || [];
-    const target = contratos.find(c => c.id === this.editingContractId);
-    if (!target) return;
+    const updates = {
+      empresa: document.getElementById('editCtrEmpresa').value.trim(),
+      arquivoNome: document.getElementById('editCtrArquivo').value.trim(),
+      objeto: document.getElementById('editCtrObjeto').value.trim(),
+      valorMensal: parseFloat(document.getElementById('editCtrValor').value),
+      status: document.getElementById('editCtrStatus').value,
+      vigenciaInicio: document.getElementById('editCtrInicio').value,
+      vigenciaFim: document.getElementById('editCtrFim').value,
+      obrigacoes: document.getElementById('editCtrObrigacoes').value.trim(),
+      valorTotalAnual: parseFloat(document.getElementById('editCtrValor').value) * 12
+    };
 
-    target.empresa = document.getElementById('editCtrEmpresa').value.trim();
-    target.objeto = document.getElementById('editCtrObjeto').value.trim();
-    target.valorMensal = parseFloat(document.getElementById('editCtrValor').value);
-    target.status = document.getElementById('editCtrStatus').value;
-    target.vigenciaInicio = document.getElementById('editCtrInicio').value;
-    target.vigenciaFim = document.getElementById('editCtrFim').value;
-    target.obrigacoes = document.getElementById('editCtrObrigacoes').value.trim();
-    target.valorTotalAnual = target.valorMensal * 12;
-
-    window.CondoStore.saveData();
-    App.showToast(`✏️ Contrato "${target.empresa}" atualizado com sucesso pelo Síndico!`, 'success');
+    window.CondoStore.updateContrato(this.editingContractId, updates);
+    App.showToast(`✏️ Contrato "${updates.empresa}" atualizado e renomeado com sucesso!`, 'success');
 
     const modal = document.getElementById('modalEditContrato');
     if (modal) modal.remove();
