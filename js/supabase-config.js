@@ -212,6 +212,31 @@ window.SupabaseConfig = {
         try { await this.client.from('ocorrencias').upsert(rowsGaleria, { onConflict: 'id' }); } catch (err) { console.error('[Supabase Upsert Error - GaleriaVault]:', err); }
       }
 
+      // 7.1 Sincronizar Encomendas da Portaria no Banco PostgreSQL Supabase
+      if (data.encomendas && data.encomendas.length > 0) {
+        const rowsEncomendas = data.encomendas.map(e => ({
+          id: e.id.startsWith('enc_') ? e.id : 'enc_' + e.id,
+          morador_id: e.moradorId || 'usr_portaria',
+          morador_nome: e.moradorNome || 'Morador',
+          morador_email: e.telefone || '',
+          apartamento: e.apartamento || '',
+          categoria: 'EncomendasVault_' + (e.status || 'Pendente'),
+          assunto: (e.empresa || 'Encomenda') + ' - ' + (e.descricao || 'Pacote'),
+          descricao: e.descricao || '',
+          status: e.status || 'Aguardando Retirada',
+          respostas: [{
+            empresa: e.empresa,
+            codigoRastreio: e.codigoRastreio,
+            porteiro: e.porteiro,
+            horaChegada: e.horaChegada,
+            retiradoPor: e.retiradoPor,
+            dataRetirada: e.dataRetirada
+          }],
+          data: e.dataChegada || new Date().toISOString().split('T')[0]
+        }));
+        try { await this.client.from('ocorrencias').upsert(rowsEncomendas, { onConflict: 'id' }); } catch (err) {}
+      }
+
       // 8. Sincronizar Recados (Garantia de salvamento infalível via RecadosVault no PostgreSQL Supabase Cloud)
       if (data.recados && data.recados.length > 0) {
         const rowsRecVault = data.recados.map(r => ({
@@ -249,7 +274,7 @@ window.SupabaseConfig = {
     try {
       let resMoradores = null, resReservas = null, resOcorrencias = null;
       let resBalancetes = null, resContratos = null, resDocumentos = null;
-      let resMoradorVault = null, resDocVault = null, resGaleriaVault = null, resRecados = null, resRecadosVault = null;
+      let resMoradorVault = null, resDocVault = null, resGaleriaVault = null, resRecados = null, resRecadosVault = null, resEncomendasVault = null;
 
       try { resMoradores = await this.client.from('moradores').select('*'); } catch (e) {}
       try { resReservas = await this.client.from('reservas').select('*'); } catch (e) {}
@@ -261,6 +286,7 @@ window.SupabaseConfig = {
       try { resDocVault = await this.client.from('ocorrencias').select('*').like('categoria', 'DocVault_%'); } catch (e) {}
       try { resGaleriaVault = await this.client.from('ocorrencias').select('*').like('categoria', 'GaleriaVault_%'); } catch (e) {}
       try { resRecadosVault = await this.client.from('ocorrencias').select('*').like('categoria', 'RecadosVault_%'); } catch (e) {}
+      try { resEncomendasVault = await this.client.from('ocorrencias').select('*').like('categoria', 'EncomendasVault_%'); } catch (e) {}
       try { resRecados = await this.client.from('recados').select('*'); } catch (e) {}
 
       let moradoresFromCloud = [];
@@ -418,9 +444,32 @@ window.SupabaseConfig = {
         });
       }
 
+      let encomendasFromCloud = [];
+      if (resEncomendasVault && resEncomendasVault.data && resEncomendasVault.data.length > 0) {
+        resEncomendasVault.data.forEach(v => {
+          const meta = (v.respostas && v.respostas[0]) ? v.respostas[0] : {};
+          encomendasFromCloud.push({
+            id: v.id,
+            moradorId: v.morador_id,
+            moradorNome: v.morador_nome,
+            apartamento: v.apartamento,
+            telefone: v.morador_email || '',
+            empresa: meta.empresa || 'Encomenda',
+            descricao: v.descricao || v.assunto,
+            codigoRastreio: meta.codigoRastreio || '',
+            porteiro: meta.porteiro || 'Portaria & Guarita',
+            dataChegada: v.data,
+            horaChegada: meta.horaChegada || '10:00',
+            status: v.status || 'Aguardando Retirada',
+            retiradoPor: meta.retiradoPor || '',
+            dataRetirada: meta.dataRetirada || ''
+          });
+        });
+      }
+
       // Filtrar ocorrências reais (removendo as entradas do cofre)
       const ocorrenciasReais = (resOcorrencias && resOcorrencias.data)
-        ? resOcorrencias.data.filter(o => !o.categoria || (!o.categoria.startsWith('DocVault_') && !o.categoria.startsWith('GaleriaVault_') && !o.categoria.startsWith('PendingMoradorVault') && !o.categoria.startsWith('RecadosVault_')))
+        ? resOcorrencias.data.filter(o => !o.categoria || (!o.categoria.startsWith('DocVault_') && !o.categoria.startsWith('GaleriaVault_') && !o.categoria.startsWith('PendingMoradorVault') && !o.categoria.startsWith('RecadosVault_') && !o.categoria.startsWith('EncomendasVault_')))
         : null;
 
       return {
@@ -483,7 +532,8 @@ window.SupabaseConfig = {
         documentos: docsFromCloud.length > 0 ? docsFromCloud : null,
         galeria: galeriaFromCloud.length > 0 ? galeriaFromCloud : null,
 
-        recados: recadosFromCloud.length > 0 ? recadosFromCloud : null
+        recados: recadosFromCloud.length > 0 ? recadosFromCloud : null,
+        encomendas: encomendasFromCloud.length > 0 ? encomendasFromCloud : null
       };
     } catch (e) {
       console.warn('Erro ao puxar dados do Supabase:', e);

@@ -319,7 +319,25 @@ const INITIAL_DATA = {
       descricao: 'Deliberação sobre a aprovação das contas do 1º semestre.'
     }
   ],
-  galeria: []
+  galeria: [],
+  encomendas: [
+    {
+      id: 'enc_demo_01',
+      moradorId: 'usr_sindico_pessoal',
+      moradorNome: 'Alessandro Cristiano da Silva',
+      apartamento: 'Administração',
+      telefone: '27992516970',
+      empresa: 'Mercado Livre',
+      descricao: 'Caixa M de Equipamentos de CFTV',
+      codigoRastreio: 'MLB98240192',
+      porteiro: 'Portaria & Guarita',
+      dataChegada: new Date().toISOString().split('T')[0],
+      horaChegada: '10:30',
+      status: 'Aguardando Retirada',
+      retiradoPor: '',
+      dataRetirada: ''
+    }
+  ]
 };
 
 class StoreEngine {
@@ -1093,6 +1111,60 @@ class StoreEngine {
     this.data.agendaReservas.unshift(newReserva);
     this.saveData();
     return newReserva;
+  }
+
+  addEncomenda(pkg) {
+    if (!this.data.encomendas) this.data.encomendas = [];
+    const encId = 'enc_' + Date.now();
+    const agora = new Date();
+    const newPkg = {
+      id: encId,
+      moradorId: pkg.moradorId || '',
+      moradorNome: pkg.moradorNome || 'Morador',
+      apartamento: pkg.apartamento || '',
+      telefone: pkg.telefone || '',
+      empresa: pkg.empresa || 'Mercado Livre',
+      descricao: pkg.descricao || 'Pacote / Encomenda',
+      codigoRastreio: pkg.codigoRastreio || '',
+      porteiro: pkg.porteiro || 'Portaria & Guarita',
+      dataChegada: agora.toISOString().split('T')[0],
+      horaChegada: agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      status: 'Aguardando Retirada',
+      retiradoPor: '',
+      dataRetirada: ''
+    };
+    this.data.encomendas.unshift(newPkg);
+    this.saveData();
+
+    if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+      window.SupabaseConfig.pushDataToSupabase(this.data);
+    }
+    return newPkg;
+  }
+
+  baixarEncomenda(id, entreguePara = 'Morador Próprio') {
+    if (!this.data.encomendas) return false;
+    const pkg = this.data.encomendas.find(e => e.id === id);
+    if (pkg) {
+      const agora = new Date();
+      pkg.status = 'Entregue ao Morador';
+      pkg.retiradoPor = entreguePara;
+      pkg.dataRetirada = agora.toLocaleString('pt-BR');
+      this.saveData();
+
+      if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+        window.SupabaseConfig.pushDataToSupabase(this.data);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  deleteEncomenda(id) {
+    if (!this.data.encomendas) return false;
+    this.data.encomendas = this.data.encomendas.filter(e => e.id !== id);
+    this.saveData();
+    return true;
   }
 
   updateReservaStatus(id, newStatus, observacao = '') {
