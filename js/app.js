@@ -9,7 +9,14 @@ window.App = {
   init() {
     this.setupTheme();
     this.bindEvents();
-    
+
+    // Tratar/suprimir mensagens assíncronas abortadas por extensões do navegador (ex: Kaspersky, Tradutor, AdBlockers)
+    window.addEventListener('unhandledrejection', (event) => {
+      if (event.reason && typeof event.reason.message === 'string' && event.reason.message.includes('message channel closed before a response was received')) {
+        event.preventDefault();
+      }
+    });
+
     // Ler rota inicial via hash da URL
     const hash = window.location.hash.replace('#', '');
     if (hash && this.isValidRoute(hash)) {
