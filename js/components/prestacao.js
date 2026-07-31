@@ -90,9 +90,31 @@ window.PrestacaoComponent = {
 
   trocarAba(tab) {
     this.activeTab = tab;
-    App.currentRoute = 'prestacao';
-    window.location.hash = tab === 'prestacao' ? 'prestacao' : tab;
-    App.render();
+    window.location.hash = tab;
+    const container = document.getElementById('unifiedTabContent');
+    const data = (window.CondoStore && window.CondoStore.data) ? window.CondoStore.data : {};
+
+    if (container) {
+      if (tab === 'balancetes' && window.BalancetesComponent) {
+        window.BalancetesComponent.render(container, data);
+      } else if (tab === 'contratos' && window.ContratosComponent) {
+        window.ContratosComponent.render(container, data);
+      } else {
+        this.renderPrestacaoInterna(container, data);
+      }
+
+      // Atualizar destaque visual dos botões
+      const buttons = document.querySelectorAll('.card-widget button[onclick*="trocarAba"]');
+      buttons.forEach(btn => {
+        if (btn.getAttribute('onclick').includes(`'${tab}'`)) {
+          btn.className = 'btn-secondary btn-primary';
+        } else {
+          btn.className = 'btn-secondary';
+        }
+      });
+    } else {
+      App.render();
+    }
   },
 
   renderPrestacaoInterna(container, data) {

@@ -114,17 +114,18 @@ window.ContratosComponent = {
             <!-- Botões de Ação para Gestão do Síndico -->
             ${isSindico ? `
               <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.75rem 1.1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.openImportModal()">
-                  <span class="material-symbols-outlined" style="font-size: 1.2rem;">cloud_upload</span> 📄 Carregar Contrato
+                <button class="btn-primary" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.7rem 1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.openImportModal()">
+                  <span class="material-symbols-outlined" style="font-size: 1.1rem;">cloud_upload</span> 📄 Carregar Contrato
                 </button>
-                ${contratos.length > 0 ? `
-                  <button class="btn-secondary" style="background: #2563EB; color: white; border: none; font-weight: 700; padding: 0.75rem 1.1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.openEditModal('${contratos[0].id}')">
-                    <span class="material-symbols-outlined" style="font-size: 1.2rem;">edit</span> ✏️ Editar Contrato
-                  </button>
-                  <button class="btn-secondary btn-danger" style="background: #E11D48; color: white; border: none; font-weight: 700; padding: 0.75rem 1.1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.excluirContrato('${contratos[0].id}', '${contratos[0].empresa}')">
-                    <span class="material-symbols-outlined" style="font-size: 1.2rem;">delete</span> 🗑️ Excluir Contrato
-                  </button>
-                ` : ''}
+                <button class="btn-secondary" style="background: #2563EB; color: white; border: none; font-weight: 700; padding: 0.7rem 1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.openSelectEditModal()">
+                  <span class="material-symbols-outlined" style="font-size: 1.1rem;">edit</span> ✏️ Editar Escopo &amp; Contratos
+                </button>
+                <button class="btn-secondary btn-danger" style="background: #E11D48; color: white; border: none; font-weight: 700; padding: 0.7rem 1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.openSelectDeleteModal()">
+                  <span class="material-symbols-outlined" style="font-size: 1.1rem;">delete</span> 🗑️ Excluir Contrato
+                </button>
+                <button class="btn-secondary" style="background: #475569; color: white; border: none; font-weight: 700; padding: 0.7rem 1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px; font-size: 0.85rem;" onclick="ContratosComponent.resetarContratosPadrao()" title="Recomeçar / Redefinir lista padrão de contratos">
+                  <span class="material-symbols-outlined" style="font-size: 1.1rem;">restart_alt</span> 🔄 Recomeçar
+                </button>
               </div>
             ` : `
               <span class="badge" style="background: rgba(255,255,255,0.1); color: #94A3B8; font-size: 0.8rem; padding: 6px 12px;">
@@ -731,5 +732,174 @@ window.ContratosComponent = {
       App.showToast(`🗑️ Contrato "${empresa}" excluído com sucesso!`, 'info');
       App.render();
     }
+  },
+
+  openSelectEditModal() {
+    const contratos = window.CondoStore.data.contratos || [];
+    if (contratos.length === 0) {
+      alert('Nenhum contrato cadastrado no momento.');
+      return;
+    }
+
+    const existing = document.getElementById('modalSelectEdit');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalSelectEdit" style="z-index: 999999;">
+        <div class="modal-card" style="max-width: 600px; border: 2px solid #2563EB;">
+          <div class="modal-header" style="background: #0F172A; color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined" style="color: #60A5FA;">edit</span> Selecione o Contrato para Editar Escopo / Dados
+            </div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalSelectEdit').remove()">✕</button>
+          </div>
+          <div class="modal-body" style="padding: 1.25rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              ${contratos.map(c => `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; border: 1px solid #E2E8F0; padding: 0.85rem; border-radius: 8px;">
+                  <div>
+                    <strong style="color: #0F172A; font-size: 0.92rem; display: block;">${c.empresa}</strong>
+                    <span style="font-size: 0.8rem; color: #64748B;">R$ ${(c.valorMensal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})} / mês</span>
+                  </div>
+                  <button class="btn-primary" style="background: #2563EB; color: white; padding: 0.4rem 0.85rem; font-size: 0.85rem; font-weight: 700;" onclick="document.getElementById('modalSelectEdit').remove(); ContratosComponent.openEditModal('${c.id}');">
+                    ✏️ Editar Escopo
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  openSelectDeleteModal() {
+    const contratos = window.CondoStore.data.contratos || [];
+    if (contratos.length === 0) {
+      alert('Nenhum contrato cadastrado para excluir.');
+      return;
+    }
+
+    const existing = document.getElementById('modalSelectDelete');
+    if (existing) existing.remove();
+
+    const modalHtml = `
+      <div class="modal-overlay active" id="modalSelectDelete" style="z-index: 999999;">
+        <div class="modal-card" style="max-width: 600px; border: 2px solid #E11D48;">
+          <div class="modal-header" style="background: #0F172A; color: white;">
+            <div class="modal-title" style="color: white; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span class="material-symbols-outlined" style="color: #F87171;">delete</span> Selecione o Contrato para Excluir
+            </div>
+            <button class="modal-close" style="color: white;" onclick="document.getElementById('modalSelectDelete').remove()">✕</button>
+          </div>
+          <div class="modal-body" style="padding: 1.25rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+              ${contratos.map(c => `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: #FFF1F2; border: 1px solid #FECACA; padding: 0.85rem; border-radius: 8px;">
+                  <div>
+                    <strong style="color: #0F172A; font-size: 0.92rem; display: block;">${c.empresa}</strong>
+                    <span style="font-size: 0.8rem; color: #64748B;">R$ ${(c.valorMensal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})} / mês</span>
+                  </div>
+                  <button class="btn-primary" style="background: #E11D48; color: white; padding: 0.4rem 0.85rem; font-size: 0.85rem; font-weight: 700;" onclick="document.getElementById('modalSelectDelete').remove(); ContratosComponent.excluirContrato('${c.id}', '${c.empresa}');">
+                    🗑️ Apagar
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+  },
+
+  resetarContratosPadrao() {
+    if (!confirm('🔄 RECOMEÇAR / REDEFINIR CONTRATOS\n\nTem certeza que deseja redefinir a lista de contratos para a configuração oficial padronizada do condomínio?')) return;
+
+    window.CondoStore.data.contratos = [
+      {
+        id: 'ctr_01',
+        empresa: 'Manutenção de Elevadores & Plataforma',
+        categoria: 'Elevadores & Plataforma',
+        objeto: 'Manutenção Preventiva e Corretiva dos 2 Elevadores e Plataforma de Acessibilidade',
+        valorMensal: 1050.00,
+        valorTotalAnual: 12600.00,
+        vigenciaInicio: '2025-01-01',
+        vigenciaFim: '2027-01-01',
+        obrigacoes: 'Atendimento de emergência 24h em até 30 minutos, substituição de peças e vistoria técnica preventiva mensal com emissão de ART.',
+        status: 'Ativo',
+        arquivoNome: 'CONTRATO_OFICIAL_ELEVADORES_E_PLATAFORMA.pdf'
+      },
+      {
+        id: 'ctr_02',
+        empresa: 'Assessoria de Engenharia & Perícia',
+        categoria: 'Engenharia & Perícia',
+        objeto: 'Assessoria Técnica Especializada de Engenharia Civil e Acompanhamento de Obras',
+        valorMensal: 4500.00,
+        valorTotalAnual: 54000.00,
+        vigenciaInicio: '2025-02-01',
+        vigenciaFim: '2027-02-01',
+        obrigacoes: 'Laudos técnicos estruturais, fiscalização técnica semanal de reparos e auditoria de obras do edifício.',
+        status: 'Ativo',
+        arquivoNome: 'CONTRATO_OFICIAL_ENGENHARIA_E_PERICIA.pdf'
+      },
+      {
+        id: 'ctr_03',
+        empresa: 'Manutenção de Sistema de Energia Solar',
+        categoria: 'Energia Solar',
+        objeto: 'Manutenção Preventiva do Sistema Fotovoltaico e Limpeza dos Módulos Solares',
+        valorMensal: 300.00,
+        valorTotalAnual: 3600.00,
+        vigenciaInicio: '2025-03-01',
+        vigenciaFim: '2027-03-01',
+        obrigacoes: 'Monitoramento da geração solar, verificação de inversores e lavagem dos 75 módulos solares.',
+        status: 'Ativo',
+        arquivoNome: 'CONTRATO_OFICIAL_ENERGIA_SOLAR.pdf'
+      },
+      {
+        id: 'ctr_04',
+        empresa: 'Manutenção de Segurança Eletrônica & CFTV',
+        categoria: 'Segurança & CFTV',
+        objeto: 'Manutenção de Câmeras CFTV, Interfonia, Central de Alarme e Portões Automáticos',
+        valorMensal: 450.00,
+        valorTotalAnual: 5400.00,
+        vigenciaInicio: '2025-01-01',
+        vigenciaFim: '2027-01-01',
+        obrigacoes: 'Manutenção preventiva mensal de câmeras, no-breaks, cabeamento e placas eletrônicas de portão.',
+        status: 'Ativo',
+        arquivoNome: 'CONTRATO_OFICIAL_SEGURANCA_ELETRONICA.pdf'
+      },
+      {
+        id: 'ctr_05',
+        empresa: 'Provedor de Internet para Áreas Comuns',
+        categoria: 'Telecomunicações',
+        objeto: 'Link Dedicado de Fibra Óptica para Portaria, Guarita e Câmeras do Condomínio',
+        valorMensal: 88.90,
+        valorTotalAnual: 1066.80,
+        vigenciaInicio: '2025-01-01',
+        vigenciaFim: '2027-01-01',
+        obrigacoes: 'Provedor de Internet corporativa com valor mensal promocional com desconto aplicado.',
+        status: 'Ativo',
+        arquivoNome: 'CONTRATO_OFICIAL_TELECOMUNICACOES.pdf'
+      },
+      {
+        id: 'ctr_06',
+        empresa: 'Acordo de Recuperação Estrutural',
+        categoria: 'Acordo & Ressarcimento',
+        objeto: 'Acordo de Cooperação e Ressarcimento para Obras de Recuperação Estrutural do Edifício',
+        valorMensal: 38705.88,
+        valorTotalAnual: 928941.27,
+        vigenciaInicio: '2025-01-01',
+        vigenciaFim: '2026-12-31',
+        obrigacoes: 'Ressarcimento e repasses quinzenais do valor global estimado de R$ 928.941,27 para custeio de obras.',
+        status: 'Ativo',
+        arquivoNome: 'CONTRATO_OFICIAL_ACORDO_ESTRUTURAL.pdf'
+      }
+    ];
+
+    window.CondoStore.saveData();
+    App.showToast('🔄 Lista de contratos redefinida para os contratos padrões oficiais!', 'success');
+    App.render();
   }
 };
