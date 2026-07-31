@@ -24,10 +24,12 @@ window.App = {
       this.currentRoute = hash;
     }
 
-    // Escutar mudanças de dados na Store
-    window.CondoStore.subscribe(() => {
-      this.render();
-    });
+    // Escutar mudanças de dados na Store de forma infalível
+    if (window.CondoStore && typeof window.CondoStore.subscribe === 'function') {
+      window.CondoStore.subscribe(() => {
+        this.render();
+      });
+    }
 
     this.render();
   },
