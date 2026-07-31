@@ -92,8 +92,29 @@ window.DashboardFinanceiroComponent = {
               </p>
             </div>
 
-            <!-- Botões de Ação Globais -->
+            <!-- Botões de Ação Globais & Seletor de Competência Mês a Mês -->
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
+              
+              <!-- Seletor Destacado de Competência (Mês a Mês) -->
+              <div style="display: flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.08); padding: 0.35rem 0.75rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
+                <span class="material-symbols-outlined" style="color: #60A5FA; font-size: 1.1rem;">calendar_month</span>
+                <select class="form-control" onchange="DashboardFinanceiroComponent.setFiltro('selectedCompetencia', this.value)" style="width: auto; font-weight: 700; background: #0F172A; color: #38BDF8; border: 1px solid #334155; border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 0.85rem; cursor: pointer;" title="Escolha o mês que deseja visualizar">
+                  <option value="Todas" ${this.selectedCompetencia === 'Todas' ? 'selected' : ''}>🌐 Todos os Meses (Visão Geral)</option>
+                  <option value="Janeiro/2026" ${this.selectedCompetencia === 'Janeiro/2026' ? 'selected' : ''}>📅 Janeiro/2026</option>
+                  <option value="Fevereiro/2026" ${this.selectedCompetencia === 'Fevereiro/2026' ? 'selected' : ''}>📅 Fevereiro/2026</option>
+                  <option value="Março/2026" ${this.selectedCompetencia === 'Março/2026' ? 'selected' : ''}>📅 Março/2026</option>
+                  <option value="Abril/2026" ${this.selectedCompetencia === 'Abril/2026' ? 'selected' : ''}>📅 Abril/2026</option>
+                  <option value="Maio/2026" ${this.selectedCompetencia === 'Maio/2026' ? 'selected' : ''}>📅 Maio/2026</option>
+                  <option value="Junho/2026" ${this.selectedCompetencia === 'Junho/2026' ? 'selected' : ''}>📅 Junho/2026</option>
+                  <option value="Julho/2026" ${this.selectedCompetencia === 'Julho/2026' ? 'selected' : ''}>📅 Julho/2026</option>
+                  <option value="Agosto/2026" ${this.selectedCompetencia === 'Agosto/2026' ? 'selected' : ''}>📅 Agosto/2026</option>
+                  <option value="Setembro/2026" ${this.selectedCompetencia === 'Setembro/2026' ? 'selected' : ''}>📅 Setembro/2026</option>
+                  <option value="Outubro/2026" ${this.selectedCompetencia === 'Outubro/2026' ? 'selected' : ''}>📅 Outubro/2026</option>
+                  <option value="Novembro/2026" ${this.selectedCompetencia === 'Novembro/2026' ? 'selected' : ''}>📅 Novembro/2026</option>
+                  <option value="Dezembro/2026" ${this.selectedCompetencia === 'Dezembro/2026' ? 'selected' : ''}>📅 Dezembro/2026</option>
+                </select>
+              </div>
+
               ${isSindico ? `
                 <button class="btn-secondary btn-sm" onclick="DashboardFinanceiroComponent.reprocessarDadosManualmente()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;" title="Reprocessar e Atualizar Dashboard">
                   <span class="material-symbols-outlined" style="font-size: 1.1rem;">refresh</span> 📈 Atualizar Dashboard
