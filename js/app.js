@@ -517,8 +517,16 @@ Object.assign(window.App, {
   }
 });
 
-// Alias global de escopo de janela para garantir que onclick="App...." funcione em 100% dos navegadores
+// Aliases globais no objeto window para garantir suporte a 100% dos navegadores
+window.App = window.App || {};
 var App = window.App;
+window.navigateTo = window.navigateTo || function(route) {
+  if (window.App && typeof window.App.navigateTo === 'function') {
+    window.App.navigateTo(route);
+  } else {
+    window.location.hash = route;
+  }
+};
 
 // Inicializar a Aplicação assim que o DOM ou os scripts estiverem prontos
 document.addEventListener('DOMContentLoaded', () => {
