@@ -274,7 +274,7 @@ window.SupabaseConfig = {
     try {
       let resMoradores = null, resReservas = null, resOcorrencias = null;
       let resBalancetes = null, resContratos = null, resDocumentos = null;
-      let resMoradorVault = null, resDocVault = null, resGaleriaVault = null, resRecados = null, resRecadosVault = null, resEncomendasVault = null;
+      let resMoradorVault = { data: [] }, resDocVault = { data: [] }, resGaleriaVault = { data: [] }, resRecadosVault = { data: [] }, resEncomendasVault = { data: [] };
 
       try { resMoradores = await this.client.from('moradores').select('*'); } catch (e) {}
       try { resReservas = await this.client.from('reservas').select('*'); } catch (e) {}
@@ -282,12 +282,15 @@ window.SupabaseConfig = {
       try { resBalancetes = await this.client.from('balancetes').select('*'); } catch (e) {}
       try { resContratos = await this.client.from('contratos').select('*'); } catch (e) {}
       try { resDocumentos = await this.client.from('documentos').select('*'); } catch (e) {}
-      try { resMoradorVault = await this.client.from('ocorrencias').select('*').like('categoria', 'PendingMoradorVault%'); } catch (e) {}
-      try { resDocVault = await this.client.from('ocorrencias').select('*').like('categoria', 'DocVault_%'); } catch (e) {}
-      try { resGaleriaVault = await this.client.from('ocorrencias').select('*').like('categoria', 'GaleriaVault_%'); } catch (e) {}
-      try { resRecadosVault = await this.client.from('ocorrencias').select('*').like('categoria', 'RecadosVault_%'); } catch (e) {}
-      try { resEncomendasVault = await this.client.from('ocorrencias').select('*').like('categoria', 'EncomendasVault_%'); } catch (e) {}
-      try { resRecados = await this.client.from('recados').select('*'); } catch (e) {}
+
+      if (resOcorrencias && Array.isArray(resOcorrencias.data)) {
+        const all = resOcorrencias.data;
+        resMoradorVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('PendingMoradorVault')) };
+        resDocVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('DocVault_')) };
+        resGaleriaVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('GaleriaVault_')) };
+        resRecadosVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('RecadosVault_')) };
+        resEncomendasVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('EncomendasVault_')) };
+      }
 
       let moradoresFromCloud = [];
       if (resMoradores && resMoradores.data && resMoradores.data.length > 0) {
