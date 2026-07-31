@@ -498,10 +498,18 @@ window.DashboardFinanceiroComponent = {
           </p>
           <div style="display: flex; gap: 0.75rem; justify-content: center; align-items: center; flex-wrap: wrap;">
             <select id="selUploadCompetencia" onclick="event.stopPropagation()" class="form-control" style="width: auto; font-weight: 700; background: white; color: #0F172A; border-radius: 8px;">
-              <option value="Maio/2026">📅 Maio/2026</option>
+              <option value="Janeiro/2026">📅 Janeiro/2026</option>
+              <option value="Fevereiro/2026">📅 Fevereiro/2026</option>
+              <option value="Março/2026">📅 Março/2026</option>
+              <option value="Abril/2026">📅 Abril/2026</option>
+              <option value="Maio/2026" selected>📅 Maio/2026</option>
               <option value="Junho/2026">📅 Junho/2026</option>
               <option value="Julho/2026">📅 Julho/2026</option>
               <option value="Agosto/2026">📅 Agosto/2026</option>
+              <option value="Setembro/2026">📅 Setembro/2026</option>
+              <option value="Outubro/2026">📅 Outubro/2026</option>
+              <option value="Novembro/2026">📅 Novembro/2026</option>
+              <option value="Dezembro/2026">📅 Dezembro/2026</option>
             </select>
             <button type="button" class="btn-primary" style="background: #2563EB; color: white; padding: 0.65rem 1.4rem; font-weight: 700; border: none; border-radius: 8px;">
               <span class="material-symbols-outlined">upload_file</span> Enviar &amp; Processar Balancete
