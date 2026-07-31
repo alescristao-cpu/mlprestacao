@@ -485,10 +485,6 @@ window.ContratosComponent = {
 
     // Sanitização de nomes de empresas ou pessoas para títulos descritivos de serviços
     let empresaFinal = 'Serviço Terceirizado Especializado';
-    const nameLow = fileName.toLowerCase();
-
-    // Sanitização de nomes de empresas ou pessoas para títulos descritivos de serviços
-    let empresaFinal = 'Serviço Terceirizado Especializado';
     let catKey = 'SERVICO';
     const nameLow = (fileName || '').toLowerCase();
     const textLow = (text || '').toLowerCase();
