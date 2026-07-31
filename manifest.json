@@ -1,17 +1,24 @@
 {
-  "name": "Modern Life Residence - Portal da Transparência",
+  "name": "Modern Life Residence - Portal Condominial",
   "short_name": "Modern Life",
-  "description": "Portal de Transparência, Prestação de Contas e Gestão do Condomínio Modern Life Residence",
+  "description": "Portal Oficial de Gestão, Transparência, Balancetes e Prestação de Contas do Condomínio Modern Life Residence",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#F4F4F4",
+  "orientation": "any",
+  "background_color": "#1E293B",
   "theme_color": "#2E6B42",
-  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "business", "utilities"],
   "icons": [
     {
-      "src": "./assets/logo.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
+      "src": "assets/lnovo.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/lnovo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
       "purpose": "any maskable"
     }
   ]

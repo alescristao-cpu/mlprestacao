@@ -1,43 +1,26 @@
-/* ----------------------------------------------------
-   Modern Life Residence - Service Worker (PWA)
-   Cache v6 - Filtro Individual Rígido por E-mail do Morador
-   ---------------------------------------------------- */
-
-const CACHE_NAME = 'modern-life-v6-cache';
+/* ====================================================
+   Modern Life Residence - PWA Service Worker & Cache
+   ==================================================== */
+const CACHE_NAME = 'modern-life-pwa-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './favicon.ico',
   './assets/lnovo.jpeg',
-  './css/main.css',
+  './css/main.css?v=13',
+  './js/loader.js?v=20260730_v999',
+  './js/supabase-config.js',
   './js/store.js',
-  './js/firebase-config.js',
-  './js/components/auth.js',
-  './js/components/dashboard.js',
-  './js/components/prestacao.js',
-  './js/components/balancetes.js',
-  './js/components/contratos.js',
-  './js/components/transparencia.js',
-  './js/components/documentos.js',
-  './js/components/recados.js',
-  './js/components/canal.js',
-  './js/components/ocorrencias.js',
-  './js/components/utilidades.js',
-  './js/components/portaria.js',
-  './js/components/agenda.js',
-  './js/components/galeria.js',
-  './js/components/admin.js',
   './js/app.js'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        ASSETS_TO_CACHE.map(url => cache.add(url).catch(err => console.log('Asset skippable:', url)))
-      );
+      return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
     })
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -50,27 +33,25 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  
+  // Ignorar chamadas em tempo real da API do Supabase para garantir dados ao vivo
+  if (event.request.method !== 'GET' || event.request.url.includes('supabase.co')) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
         if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
         }
         return response;
       })
-      .catch(() => {
-        return caches.match(event.request);
-      })
+      .catch(() => caches.match(event.request))
   );
 });

@@ -9,6 +9,7 @@ window.App = {
   init() {
     this.setupTheme();
     this.bindEvents();
+    this.setupPWA();
 
     // Tratar/suprimir mensagens assíncronas abortadas por extensões do navegador (ex: Kaspersky, Tradutor, AdBlockers)
     window.addEventListener('unhandledrejection', (event) => {
@@ -447,6 +448,55 @@ window.App = {
       toast.style.transform = 'translateX(100%)';
       setTimeout(() => toast.remove(), 300);
     }, 4000);
+  },
+
+  setupPWA() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('✅ PWA Service Worker registrado com sucesso:', reg.scope);
+        }).catch((err) => {
+          console.warn('⚠️ Erro ao registrar Service Worker do PWA:', err);
+        });
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      window.deferredPwaPrompt = e;
+      this.showPWAInstallButton();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      window.deferredPwaPrompt = null;
+      const btn = document.getElementById('btnInstallPWA');
+      if (btn) btn.remove();
+      this.showToast('🎉 Aplicativo do Condomínio instalado com sucesso na sua tela inicial!', 'success');
+    });
+  },
+
+  showPWAInstallButton() {
+    const headerActions = document.querySelector('.header-actions');
+    if (!headerActions || document.getElementById('btnInstallPWA')) return;
+
+    const btn = document.createElement('button');
+    btn.id = 'btnInstallPWA';
+    btn.className = 'btn-primary btn-sm';
+    btn.style.cssText = 'background: linear-gradient(135deg, #2E6B42 0%, #1E462B 100%); color: white; display: flex; align-items: center; gap: 4px; font-weight: 600; box-shadow: var(--shadow-sm); border: none; padding: 0.4rem 0.75rem; border-radius: var(--radius-sm); cursor: pointer;';
+    btn.innerHTML = `<span class="material-symbols-outlined" style="font-size: 1.1rem;">get_app</span> Instalar App`;
+    btn.onclick = () => {
+      if (window.deferredPwaPrompt) {
+        window.deferredPwaPrompt.prompt();
+        window.deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            App.showToast('📲 Aplicativo instalado na tela inicial!', 'success');
+          }
+          window.deferredPwaPrompt = null;
+          btn.remove();
+        });
+      }
+    };
+    headerActions.insertBefore(btn, headerActions.firstChild);
   }
 };
 
