@@ -4,7 +4,7 @@
    Resgate de Moradores de Todas as Versões Anteriores + Backup Direto no Supabase Cloud Database
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V50';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V51';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V49';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
 const DELETED_DOCS_KEY = 'MODERN_LIFE_DELETED_DOCS_LIST_V2';
@@ -175,88 +175,7 @@ const INITIAL_DATA = {
 
   prestacaoContas: [],
   balancetes: [],
-
-  contratos: [
-    {
-      id: 'ctr_01',
-      empresa: 'Manutenção de Elevadores & Plataforma',
-      categoria: 'Elevadores & Plataforma',
-      objeto: 'Manutenção Preventiva e Corretiva dos Elevadores e Plataforma de Acessibilidade',
-      valorMensal: 1050.00,
-      valorTotalAnual: 12600.00,
-      vigenciaInicio: '2025-01-01',
-      vigenciaFim: '2027-01-01',
-      obrigacoes: 'Atendimento de emergência 24h em até 30 minutos, substituição de peças e vistoria técnica preventiva mensal.',
-      status: 'Ativo',
-      arquivoNome: 'CONTRATO_ELEVADORES_E_PLATAFORMA.pdf'
-    },
-    {
-      id: 'ctr_02',
-      empresa: 'Assessoria de Engenharia & Perícia Técnica',
-      categoria: 'Engenharia & Perícia',
-      objeto: 'Assessoria Técnica Especializada de Engenharia Civil e Acompanhamento de Obras',
-      valorMensal: 4500.00,
-      valorTotalAnual: 54000.00,
-      vigenciaInicio: '2025-02-01',
-      vigenciaFim: '2027-02-01',
-      obrigacoes: 'Laudos técnicos de estrutura, fiscalização de reparos e auditoria de obras do edifício.',
-      status: 'Ativo',
-      arquivoNome: 'CONTRATO_ASSESSORIA_ENGENHARIA.pdf'
-    },
-    {
-      id: 'ctr_03',
-      empresa: 'Manutenção de Sistema de Energia Solar',
-      categoria: 'Energia Solar',
-      objeto: 'Manutenção Preventiva do Sistema Fotovoltaico e Limpeza dos Módulos Solares',
-      valorMensal: 300.00,
-      valorTotalAnual: 3600.00,
-      vigenciaInicio: '2025-03-01',
-      vigenciaFim: '2027-03-01',
-      obrigacoes: 'Monitoramento da geração solar, verificação de inversores e lavagem dos 75 módulos solares (serviço pontual de R$ 2.500,00).',
-      status: 'Ativo',
-      arquivoNome: 'CONTRATO_MANUTENCAO_ENERGIA_SOLAR.pdf'
-    },
-    {
-      id: 'ctr_04',
-      empresa: 'Manutenção de Segurança Eletrônica & CFTV',
-      categoria: 'Segurança & CFTV',
-      objeto: 'Manutenção de Câmeras CFTV, Interfonia, Central de Alarme e Portões Automáticos',
-      valorMensal: 450.00,
-      valorTotalAnual: 5400.00,
-      vigenciaInicio: '2025-01-01',
-      vigenciaFim: '2027-01-01',
-      obrigacoes: 'Manutenção preventiva mensal de câmeras, no-breaks, cabeamento e placas eletrônicas de portão.',
-      status: 'Ativo',
-      arquivoNome: 'CONTRATO_SEGURANCA_ELETRONICA.pdf'
-    },
-    {
-      id: 'ctr_05',
-      empresa: 'Provedor de Internet para Áreas Comuns',
-      categoria: 'Telecomunicações',
-      objeto: 'Link Dedicado de Fibra Óptica para Portaria, Guarita e Câmeras do Condomínio',
-      valorMensal: 88.90,
-      valorTotalAnual: 1066.80,
-      vigenciaInicio: '2025-01-01',
-      vigenciaFim: '2027-01-01',
-      obrigacoes: 'Provedor de Internet corporativa com valor mensal promocional com desconto aplicado.',
-      status: 'Ativo',
-      arquivoNome: 'CONTRATO_INTERNET_AREAS_COMUNS.pdf'
-    },
-    {
-      id: 'ctr_06',
-      empresa: 'Acordo de Recuperação Estrutural de Edificações',
-      categoria: 'Acordo & Ressarcimento',
-      objeto: 'Acordo de Cooperação e Ressarcimento para Obras de Recuperação Estrutural do Edifício',
-      valorMensal: 38705.88,
-      valorTotalAnual: 928941.27,
-      vigenciaInicio: '2025-01-01',
-      vigenciaFim: '2026-12-31',
-      obrigacoes: 'Ressarcimento e repasses quinzenais do valor global estimado de R$ 928.941,27 para custeio de obras.',
-      status: 'Ativo',
-      arquivoNome: 'TERMO_ACORDO_RESSARCIMENTO_ESTRUTURAL.pdf'
-    }
-  ],
-
+  contratos: [],
   documentos: [],
   recados: [
     {

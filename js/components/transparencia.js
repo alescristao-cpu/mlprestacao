@@ -494,6 +494,22 @@ window.TransparenciaComponent = {
 
   renderContratosTab(data) {
     const contratos = data.contratos || [];
+    if (contratos.length === 0) {
+      return `
+        <div style="background: white; border: 1px solid #E2E8F0; border-radius: 16px; padding: 3.5rem 1.5rem; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); max-width: 700px; margin: 1rem auto;">
+          <div style="width: 70px; height: 70px; border-radius: 50%; background: #F1F5F9; color: #64748B; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
+            <span class="material-symbols-outlined" style="font-size: 2.8rem;">assignment_late</span>
+          </div>
+          <h3 style="font-family: var(--font-heading); color: #0F172A; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem;">
+            Nenhum Contrato Publicado no Momento
+          </h3>
+          <p style="color: #64748B; font-size: 0.92rem; max-width: 500px; margin: 0 auto; line-height: 1.6;">
+            A lista de contratos do Portal de Transparência foi limpa. Assim que novos contratos forem cadastrados pela gestão do Síndico, os dados anonimizados serão exibidos aqui.
+          </p>
+        </div>
+      `;
+    }
+
     const totalServicos = contratos.length;
     const custoMensalTotal = contratos.filter(c => c.categoria !== 'Acordo & Ressarcimento').reduce((acc, c) => acc + (c.valorMensal || 0), 0);
     const custoAnualTotal = custoMensalTotal * 12;
