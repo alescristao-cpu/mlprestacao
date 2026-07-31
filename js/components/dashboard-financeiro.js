@@ -94,9 +94,11 @@ window.DashboardFinanceiroComponent = {
 
             <!-- Botões de Ação Globais -->
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
-              <button class="btn-secondary btn-sm" onclick="DashboardFinanceiroComponent.reprocessarDadosManualmente()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;" title="Reprocessar e Atualizar Dashboard">
-                <span class="material-symbols-outlined" style="font-size: 1.1rem;">refresh</span> 📈 Atualizar Dashboard
-              </button>
+              ${isSindico ? `
+                <button class="btn-secondary btn-sm" onclick="DashboardFinanceiroComponent.reprocessarDadosManualmente()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;" title="Reprocessar e Atualizar Dashboard">
+                  <span class="material-symbols-outlined" style="font-size: 1.1rem;">refresh</span> 📈 Atualizar Dashboard
+                </button>
+              ` : ''}
               
               <div class="dropdown" style="position: relative; display: inline-block;">
                 <button class="btn-primary btn-sm" onclick="DashboardFinanceiroComponent.toggleExportMenu()" style="background: #2563EB; color: white; font-weight: 700; border: none; padding: 0.55rem 1rem; border-radius: 8px;" id="btnExportMenu">
@@ -137,11 +139,7 @@ window.DashboardFinanceiroComponent = {
               <button class="btn-primary btn-sm" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.65rem 1.2rem; border-radius: 8px; font-size: 0.85rem;" onclick="DashboardFinanceiroComponent.setTab('arquivos')">
                 <span class="material-symbols-outlined" style="font-size: 1.1rem;">cloud_upload</span> 📤 Enviar Arquivo de Balancete
               </button>
-            ` : `
-              <span class="badge" style="background: #F1F5F9; color: #475569; font-weight: 700; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; border: 1px solid #E2E8F0;">
-                👁️ Acesso de Leitura para Moradores
-              </span>
-            `}
+            ` : ''}
           </div>
         </div>
 
