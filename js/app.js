@@ -129,8 +129,12 @@ window.App = {
       }
     }
 
+    const isSindicoUser = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
+
     if (isPortaria && !['portaria', 'utilidades', 'agenda'].includes(route)) {
       route = 'portaria';
+    } else if (!isSindicoUser && ['prestacao', 'balancetes', 'contratos'].includes(route)) {
+      route = 'dashboard';
     } else if (!this.isValidRoute(route)) {
       route = 'dashboard';
     }
@@ -211,8 +215,8 @@ window.App = {
   },
 
   updateNavigationUI() {
-    const data = (window.CondoStore && window.CondoStore.data) ? window.CondoStore.data : {};
     const user = window.CondoStore ? window.CondoStore.currentUser : null;
+    const isSindicoUser = user && (user.role === 'Administrador' || (user.email && user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com'));
     const isPortaria = user && user.role === 'Portaria';
 
     const portariaAllowedRoutes = ['portaria', 'utilidades', 'agenda'];
@@ -222,6 +226,14 @@ window.App = {
 
       if (isPortaria) {
         if (portariaAllowedRoutes.includes(route)) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      } else if (route === 'prestacao' || route === 'balancetes' || route === 'contratos') {
+        // A aba "Contas" fica OCULTA para Moradores, Portaria e Conselheiros
+        // Visível SOMENTE para o Síndico Master
+        if (isSindicoUser) {
           item.style.display = 'flex';
         } else {
           item.style.display = 'none';
