@@ -18,6 +18,7 @@ window.ContratosComponent = {
         user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com'
       ))
     );
+    const isApproved = user && (user.status === 'Aprovado' || isSindico);
 
     // Access Gate para visitantes não aprovados
     if (!user || !isApproved) {
