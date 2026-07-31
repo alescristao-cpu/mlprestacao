@@ -141,12 +141,10 @@ window.TransparenciaComponent = {
               </select>
 
               <!-- Upload de Planilha (.xlsx, .xls, .csv) -->
-              ${isSindico ? `
-                <label for="excelFileInputTransp" class="btn-primary" style="cursor: pointer; background: #2563EB; color: white; font-weight: 700; border-radius: 8px; padding: 0.55rem 1rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem; border: none;" title="Subir nova planilha Excel ou CSV">
-                  <span class="material-symbols-outlined" style="font-size: 1.1rem;">upload_file</span> Carregar Excel/CSV
-                </label>
-                <input type="file" id="excelFileInputTransp" accept=".xlsx,.xls,.csv" style="display: none;" onchange="TransparenciaComponent.importarPlanilhaAuto(event)">
-              ` : ''}
+              <!-- Indicador de Modo de Visualização Auditável (Sem upload nesta aba) -->
+              <span style="font-size: 0.78rem; color: #94A3B8; font-weight: 600; display: flex; align-items: center; gap: 0.3rem; background: rgba(255,255,255,0.05); padding: 0.5rem 0.8rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);">
+                <span class="material-symbols-outlined" style="font-size: 1rem; color: #38BDF8;">visibility</span> Visualização Pública
+              </span>
 
               <!-- Botões de Exportação -->
               <button class="btn-secondary btn-sm" onclick="window.print()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;" title="Imprimir / Salvar em PDF">
