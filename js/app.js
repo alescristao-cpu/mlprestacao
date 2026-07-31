@@ -142,22 +142,12 @@ Object.assign(window.App, {
       ))
     );
 
-    if (!isSindicoUser && ['prestacao', 'balancetes', 'contratos'].includes(route)) {
+    if (['contas', 'prestacao', 'balancetes', 'contratos', 'transparencia'].includes(route)) {
+      route = 'dashboardFinanceiro';
+    } else if (!isSindicoUser && ['admin', 'portaria'].includes(route)) {
       route = 'dashboard';
-    } else if (isPortaria && !['portaria', 'utilidades', 'agenda'].includes(route)) {
-      route = 'portaria';
     } else if (!this.isValidRoute(route)) {
       route = 'dashboard';
-    }
-
-    if (route === 'balancetes' && window.PrestacaoComponent) {
-      window.PrestacaoComponent.activeTab = 'balancetes';
-      route = 'prestacao';
-    } else if (route === 'contratos' && window.PrestacaoComponent) {
-      window.PrestacaoComponent.activeTab = 'contratos';
-      route = 'prestacao';
-    } else if (route === 'transparencia') {
-      route = 'dashboardFinanceiro';
     }
 
     this.currentRoute = route;
@@ -189,14 +179,6 @@ Object.assign(window.App, {
         break;
       case 'dashboardFinanceiro':
         if (window.DashboardFinanceiroComponent) window.DashboardFinanceiroComponent.render(pageContainer, data);
-        break;
-      case 'prestacao':
-      case 'balancetes':
-      case 'contratos':
-        if (window.PrestacaoComponent) window.PrestacaoComponent.render(pageContainer, data);
-        break;
-      case 'transparencia':
-        if (window.TransparenciaComponent) window.TransparenciaComponent.render(pageContainer, data);
         break;
       case 'documentos':
         if (window.DocumentosComponent) window.DocumentosComponent.render(pageContainer, data);
