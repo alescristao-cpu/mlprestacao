@@ -119,22 +119,38 @@ window.DashboardFinanceiroComponent = {
         </div>
 
         <!-- Navegação entre Abas Principais -->
-        <div style="display: flex; gap: 0.75rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem; flex-wrap: wrap;">
-          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; ${this.activeTab === 'dashboard' ? 'background: #2563EB; color: white; border: none; box-shadow: 0 4px 12px rgba(37,99,235,0.25);' : 'background: white; color: #475569; border: 1px solid #CBD5E1;'}" onclick="DashboardFinanceiroComponent.setTab('dashboard')">
-            <span class="material-symbols-outlined">analytics</span> 📊 Painel Financeiro Interativo
-          </button>
+        <div style="display: flex; gap: 0.75rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; ${this.activeTab === 'dashboard' ? 'background: #2563EB; color: white; border: none; box-shadow: 0 4px 12px rgba(37,99,235,0.25);' : 'background: white; color: #475569; border: 1px solid #CBD5E1;'}" onclick="DashboardFinanceiroComponent.setTab('dashboard')">
+              <span class="material-symbols-outlined">analytics</span> 📊 Painel Financeiro Interativo
+            </button>
 
-          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; ${this.activeTab === 'arquivos' ? 'background: #0F172A; color: white; border: none; box-shadow: 0 4px 12px rgba(15,23,42,0.25);' : 'background: white; color: #475569; border: 1px solid #CBD5E1;'}" onclick="DashboardFinanceiroComponent.setTab('arquivos')">
-            <span class="material-symbols-outlined">folder_open</span> 📁 Área Administrativa de Arquivos (${arquivos.length})
-          </button>
+            ${isSindico ? `
+              <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; ${this.activeTab === 'arquivos' ? 'background: #0F172A; color: white; border: none; box-shadow: 0 4px 12px rgba(15,23,42,0.25);' : 'background: white; color: #475569; border: 1px solid #CBD5E1;'}" onclick="DashboardFinanceiroComponent.setTab('arquivos')">
+                <span class="material-symbols-outlined">folder_open</span> 📁 Gestão de Arquivos &amp; Upload (${arquivos.length})
+              </button>
+            ` : ''}
+          </div>
+
+          <div>
+            ${isSindico ? `
+              <button class="btn-primary btn-sm" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; font-weight: 700; border: none; padding: 0.65rem 1.2rem; border-radius: 8px; font-size: 0.85rem;" onclick="DashboardFinanceiroComponent.setTab('arquivos')">
+                <span class="material-symbols-outlined" style="font-size: 1.1rem;">cloud_upload</span> 📤 Enviar Arquivo de Balancete
+              </button>
+            ` : `
+              <span class="badge" style="background: #F1F5F9; color: #475569; font-weight: 700; padding: 6px 14px; border-radius: 8px; font-size: 0.82rem; border: 1px solid #E2E8F0;">
+                👁️ Acesso de Leitura para Moradores
+              </span>
+            `}
+          </div>
         </div>
 
-        ${this.activeTab === 'arquivos' ? this.renderAreaArquivos(data, isSindico) : this.renderPainelDashboard(kpis, comparativos, insights, lancamentosFiltrados, todosLancamentos)}
+        ${(this.activeTab === 'arquivos' && isSindico) ? this.renderAreaArquivos(data, isSindico) : this.renderPainelDashboard(kpis, comparativos, insights, lancamentosFiltrados, todosLancamentos)}
 
       </div>
     `;
 
-    if (this.activeTab === 'dashboard') {
+    if (this.activeTab === 'dashboard' || !isSindico) {
       setTimeout(() => {
         this.initCharts(lancamentosFiltrados, todosLancamentos);
       }, 100);
@@ -146,6 +162,23 @@ window.DashboardFinanceiroComponent = {
   },
 
   setTab(tabName) {
+    const user = window.CondoStore ? window.CondoStore.currentUser : null;
+    const isSindico = user && (
+      user.role === 'Administrador' ||
+      user.role === 'Síndico' ||
+      (user.email && (
+        user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' ||
+        user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com'
+      ))
+    );
+
+    if (tabName === 'arquivos' && !isSindico) {
+      alert('🔒 Acesso Restrito: Apenas a gestão do Síndico Administrador possui permissão para enviar e gerenciar arquivos de balancetes.');
+      this.activeTab = 'dashboard';
+      App.render();
+      return;
+    }
+
     this.activeTab = tabName;
     App.render();
   },
