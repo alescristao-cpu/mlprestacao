@@ -36,22 +36,28 @@ window.ContratosComponent = {
 
     const contratos = data.contratos || [];
 
-    // Sanitização para garantir que nenhum nome de empresa/pessoa ou nome de arquivo bruto apareça nos contratos existentes
+    // Sanitização rigorosa para remover qualquer nome de empresa, pessoa ou arquivo bruto
     contratos.forEach(c => {
-      if (c.empresa) {
-        if (c.empresa.toLowerCase().includes('otis')) c.empresa = 'Manutenção de Elevadores';
-        if (c.empresa.toLowerCase().includes('servis')) c.empresa = 'Portaria & Limpeza Terceirizada';
-        if (c.empresa.toLowerCase().includes('aquaclean')) c.empresa = 'Manutenção de Piscinas & Paisagismo';
-        if (c.empresa.toLowerCase().includes('garantia')) c.empresa = 'Assessoria Contábil & Gestão';
-        if (c.empresa.toLowerCase().includes('concrevit')) c.empresa = 'Acordo de Recuperação Estrutural';
+      const empLow = (c.empresa || '').toLowerCase();
+      if (empLow.includes('fregonassi') || empLow.includes('engenharia') || c.categoria === 'Engenharia & Perícia') {
+        c.empresa = 'Assessoria de Engenharia & Perícia';
+      } else if (empLow.includes('elevador') || c.categoria === 'Elevadores & Plataforma' || c.categoria === 'Elevadores') {
+        c.empresa = 'Manutenção de Elevadores & Plataforma';
+      } else if (empLow.includes('solar') || empLow.includes('connex') || c.categoria === 'Energia Solar') {
+        c.empresa = 'Manutenção de Sistema de Energia Solar';
+      } else if (empLow.includes('segurança') || empLow.includes('warions') || c.categoria === 'Segurança & CFTV') {
+        c.empresa = 'Manutenção de Segurança Eletrônica & CFTV';
+      } else if (empLow.includes('internet') || empLow.includes('ebr') || c.categoria === 'Telecomunicações') {
+        c.empresa = 'Provedor de Internet para Áreas Comuns';
+      } else if (empLow.includes('concrevit') || empLow.includes('acordo') || c.categoria === 'Acordo & Ressarcimento') {
+        c.empresa = 'Acordo de Recuperação Estrutural';
+      } else if (c.categoria) {
+        c.empresa = c.categoria;
       }
+
       if (c.arquivoNome) {
-        if (c.arquivoNome.toLowerCase().includes('concrevit')) c.arquivoNome = 'TERMO_ACORDO_RESSARCIMENTO_ESTRUTURAL.pdf';
-        if (c.arquivoNome.toLowerCase().includes('connex')) c.arquivoNome = 'CONTRATO_MANUTENCAO_ENERGIA_SOLAR.pdf';
-        if (c.arquivoNome.toLowerCase().includes('vix')) c.arquivoNome = 'CONTRATO_ELEVADORES_E_PLATAFORMA.pdf';
-        if (c.arquivoNome.toLowerCase().includes('warions')) c.arquivoNome = 'CONTRATO_SEGURANCA_ELETRONICA.pdf';
-        if (c.arquivoNome.toLowerCase().includes('ebr')) c.arquivoNome = 'CONTRATO_INTERNET_AREAS_COMUNS.pdf';
-        if (c.arquivoNome.toLowerCase().includes('fregonassi')) c.arquivoNome = 'CONTRATO_ASSESSORIA_ENGENHARIA.pdf';
+        const catKey = (c.categoria || c.empresa || 'SERVICO').toUpperCase().replace(/[^A-Z0-9]/g, '_');
+        c.arquivoNome = `CONTRATO_OFICIAL_${catKey}.pdf`;
       }
     });
 
@@ -465,20 +471,37 @@ window.ContratosComponent = {
     let empresaFinal = 'Serviço Terceirizado Especializado';
     const nameLow = fileName.toLowerCase();
 
-    if (nameLow.includes('elevador') || text.toLowerCase().includes('elevador')) {
-      empresaFinal = 'Manutenção de Elevadores';
-    } else if (nameLow.includes('portaria') || nameLow.includes('limpeza') || text.toLowerCase().includes('portaria')) {
+    // Sanitização de nomes de empresas ou pessoas para títulos descritivos de serviços
+    let empresaFinal = 'Serviço Terceirizado Especializado';
+    let catKey = 'SERVICO';
+    const nameLow = (fileName || '').toLowerCase();
+    const textLow = (text || '').toLowerCase();
+
+    if (nameLow.includes('fregonassi') || nameLow.includes('engenharia') || textLow.includes('engenharia') || textLow.includes('perícia')) {
+      empresaFinal = 'Assessoria de Engenharia & Perícia';
+      catKey = 'ENGENHARIA_E_PERICIA';
+    } else if (nameLow.includes('elevador') || textLow.includes('elevador')) {
+      empresaFinal = 'Manutenção de Elevadores & Plataforma';
+      catKey = 'ELEVADORES_E_PLATAFORMA';
+    } else if (nameLow.includes('solar') || textLow.includes('solar') || textLow.includes('fotovoltaico')) {
+      empresaFinal = 'Manutenção de Sistema de Energia Solar';
+      catKey = 'ENERGIA_SOLAR';
+    } else if (nameLow.includes('segurança') || nameLow.includes('cftv') || textLow.includes('câmera')) {
+      empresaFinal = 'Manutenção de Segurança Eletrônica & CFTV';
+      catKey = 'SEGURANCA_ELETRONICA';
+    } else if (nameLow.includes('internet') || nameLow.includes('telecom') || textLow.includes('fibra')) {
+      empresaFinal = 'Provedor de Internet para Áreas Comuns';
+      catKey = 'TELECOMUNICACOES';
+    } else if (nameLow.includes('concrevit') || nameLow.includes('acordo') || textLow.includes('ressarcimento')) {
+      empresaFinal = 'Acordo de Recuperação Estrutural';
+      catKey = 'ACORDO_ESTRUTURAL';
+    } else if (nameLow.includes('portaria') || nameLow.includes('limpeza')) {
       empresaFinal = 'Portaria & Limpeza Terceirizada';
-    } else if (nameLow.includes('piscina') || nameLow.includes('jardim') || text.toLowerCase().includes('piscina')) {
-      empresaFinal = 'Manutenção de Piscinas & Paisagismo';
-    } else if (nameLow.includes('contabil') || nameLow.includes('gestao') || text.toLowerCase().includes('contábil')) {
-      empresaFinal = 'Assessoria Contábil & Gestão';
-    } else if (fileName) {
-      empresaFinal = `Contrato de ${fileName.replace(/\.[^/.]+$/, "").replace(/contrato/i, "").replace(/_/g, " ").trim()}`;
+      catKey = 'PORTARIA_E_LIMPEZA';
     }
 
     const valorFinal = valorDetectado > 0 ? valorDetectado : 1250.00;
-    const objetoFinal = objetoDetectado || `Prestação de Serviços Terceirizados para o Condomínio (${fileName})`;
+    const objetoFinal = objetoDetectado || `Prestação de Serviços Terceirizados Prediais`;
     const obrigacoesFinal = obrigacoesDetectadas.length > 0
       ? obrigacoesDetectadas.slice(0, 4).join('\n• ')
       : 'Atendimento emergencial 24h, manutenção preventiva mensal com laudo técnico e reposição de componentes homologados.';
@@ -491,7 +514,7 @@ window.ContratosComponent = {
       vigenciaInicio: new Date().toISOString().split('T')[0],
       vigenciaFim: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0],
       obrigacoes: obrigacoesFinal,
-      arquivoNome: fileName || 'CONTRATO_IMPORTADO.pdf'
+      arquivoNome: `CONTRATO_OFICIAL_${catKey}.pdf`
     });
   },
 
