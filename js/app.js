@@ -185,6 +185,9 @@ Object.assign(window.App, {
       case 'dashboard':
         if (window.DashboardComponent) window.DashboardComponent.render(pageContainer, data);
         break;
+      case 'dashboardFinanceiro':
+        if (window.DashboardFinanceiroComponent) window.DashboardFinanceiroComponent.render(pageContainer, data);
+        break;
       case 'prestacao':
       case 'balancetes':
       case 'contratos':
