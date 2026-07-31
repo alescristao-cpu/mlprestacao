@@ -3,7 +3,9 @@
    Roteamento, Temas, Eventos Globais e Abertura do Modal de Login
    ---------------------------------------------------- */
 
-window.App = {
+var App = window.App = window.App || {};
+
+Object.assign(window.App, {
   currentRoute: 'dashboard',
 
   init() {
@@ -512,9 +514,8 @@ window.App = {
         });
       }
     };
-    headerActions.insertBefore(btn, headerActions.firstChild);
   }
-};
+});
 
 // Alias global de escopo de janela para garantir que onclick="App...." funcione em 100% dos navegadores
 var App = window.App;
