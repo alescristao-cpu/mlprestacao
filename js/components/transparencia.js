@@ -68,16 +68,58 @@ window.TransparenciaComponent = {
 
     // EXTRAÇÃO DOS DADOS INTEGRADOS DAS CONTAS
     const balancetes = data.balancetes || [];
-    const activeBal = balancetes[this.selectedPeriodIndex] || balancetes[0] || {
-      mes: 'Maio',
-      ano: 2026,
-      receitaBruta: 90351.01,
-      despesaBruta: 69866.77,
-      saldoAnterior: 498438.09,
-      saldoMes: 20484.24,
-      saldoAtual: 518922.33,
-      categoriasDespesa: []
-    };
+
+    if (balancetes.length === 0 && this.activeTab === 'dashboard') {
+      container.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+          
+          <!-- Header Banner -->
+          <div style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: white; padding: 1.5rem; border-radius: 16px; border-left: 6px solid #2563EB; box-shadow: 0 10px 30px rgba(0,0,0,0.12);">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem;">
+              <div>
+                <span class="badge" style="background: rgba(37, 99, 235, 0.2); color: #60A5FA; font-weight: 700; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; border: 1px solid rgba(96, 165, 250, 0.3);">
+                  🛡️ PORTAL DE TRANSPARÊNCIA DO CONDOMÍNIO
+                </span>
+                <h1 style="font-family: var(--font-heading); font-size: 1.55rem; font-weight: 800; color: #F8FAFC; letter-spacing: -0.5px; margin: 0.3rem 0 0 0;">
+                  Portal de Transparência &amp; Auditoria
+                </h1>
+                <p style="font-size: 0.88rem; color: #94A3B8; margin-top: 0.3rem; margin-bottom: 0;">
+                  Condomínio Modern Life Residence &bull; Gestão do Síndico Alessandro Cristiano da Silva
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Barra de Abas Internas -->
+          <div style="display: flex; gap: 0.75rem; border-bottom: 2px solid #E2E8F0; padding-bottom: 0.5rem; flex-wrap: wrap;">
+            <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; ${this.activeTab === 'dashboard' ? 'background: #2563EB; color: white; border: none; box-shadow: 0 4px 12px rgba(37,99,235,0.25);' : 'background: white; color: #475569; border: 1px solid #CBD5E1;'}" onclick="TransparenciaComponent.setTab('dashboard')">
+              <span class="material-symbols-outlined">analytics</span> 📊 Dashboard &amp; Auditoria
+            </button>
+
+            <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.25rem; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; ${this.activeTab === 'contratos' ? 'background: #059669; color: white; border: none; box-shadow: 0 4px 12px rgba(5,150,105,0.25);' : 'background: white; color: #475569; border: 1px solid #CBD5E1;'}" onclick="TransparenciaComponent.setTab('contratos')">
+              <span class="material-symbols-outlined">description</span> 📜 Serviços Contratados (${(data.contratos || []).length})
+            </button>
+          </div>
+
+          <!-- Estado Limpo de Arquivos Zerados -->
+          <div style="background: white; border: 1px solid #E2E8F0; border-radius: 16px; padding: 3.5rem 1.5rem; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); max-width: 700px; margin: 1rem auto;">
+            <div style="width: 70px; height: 70px; border-radius: 50%; background: #F1F5F9; color: #64748B; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
+              <span class="material-symbols-outlined" style="font-size: 2.8rem;">folder_off</span>
+            </div>
+            <h3 style="font-family: var(--font-heading); color: #0F172A; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem;">
+              Nenhum Arquivo ou Balancete Publicado
+            </h3>
+            <p style="color: #64748B; font-size: 0.92rem; max-width: 500px; margin: 0 auto; line-height: 1.6;">
+              A aba de Transparência foi totalmente limpa. Assim que novos demonstrativos financeiros, planilhas ou relatórios forem publicados pela gestão do Síndico, os indicadores e arquivos aparecerão aqui automaticamente.
+            </p>
+          </div>
+
+        </div>
+      `;
+      return;
+    }
+
+    const activeBal = balancetes[this.selectedPeriodIndex] || balancetes[0] || {};
 
     // Montagem do Dataset de Lançamentos a partir dos dados do Balancete/Planilha Ativa
     const lancamentos = this.gerarLancamentosApartirDoBalancete(activeBal);
