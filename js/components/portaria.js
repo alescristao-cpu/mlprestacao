@@ -56,6 +56,10 @@ window.PortariaComponent = {
               <button class="btn-secondary" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); font-weight: 600;" onclick="PortariaComponent.openNovaReservaModal()">
                 <span class="material-symbols-outlined">event</span> ➕ Reserva Presencial
               </button>
+
+              <button class="btn-secondary" style="background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.35); font-weight: 700;" onclick="App.navigateTo('admin')">
+                <span class="material-symbols-outlined">admin_panel_settings</span> 👑 Painel do Síndico
+              </button>
             </div>
           </div>
         </div>

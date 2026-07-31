@@ -124,6 +124,12 @@ window.AdminComponent = {
             </button>
           ` : ''}
 
+          <!-- Atalho Direto: Painel da Portaria & Guarita -->
+          <button class="btn-sm" style="font-weight: 700; padding: 0.75rem 1.1rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; white-space: nowrap; background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2;" onclick="App.navigateTo('portaria')">
+            <span class="material-symbols-outlined" style="font-size: 1.1rem;">door_front</span> 
+            📦 Painel da Portaria
+          </button>
+
         </div>
 
         <!-- CONTEÚDO DAS ABAS -->
