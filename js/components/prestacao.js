@@ -286,55 +286,38 @@ window.PrestacaoComponent = {
 
               </div>
 
+  <!-- Seção de Gráficos Interativos Chart.js -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.35rem;">
+          
+          <!-- Gráfico Interativo 1: Donut Chart de Despesas -->
+          <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <h3 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #0F172A;">
+                📊 Distribuição de Gastos por Categoria
+              </h3>
+              <span class="badge" style="background: #EFF6FF; color: #1D4ED8; font-weight: 700; font-size: 0.75rem;">Chart.js Pizza</span>
+            </div>
+            <p style="font-size: 0.82rem; color: #64748B; margin-bottom: 1rem;">
+              Passe o ponteiro ou toque nas fatias para visualizar os valores exatos de cada investimento.
+            </p>
+            <div style="height: 280px; position: relative;">
+              <canvas id="chartDespesasPizza"></canvas>
             </div>
           </div>
 
-          <!-- Gráfico 2: Composição Visual das Despesas -->
+          <!-- Gráfico Interativo 2: Bar Chart Comparativo -->
           <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
               <h3 style="font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700; color: #0F172A;">
-                Composição de Despesas por Categoria
+                📈 Balanço Comparativo de Receitas vs Despesas
               </h3>
-              <span class="badge" style="background: #EFF6FF; color: #1D4ED8; font-weight: 700; font-size: 0.75rem;">Detalhamento</span>
+              <span class="badge" style="background: #ECFDF5; color: #047857; font-weight: 700; font-size: 0.75rem;">Chart.js Barras</span>
             </div>
-            <p style="font-size: 0.82rem; color: #64748B; margin-bottom: 1.2rem;">
-              Destino exato dos investimentos em manutenção e operação predial.
+            <p style="font-size: 0.82rem; color: #64748B; margin-bottom: 1rem;">
+              Comparativo direto entre a arrecadação bruta, despesas executadas e o saldo em conta.
             </p>
-
-            <div style="display: flex; flex-direction: column; gap: 0.85rem; max-height: 270px; overflow-y: auto; padding-right: 6px;">
-              ${despesasDetalhadas.map((d, idx) => {
-                const perc = totalDespesasSoma > 0 ? Math.round((d.valor / totalDespesasSoma) * 100) : 0;
-                
-                const gradientesConfianca = [
-                  'linear-gradient(90deg, #2563EB 0%, #3B82F6 100%)',
-                  'linear-gradient(90deg, #0D9488 0%, #14B8A6 100%)',
-                  'linear-gradient(90deg, #D97706 0%, #F59E0B 100%)',
-                  'linear-gradient(90deg, #7C3AED 0%, #8B5CF6 100%)',
-                  'linear-gradient(90deg, #0284C7 0%, #38BDF8 100%)',
-                  'linear-gradient(90deg, #059669 0%, #10B981 100%)',
-                  'linear-gradient(90deg, #4F46E5 0%, #6366F1 100%)',
-                  'linear-gradient(90deg, #EC4899 0%, #F472B6 100%)'
-                ];
-
-                const gradUsado = gradientesConfianca[idx % gradientesConfianca.length];
-                const corDot = d.cor || '#2563EB';
-
-                return `
-                  <div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px;">
-                      <span style="display: flex; align-items: center; gap: 6px; color: #334155;">
-                        <span style="width: 10px; height: 10px; border-radius: 50%; background: ${corDot}; display: inline-block;"></span>
-                        ${d.nome}
-                      </span>
-                      <strong style="color: #0F172A;">R$ ${d.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2})} <span style="color: #64748B; font-weight: 500;">(${perc}%)</span></strong>
-                    </div>
-
-                    <div style="height: 8px; background: #F1F5F9; border-radius: 4px; overflow: hidden;">
-                      <div style="width: ${perc}%; height: 100%; background: ${gradUsado}; border-radius: 4px; transition: width 0.8s ease;"></div>
-                    </div>
-                  </div>
-                `;
-              }).join('')}
+            <div style="height: 280px; position: relative;">
+              <canvas id="chartComparativoBarras"></canvas>
             </div>
           </div>
 
@@ -443,6 +426,115 @@ window.PrestacaoComponent = {
 
       </div>
     `;
+
+    setTimeout(() => {
+      this.renderInteractiveCharts(despesasDetalhadas, receitaTotal, despesaTotal, superavitMes, saldoFinal);
+    }, 60);
+  },
+
+  renderInteractiveCharts(despesas, receitaTotal, despesaTotal, superavitMes, saldoFinal) {
+    if (typeof Chart === 'undefined') return;
+
+    if (this.chartPizzaInstance) {
+      try { this.chartPizzaInstance.destroy(); } catch (e) {}
+    }
+    if (this.chartBarrasInstance) {
+      try { this.chartBarrasInstance.destroy(); } catch (e) {}
+    }
+
+    const ctxPizza = document.getElementById('chartDespesasPizza');
+    if (ctxPizza) {
+      const labels = despesas.map(d => d.nome);
+      const values = despesas.map(d => d.valor);
+      const bgColors = [
+        '#2563EB', '#0D9488', '#D97706', '#7C3AED', '#0284C7',
+        '#059669', '#4F46E5', '#14B8A6', '#8B5CF6', '#F59E0B',
+        '#6366F1', '#38BDF8', '#EC4899'
+      ];
+
+      this.chartPizzaInstance = new Chart(ctxPizza, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: bgColors,
+            borderWidth: 2,
+            borderColor: '#FFFFFF'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 10,
+                font: { size: 10, weight: '600', family: 'Inter' },
+                color: '#334155'
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const val = ctx.raw || 0;
+                  return ` R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    const ctxBarras = document.getElementById('chartComparativoBarras');
+    if (ctxBarras) {
+      this.chartBarrasInstance = new Chart(ctxBarras, {
+        type: 'bar',
+        data: {
+          labels: ['Arrecadação Total', 'Gastos Executados', 'Superávit do Mês', 'Saldo Consolidado'],
+          datasets: [{
+            label: 'Valores (R$)',
+            data: [receitaTotal, despesaTotal, superavitMes, saldoFinal],
+            backgroundColor: ['#10B981', '#E11D48', '#2563EB', '#7C3AED'],
+            borderRadius: 8,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  const val = ctx.raw || 0;
+                  return ` R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(val) {
+                  return 'R$ ' + (val / 1000).toFixed(0) + 'k';
+                },
+                font: { size: 10, weight: '600', family: 'Inter' }
+              }
+            },
+            x: {
+              ticks: {
+                font: { size: 10, weight: '700', family: 'Inter' }
+              }
+            }
+          }
+        }
+      });
+    }
   },
 
   trocarPeriodo(idx) {
