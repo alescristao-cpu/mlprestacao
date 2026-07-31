@@ -392,6 +392,73 @@ window.PrestacaoComponent = {
 
         </div>
 
+        <!-- Seção de Gestão de Contratos Vigentes dentro de Contas -->
+        <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-top: 4px solid #059669; border-radius: 12px; padding: 1.35rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+            <div>
+              <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-outlined" style="color: #059669;">description</span> Contratos &amp; Compromissos Vigentes do Condomínio
+              </h3>
+              <p style="font-size: 0.82rem; color: #64748B; margin-top: 2px; margin-bottom: 0;">
+                Gerenciamento direto de contratos ativos no sistema. O Síndico pode editar, renomear ou excluir qualquer contrato.
+              </p>
+            </div>
+            
+            <button class="btn-primary" style="background: #10B981; color: white; font-weight: 700; border: none; padding: 0.6rem 1rem; border-radius: 8px; font-size: 0.85rem; display: flex; align-items: center; gap: 0.35rem;" onclick="ContratosComponent.openImportModal()">
+              <span class="material-symbols-outlined" style="font-size: 1.1rem;">cloud_upload</span> 📄 Importar / Novo Contrato
+            </button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="custom-table" style="border-collapse: separate; border-spacing: 0;">
+              <thead>
+                <tr style="background: #F8FAFC;">
+                  <th style="color: #475569; font-weight: 700;">Serviço / Contrato</th>
+                  <th style="color: #475569; font-weight: 700;">Objeto / Descrição</th>
+                  <th style="text-align: right; color: #059669; font-weight: 700;">Valor Mensal (R$)</th>
+                  <th style="color: #475569; font-weight: 700;">Vigência</th>
+                  <th style="text-align: center; color: #475569; font-weight: 700;">Status</th>
+                  <th style="text-align: center; color: #475569; font-weight: 700;">Ações do Síndico</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(data.contratos || []).map(c => `
+                  <tr>
+                    <td>
+                      <strong style="color: #0F172A; font-size: 0.9rem;">${c.empresa}</strong>
+                      ${c.arquivoNome ? `
+                        <div style="font-size: 0.75rem; color: #2563EB; font-weight: 600; display: flex; align-items: center; gap: 3px; margin-top: 2px;">
+                          📄 ${c.arquivoNome}
+                        </div>
+                      ` : ''}
+                    </td>
+                    <td style="font-size: 0.85rem; color: #334155;">${c.objeto}</td>
+                    <td style="text-align: right; font-weight: 800; color: #059669; font-size: 0.92rem;">
+                      R$ ${(c.valorMensal || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                    </td>
+                    <td style="font-size: 0.8rem; color: #64748B;">
+                      📅 ${c.vigenciaInicio} a ${c.vigenciaFim}
+                    </td>
+                    <td style="text-align: center;">
+                      <span class="badge badge-success" style="font-size: 0.75rem;">${c.status || 'Ativo'}</span>
+                    </td>
+                    <td style="text-align: center;">
+                      <div style="display: flex; gap: 0.35rem; justify-content: center;">
+                        <button class="btn-secondary btn-sm" style="background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; font-weight: 700; padding: 0.35rem 0.65rem; font-size: 0.78rem;" onclick="ContratosComponent.openEditModal('${c.id}')" title="Editar / Renomear Contrato">
+                          <span class="material-symbols-outlined" style="font-size: 0.9rem;">edit</span> Editar
+                        </button>
+                        <button class="btn-secondary btn-sm btn-danger" style="background: #FFF1F2; color: #E11D48; border: 1px solid #FECACA; font-weight: 700; padding: 0.35rem 0.65rem; font-size: 0.78rem;" onclick="ContratosComponent.excluirContrato('${c.id}', '${c.empresa}')" title="Excluir Contrato">
+                          <span class="material-symbols-outlined" style="font-size: 0.9rem;">delete</span> Apagar
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- Tabela Consolidada de Histórico -->
         <div class="card-widget" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1.35rem;">
           <div class="card-header" style="margin-bottom: 1rem;">
