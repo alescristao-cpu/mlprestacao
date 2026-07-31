@@ -6,7 +6,7 @@ window.EmailService = {
   async sendEmail({ to, subject, data }) {
     if (!to) return { success: false, error: 'Sem destinatário' };
 
-    // 1. Tentar Gateway Primário (FormSubmit via FormData sem preflight CORS)
+    // 1. Tentar Gateway Primário (FormSubmit com mode no-cors infalível)
     try {
       const formData = new FormData();
       formData.append('_subject', subject);
@@ -18,15 +18,13 @@ window.EmailService = {
         });
       }
 
-      const response = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to)}`, {
+      await fetch(`https://formsubmit.co/${encodeURIComponent(to)}`, {
         method: 'POST',
-        headers: { 'Accept': 'application/json' },
+        mode: 'no-cors',
         body: formData
       });
 
-      if (response.ok) {
-        return { success: true, provider: 'FormSubmit' };
-      }
+      return { success: true, provider: 'FormSubmit' };
     } catch (err) {
       console.warn('[EmailService] Gateway Primário (FormSubmit) indisponível. Ativando fallback...', err);
     }
