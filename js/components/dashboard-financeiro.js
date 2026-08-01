@@ -701,19 +701,34 @@ window.DashboardFinanceiroComponent = {
     return 'Manutenção Predial';
   },
 
-  getLancamentosPadrao(comp = 'Maio/2026') {
-    return [
-      { id: 'l1', competencia: comp, data: '05/05/2026', descricao: 'Taxa Condominial Ordinária (54 Unidades)', categoria: 'Taxa Condominial', tipo: 'Receita', valor: 53017.98, fornecedor: 'Condôminos' },
-      { id: 'l2', competencia: comp, data: '05/05/2026', descricao: 'Fundo de Reserva Regulamentar (5%)', categoria: 'Fundo de Reserva', tipo: 'Receita', valor: 2612.57, fornecedor: 'Condôminos' },
-      { id: 'l3', competencia: comp, data: '10/05/2026', descricao: 'Mão de Obra Terceirizada - Portaria 24h & Limpeza', categoria: 'Portaria & Limpeza', tipo: 'Despesa', valor: 28933.49, fornecedor: 'Empresa Terceirizada' },
-      { id: 'l4', competencia: comp, data: '12/05/2026', descricao: 'Fatura de Consumo de Água & Esgoto', categoria: 'Água & Esgoto', tipo: 'Despesa', valor: 9404.63, fornecedor: 'Concessionária' },
-      { id: 'l5', competencia: comp, data: '15/05/2026', descricao: 'Consumo de Gás Encanado Áreas Comuns', categoria: 'Energia Elétrica', tipo: 'Despesa', valor: 2592.73, fornecedor: 'Distribuidora Gás' },
-      { id: 'l6', competencia: comp, data: '18/05/2026', descricao: 'Manutenção Preventiva de Elevadores e ART', categoria: 'Elevadores', tipo: 'Despesa', valor: 1050.00, fornecedor: 'Empresa Elevadores' },
-      { id: 'l7', competencia: comp, data: '20/05/2026', descricao: 'Honorários de Gestão Administrativa e Contábil', categoria: 'Administração', tipo: 'Despesa', valor: 2450.03, fornecedor: 'Administradora' },
-      { id: 'l8', competencia: comp, data: '22/05/2026', descricao: 'Seguro Predial e Placas Solares Fotovoltaicas', categoria: 'Manutenção Predial', tipo: 'Despesa', valor: 1512.95, fornecedor: 'Seguradora' },
-      { id: 'l9', competencia: comp, data: '25/05/2026', descricao: 'Manutenção do Sistema de CFTV e Câmeras', categoria: 'Segurança & CFTV', tipo: 'Despesa', valor: 485.00, fornecedor: 'Segurança Tec' },
-      { id: 'l10', competencia: comp, data: '28/05/2026', descricao: 'Acordo de Recuperação Estrutural Edifício', categoria: 'Taxa Condominial', tipo: 'Receita', valor: 38705.88, fornecedor: 'Construtora' }
+  getLancamentosPadrao() {
+    const meses = [
+      'Janeiro/2026', 'Fevereiro/2026', 'Março/2026', 'Abril/2026',
+      'Maio/2026', 'Junho/2026', 'Julho/2026', 'Agosto/2026',
+      'Setembro/2026', 'Outubro/2026', 'Novembro/2026', 'Dezembro/2026'
     ];
+
+    const todosLancs = [];
+
+    meses.forEach((comp, index) => {
+      const mesNum = (index + 1).toString().padStart(2, '0');
+      const varMult = 1 + (index * 0.012 - 0.02);
+
+      todosLancs.push(
+        { id: `l_${index}_1`, competencia: comp, data: `05/${mesNum}/2026`, descricao: 'Taxa Condominial Ordinária (54 Unidades)', categoria: 'Taxa Condominial', tipo: 'Receita', valor: Math.round(53017.98 * varMult * 100) / 100, fornecedor: 'Condôminos' },
+        { id: `l_${index}_2`, competencia: comp, data: `05/${mesNum}/2026`, descricao: 'Fundo de Reserva Regulamentar (5%)', categoria: 'Fundo de Reserva', tipo: 'Receita', valor: Math.round(2612.57 * varMult * 100) / 100, fornecedor: 'Condôminos' },
+        { id: `l_${index}_3`, competencia: comp, data: `10/${mesNum}/2026`, descricao: 'Mão de Obra Terceirizada - Portaria 24h & Limpeza', categoria: 'Portaria & Limpeza', tipo: 'Despesa', valor: 28933.49, fornecedor: 'Empresa Terceirizada' },
+        { id: `l_${index}_4`, competencia: comp, data: `12/${mesNum}/2026`, descricao: 'Fatura de Consumo de Água & Esgoto', categoria: 'Água & Esgoto', tipo: 'Despesa', valor: Math.round((9404.63 + (index % 3) * 350) * 100) / 100, fornecedor: 'Concessionária' },
+        { id: `l_${index}_5`, competencia: comp, data: `15/${mesNum}/2026`, descricao: 'Consumo de Energia Elétrica Áreas Comuns', categoria: 'Energia Elétrica', tipo: 'Despesa', valor: Math.round((2592.73 + (index % 4) * 180) * 100) / 100, fornecedor: 'EDP / Enel' },
+        { id: `l_${index}_6`, competencia: comp, data: `18/${mesNum}/2026`, descricao: 'Manutenção Preventiva de Elevadores e ART', categoria: 'Elevadores', tipo: 'Despesa', valor: 1050.00, fornecedor: 'Empresa Elevadores' },
+        { id: `l_${index}_7`, competencia: comp, data: `20/${mesNum}/2026`, descricao: 'Honorários de Gestão Administrativa e Contábil', categoria: 'Administração', tipo: 'Despesa', valor: 2450.03, fornecedor: 'Administradora' },
+        { id: `l_${index}_8`, competencia: comp, data: `22/${mesNum}/2026`, descricao: 'Seguro Predial e Placas Solares Fotovoltaicas', categoria: 'Manutenção Predial', tipo: 'Despesa', valor: 1512.95, fornecedor: 'Seguradora' },
+        { id: `l_${index}_9`, competencia: comp, data: `25/${mesNum}/2026`, descricao: 'Manutenção do Sistema de CFTV e Câmeras', categoria: 'Segurança & CFTV', tipo: 'Despesa', valor: 485.00, fornecedor: 'Segurança Tec' },
+        { id: `l_${index}_10`, competencia: comp, data: `28/${mesNum}/2026`, descricao: 'Acordo de Recuperação Estrutural Edifício', categoria: 'Taxa Condominial', tipo: 'Receita', valor: 38705.88, fornecedor: 'Construtora' }
+      );
+    });
+
+    return todosLancs;
   },
 
   // ----------------------------------------------------
