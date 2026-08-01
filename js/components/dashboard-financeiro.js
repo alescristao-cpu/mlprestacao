@@ -723,8 +723,7 @@ window.DashboardFinanceiroComponent = {
         { id: `l_${index}_6`, competencia: comp, data: `18/${mesNum}/2026`, descricao: 'Manutenção Preventiva de Elevadores e ART', categoria: 'Elevadores', tipo: 'Despesa', valor: 1050.00, fornecedor: 'Empresa Elevadores' },
         { id: `l_${index}_7`, competencia: comp, data: `20/${mesNum}/2026`, descricao: 'Honorários de Gestão Administrativa e Contábil', categoria: 'Administração', tipo: 'Despesa', valor: 2450.03, fornecedor: 'Administradora' },
         { id: `l_${index}_8`, competencia: comp, data: `22/${mesNum}/2026`, descricao: 'Seguro Predial e Placas Solares Fotovoltaicas', categoria: 'Manutenção Predial', tipo: 'Despesa', valor: 1512.95, fornecedor: 'Seguradora' },
-        { id: `l_${index}_9`, competencia: comp, data: `25/${mesNum}/2026`, descricao: 'Manutenção do Sistema de CFTV e Câmeras', categoria: 'Segurança & CFTV', tipo: 'Despesa', valor: 485.00, fornecedor: 'Segurança Tec' },
-        { id: `l_${index}_10`, competencia: comp, data: `28/${mesNum}/2026`, descricao: 'Acordo de Recuperação Estrutural Edifício', categoria: 'Taxa Condominial', tipo: 'Receita', valor: 38705.88, fornecedor: 'Construtora' }
+        { id: `l_${index}_9`, competencia: comp, data: `25/${mesNum}/2026`, descricao: 'Manutenção do Sistema de CFTV e Câmeras', categoria: 'Segurança & CFTV', tipo: 'Despesa', valor: 485.00, fornecedor: 'Segurança Tec' }
       );
     });
 
@@ -904,14 +903,22 @@ window.DashboardFinanceiroComponent = {
       });
     }
 
-    // 6. Colunas - Receitas por Categoria
+    // 6. Colunas - Receitas por Categoria (Apenas Receitas Operacionais Reais, sem Contratos)
     const ctxColunas = document.getElementById('chartColunasReceitas');
     if (ctxColunas) {
+      const recCatMap = {};
+      receitas.forEach(r => {
+        recCatMap[r.categoria] = (recCatMap[r.categoria] || 0) + r.valor;
+      });
+
+      const labelsRec = Object.keys(recCatMap).length > 0 ? Object.keys(recCatMap) : ['Taxa Condominial', 'Fundo de Reserva'];
+      const dataRec = Object.values(recCatMap).length > 0 ? Object.values(recCatMap) : [53017.98, 2612.57];
+
       this.chartInstances.colunas = new Chart(ctxColunas, {
         type: 'bar',
         data: {
-          labels: ['Taxa Ordinária', 'Fundo Reserva', 'Acordo Obras'],
-          datasets: [{ label: 'Receitas (R$)', data: [53017, 2612, 38705], backgroundColor: '#059669', borderRadius: 6 }]
+          labels: labelsRec,
+          datasets: [{ label: 'Receitas Operacionais (R$)', data: dataRec, backgroundColor: '#059669', borderRadius: 6 }]
         },
         options: { responsive: true, maintainAspectRatio: false }
       });
