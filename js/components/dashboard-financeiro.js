@@ -546,9 +546,16 @@ window.DashboardFinanceiroComponent = {
 
       <!-- Lista de Arquivos Enviados -->
       <div style="background: white; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.25rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-top: 1rem;">
-        <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800; color: #0F172A; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          <span class="material-symbols-outlined" style="color: #0F172A;">folder</span> Arquivos de Balancetes Armazenados (${arquivos.length})
-        </h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-outlined" style="color: #0F172A;">folder</span> Arquivos de Balancetes Armazenados (${arquivos.length})
+          </h3>
+          ${isSindico ? `
+            <button class="btn-secondary btn-danger btn-sm" onclick="DashboardFinanceiroComponent.limparTodosOsDadosBalancetes()" style="background: #EF4444; color: white; border: none; font-weight: 700; padding: 0.45rem 0.85rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem;" title="Apagar todos os balancetes e limpar o dashboard">
+              <span class="material-symbols-outlined" style="font-size: 1rem;">delete_forever</span> 🗑️ Excluir / Apagar Todos os Balancetes
+            </button>
+          ` : ''}
+        </div>
 
         ${arquivos.length === 0 ? `
           <div style="text-align: center; padding: 2.5rem 1rem; color: #64748B;">
@@ -962,12 +969,41 @@ window.DashboardFinanceiroComponent = {
   },
 
   excluirArquivo(id, nome) {
-    if (!confirm(`⚠️ CONFIRMAÇÃO DE EXCLUSÃO\n\nTem certeza que deseja excluir o arquivo "${nome}" e seus lançamentos associados?`)) return;
+    if (!confirm(`⚠️ CONFIRMAÇÃO DE EXCLUSÃO DE BALANCETE\n\nTem certeza que deseja apagar o balancete "${nome}" e todos os seus lançamentos financeiros do Dashboard?`)) return;
 
+    const arq = (window.CondoStore.data.arquivosFinanceiros || []).find(a => a.id === id);
+    const comp = arq ? arq.competencia : null;
+
+    // Remove o arquivo
     window.CondoStore.data.arquivosFinanceiros = (window.CondoStore.data.arquivosFinanceiros || []).filter(a => a.id !== id);
+
+    // Remove lançamentos associados a este arquivo ou competência
+    if (window.CondoStore.data.lancamentosFinanceiros) {
+      window.CondoStore.data.lancamentosFinanceiros = window.CondoStore.data.lancamentosFinanceiros.filter(l => l.arquivoId !== id && (!comp || l.competencia !== comp));
+    }
+
     window.CondoStore.saveData();
 
-    App.showToast(`🗑️ Arquivo "${nome}" excluído.`, 'info');
+    if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+      window.SupabaseConfig.pushDataToSupabase(window.CondoStore.data);
+    }
+
+    App.showToast(`🗑️ Balancete "${nome}" e seus lançamentos foram excluídos com sucesso.`, 'success');
+    App.render();
+  },
+
+  limparTodosOsDadosBalancetes() {
+    if (!confirm("⚠️ ATENÇÃO: EXCLUSÃO TOTAL DE BALANCETES!\n\nTem certeza que deseja APAGAR TODOS os arquivos de balancetes e lançamentos financeiros do condomínio?\n\nEsta ação removerá todos os dados armazenados e resetará os relatórios financeiro do sistema.")) return;
+
+    window.CondoStore.data.arquivosFinanceiros = [];
+    window.CondoStore.data.lancamentosFinanceiros = [];
+    window.CondoStore.saveData();
+
+    if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+      window.SupabaseConfig.pushDataToSupabase(window.CondoStore.data);
+    }
+
+    App.showToast('🗑️ Todos os balancetes e dados financeiros foram apagados com sucesso.', 'success');
     App.render();
   },
 
