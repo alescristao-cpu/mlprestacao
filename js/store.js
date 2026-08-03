@@ -1137,6 +1137,16 @@ class StoreEngine {
     return false;
   }
 
+  toggleOcorrenciaVisibilidade(ocoId) {
+    const oco = (this.data.ocorrencias || []).find(o => o.id === ocoId);
+    if (oco) {
+      oco.visivelParaTodos = !oco.visivelParaTodos;
+      this.saveData();
+      return oco.visivelParaTodos;
+    }
+    return false;
+  }
+
   addContrato(contrato) {
     if (!this.data.contratos) this.data.contratos = [];
     const newCtr = {

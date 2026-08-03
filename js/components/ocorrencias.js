@@ -31,10 +31,14 @@ window.OcorrenciasComponent = {
     // Ocorrências excluem as mensagens puras do Canal Direto nesta aba
     const allOcorrencias = (data.ocorrencias || []).filter(o => o.categoria !== 'Canal Direto');
 
-    // PRIVACIDADE ESTREITA: Síndico vê todas. Morador comum vê APENAS as suas.
+    // PRIVACIDADE ESTREITA: Síndico vê todas. Morador comum vê APENAS as suas OU as tornadas visíveis a todos pelo administrador.
     const userOcorrencias = isMasterAdmin 
       ? allOcorrencias 
-      : allOcorrencias.filter(o => (o.moradorEmail && o.moradorEmail.toLowerCase() === user.email.toLowerCase()) || o.moradorId === user.id);
+      : allOcorrencias.filter(o => 
+          (o.moradorEmail && o.moradorEmail.toLowerCase().trim() === user.email.toLowerCase().trim()) || 
+          o.moradorId === user.id || 
+          o.visivelParaTodos === true
+        );
 
     container.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -46,10 +50,10 @@ window.OcorrenciasComponent = {
               <span class="material-symbols-outlined" style="font-size: 2.5rem;">support_agent</span>
               <div>
                 <h2 style="font-family: var(--font-heading); font-size: 1.4rem; font-weight: 700;">
-                  ${isMasterAdmin ? 'Painel Master de Reclamações, Elogios &amp; Sugestões (Síndico)' : 'Minhas Reclamações, Elogios &amp; Sugestões'}
+                  ${isMasterAdmin ? 'Painel Master de Reclamações, Elogios &amp; Sugestões (Síndico)' : 'Reclamações, Elogios &amp; Sugestões'}
                 </h2>
                 <p style="font-size: 0.9rem; opacity: 0.9;">
-                  ${isMasterAdmin ? 'Gerenciamento privado e envio de respostas a todas as mensagens dos moradores.' : 'Comunicação pessoal e sigilosa com a administração. Suas mensagens são registradas diretamente no portal.'}
+                  ${isMasterAdmin ? 'Gerenciamento privado e controle de visibilidade pública das mensagens dos moradores.' : 'Comunicação pessoal com a administração. Suas mensagens são privadas, a menos que autorizadas para exibição comunitária.'}
                 </p>
               </div>
             </div>
@@ -66,14 +70,14 @@ window.OcorrenciasComponent = {
         <div class="card-widget">
           <div class="card-header">
             <div class="card-title">
-              <span class="material-symbols-outlined">inbox</span> ${isMasterAdmin ? 'Caixa de Entrada Geral (Todas as Mensagens dos Moradores)' : 'Minha Caixa de Respostas &amp; Ocorrências'}
+              <span class="material-symbols-outlined">inbox</span> ${isMasterAdmin ? 'Caixa de Entrada Geral (Todas as Mensagens dos Moradores)' : 'Minhas Mensagens &amp; Ocorrências Comunitárias'}
             </div>
           </div>
 
           ${userOcorrencias.length === 0 ? `
             <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted);">
               <span class="material-symbols-outlined" style="font-size: 3rem; opacity: 0.5; display: block; margin-bottom: 0.5rem;">mail_lock</span>
-              <p style="font-size: 0.95rem;">Nenhuma mensagem registrada na sua caixa privada.</p>
+              <p style="font-size: 0.95rem;">Nenhuma mensagem registrada na sua caixa.</p>
               ${!isMasterAdmin ? `
                 <button class="btn-outline-primary" style="margin-top: 1rem;" onclick="OcorrenciasComponent.openNewFormModal()">
                   Abrir Primeira Reclamação, Elogio ou Sugestão
@@ -86,10 +90,15 @@ window.OcorrenciasComponent = {
                 <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; box-shadow: var(--shadow-sm);">
                   <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
                     <div>
-                      <span class="badge ${item.categoria === 'Reclamação' ? 'badge-danger' : item.categoria === 'Elogio' ? 'badge-success' : 'badge-info'}" style="margin-bottom: 4px;">
-                        ${item.categoria}
-                      </span>
-                      <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--primary-dark); font-weight: 700;">
+                      <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; margin-bottom: 4px;">
+                        <span class="badge ${item.categoria === 'Reclamação' ? 'badge-danger' : item.categoria === 'Elogio' ? 'badge-success' : 'badge-info'}">
+                          ${item.categoria}
+                        </span>
+                        <span class="badge ${item.visivelParaTodos ? 'badge-success' : 'badge-secondary'}" style="font-weight: 700;">
+                          ${item.visivelParaTodos ? '🌐 Visível a Todos os Moradores' : '🔒 Mensagem Privada'}
+                        </span>
+                      </div>
+                      <h3 style="font-family: var(--font-heading); font-size: 1.2rem; color: var(--primary-dark); font-weight: 700; margin-top: 2px;">
                         ${item.assunto}
                       </h3>
                       <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
@@ -97,9 +106,16 @@ window.OcorrenciasComponent = {
                       </div>
                     </div>
 
-                    <span class="badge ${item.status.includes('Respondido') ? 'badge-success' : 'badge-warning'}">
-                      ${item.status}
-                    </span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                      <span class="badge ${item.status.includes('Respondido') ? 'badge-success' : 'badge-warning'}">
+                        ${item.status}
+                      </span>
+                      ${isMasterAdmin ? `
+                        <button class="btn-secondary btn-sm" onclick="OcorrenciasComponent.toggleVisibilidade('${item.id}')" style="font-size: 0.78rem; font-weight: 700; border: 1px solid var(--border-color);" title="Alternar Visibilidade Pública">
+                          ${item.visivelParaTodos ? '🔒 Tornar Privada' : '🌐 Tornar Visível a Todos'}
+                        </button>
+                      ` : ''}
+                    </div>
                   </div>
 
                   <p style="font-size: 0.92rem; color: var(--text-main); background: var(--bg-app); padding: 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1rem; white-space: pre-line;">
@@ -233,6 +249,12 @@ window.OcorrenciasComponent = {
 
     window.CondoStore.addRespostaOcorrencia(ocoId, text, 'Síndico Alessandro Cristiano da Silva');
     App.showToast('Resposta enviada ao morador!', 'success');
+    App.render();
+  },
+
+  toggleVisibilidade(ocoId) {
+    const novaVis = window.CondoStore.toggleOcorrenciaVisibilidade(ocoId);
+    App.showToast(novaVis ? '🌐 Ocorrência tornada visível para todos os moradores!' : '🔒 Ocorrência tornada privada (visível apenas para o autor e o síndico).', 'info');
     App.render();
   }
 };
