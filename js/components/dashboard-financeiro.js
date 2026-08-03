@@ -549,6 +549,43 @@ window.DashboardFinanceiroComponent = {
         </div>
       `}
 
+      ${isSindico ? `
+        <!-- Painel de Exclusão de Balancetes Mês a Mês (Exclusivo Síndico/ADM) -->
+        <div style="background: #FFF1F2; border: 1px solid #FECDD3; border-radius: 14px; padding: 1rem 1.25rem; margin-top: 1rem; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.05);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+              <strong style="color: #991B1B; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
+                <span class="material-symbols-outlined" style="font-size: 1.2rem; color: #E11D48;">delete_sweep</span> 🗑️ Excluir / Apagar Balancete Mês a Mês
+              </strong>
+              <span style="font-size: 0.8rem; color: #9F1239; display: block; margin-top: 2px;">
+                Selecione o mês desejado para apagar todos os lançamentos e relatórios referente àquela competência.
+              </span>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <select id="selApagarCompetencia" class="form-control" style="width: auto; font-weight: 700; background: white; color: #991B1B; border: 1px solid #FDA4AF; border-radius: 8px; font-size: 0.85rem; padding: 0.45rem 0.8rem;">
+                <option value="Janeiro/2026">📅 Janeiro/2026</option>
+                <option value="Fevereiro/2026">📅 Fevereiro/2026</option>
+                <option value="Março/2026">📅 Março/2026</option>
+                <option value="Abril/2026">📅 Abril/2026</option>
+                <option value="Maio/2026" selected>📅 Maio/2026</option>
+                <option value="Junho/2026">📅 Junho/2026</option>
+                <option value="Julho/2026">📅 Julho/2026</option>
+                <option value="Agosto/2026">📅 Agosto/2026</option>
+                <option value="Setembro/2026">📅 Setembro/2026</option>
+                <option value="Outubro/2026">📅 Outubro/2026</option>
+                <option value="Novembro/2026">📅 Novembro/2026</option>
+                <option value="Dezembro/2026">📅 Dezembro/2026</option>
+              </select>
+
+              <button type="button" class="btn-primary" onclick="DashboardFinanceiroComponent.apagarBalancetePorMes()" style="background: #E11D48; color: white; border: none; font-weight: 700; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.35rem;">
+                <span class="material-symbols-outlined" style="font-size: 1.05rem;">delete_forever</span> Apagar Mês Selecionado
+              </button>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+
       <!-- Lista de Arquivos Enviados -->
       <div style="background: white; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.25rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-top: 1rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
@@ -1011,6 +1048,31 @@ window.DashboardFinanceiroComponent = {
     }
 
     App.showToast('🗑️ Todos os balancetes e dados financeiros foram apagados com sucesso.', 'success');
+    App.render();
+  },
+
+  apagarBalancetePorMes(competenciaAlvo) {
+    const comp = competenciaAlvo || (document.getElementById('selApagarCompetencia') ? document.getElementById('selApagarCompetencia').value : 'Maio/2026');
+
+    if (!confirm(`⚠️ CONFIRMAÇÃO DE EXCLUSÃO MÊS A MÊS\n\nTem certeza que deseja APAGAR TODOS os lançamentos e relatórios do balancete referente a "${comp}"?\n\nEsta ação removerá permanentemente o balancete desse mês.`)) return;
+
+    // Remove arquivos referentes a esta competência
+    if (window.CondoStore.data.arquivosFinanceiros) {
+      window.CondoStore.data.arquivosFinanceiros = window.CondoStore.data.arquivosFinanceiros.filter(a => a.competencia !== comp);
+    }
+
+    // Remove lançamentos financeiros associados a esta competência
+    if (window.CondoStore.data.lancamentosFinanceiros) {
+      window.CondoStore.data.lancamentosFinanceiros = window.CondoStore.data.lancamentosFinanceiros.filter(l => l.competencia !== comp);
+    }
+
+    window.CondoStore.saveData();
+
+    if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+      window.SupabaseConfig.pushDataToSupabase(window.CondoStore.data);
+    }
+
+    App.showToast(`🗑️ Balancete e relatórios do mês "${comp}" foram apagados com sucesso!`, 'success');
     App.render();
   },
 
