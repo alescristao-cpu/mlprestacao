@@ -58,6 +58,11 @@ window.DashboardFinanceiroComponent = {
       return;
     }
 
+    // Para moradores comuns, forçar a visualização estritamente mês a mês (ocultar Visão Geral Consolidada)
+    if (!isSindico && this.selectedCompetencia === 'Todas') {
+      this.selectedCompetencia = 'Maio/2026';
+    }
+
     const arquivos = (data && data.arquivosFinanceiros) ? data.arquivosFinanceiros : [];
     const todosLancamentos = (data && data.lancamentosFinanceiros) ? data.lancamentosFinanceiros : this.getLancamentosPadrao();
 
@@ -99,7 +104,7 @@ window.DashboardFinanceiroComponent = {
               <div style="display: flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.08); padding: 0.35rem 0.75rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
                 <span class="material-symbols-outlined" style="color: #60A5FA; font-size: 1.1rem;">calendar_month</span>
                 <select class="form-control" onchange="DashboardFinanceiroComponent.setFiltro('selectedCompetencia', this.value)" style="width: auto; font-weight: 700; background: #0F172A; color: #38BDF8; border: 1px solid #334155; border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 0.85rem; cursor: pointer;" title="Escolha o mês que deseja visualizar">
-                  <option value="Todas" ${this.selectedCompetencia === 'Todas' ? 'selected' : ''}>🌐 Todos os Meses (Visão Geral)</option>
+                  ${isSindico ? `<option value="Todas" ${this.selectedCompetencia === 'Todas' ? 'selected' : ''}>🌐 Todos os Meses (Visão Geral ADM)</option>` : ''}
                   <option value="Janeiro/2026" ${this.selectedCompetencia === 'Janeiro/2026' ? 'selected' : ''}>📅 Janeiro/2026</option>
                   <option value="Fevereiro/2026" ${this.selectedCompetencia === 'Fevereiro/2026' ? 'selected' : ''}>📅 Fevereiro/2026</option>
                   <option value="Março/2026" ${this.selectedCompetencia === 'Março/2026' ? 'selected' : ''}>📅 Março/2026</option>
@@ -234,7 +239,7 @@ window.DashboardFinanceiroComponent = {
           <div>
             <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">📅 Competência:</label>
             <select class="form-control" onchange="DashboardFinanceiroComponent.setFiltro('selectedCompetencia', this.value)" style="font-weight: 600;">
-              <option value="Todas" ${this.selectedCompetencia === 'Todas' ? 'selected' : ''}>Todas as Competências</option>
+              ${isSindico ? `<option value="Todas" ${this.selectedCompetencia === 'Todas' ? 'selected' : ''}>Todas as Competências (Visão Geral ADM)</option>` : ''}
               ${competencias.map(c => `<option value="${c}" ${this.selectedCompetencia === c ? 'selected' : ''}>${c}</option>`).join('')}
             </select>
           </div>
@@ -812,7 +817,9 @@ window.DashboardFinanceiroComponent = {
   },
 
   limparFiltros() {
-    this.selectedCompetencia = 'Todas';
+    const user = window.CondoStore ? window.CondoStore.currentUser : null;
+    const isSindico = user && (user.role === 'Administrador' || user.role === 'Síndico' || (user.email && (user.email.toLowerCase().trim() === 'condominio.modern.life@gmail.com' || user.email.toLowerCase().trim() === 'contatoalecristiano@gmail.com')));
+    this.selectedCompetencia = isSindico ? 'Todas' : 'Maio/2026';
     this.selectedCategoria = 'Todas';
     this.selectedTipo = 'Todos';
     this.searchQuery = '';
