@@ -59,7 +59,9 @@ window.DashboardFinanceiroComponent = {
     }
 
     const arquivos = (data && data.arquivosFinanceiros) ? data.arquivosFinanceiros : [];
-    const todosLancamentos = (data && data.lancamentosFinanceiros) ? data.lancamentosFinanceiros : this.getLancamentosPadrao();
+    const todosLancamentos = (data && data.lancamentosFinanceiros && data.lancamentosFinanceiros.length > 0)
+      ? data.lancamentosFinanceiros 
+      : this.getLancamentosPadrao(this.selectedCompetencia);
 
     // Filtragem em Tempo Real dos Lançamentos
     const lancamentosFiltrados = this.filtrarLancamentos(todosLancamentos);
@@ -462,36 +464,46 @@ window.DashboardFinanceiroComponent = {
           </h3>
         </div>
 
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
-            <thead>
-              <tr style="background: #F8FAFC; border-bottom: 2px solid #E2E8F0; text-align: left;">
-                <th style="padding: 0.75rem; color: #475569; font-weight: 700;">Data</th>
-                <th style="padding: 0.75rem; color: #475569; font-weight: 700;">Descrição / Fornecedor</th>
-                <th style="padding: 0.75rem; color: #475569; font-weight: 700;">Categoria</th>
-                <th style="padding: 0.75rem; color: #475569; font-weight: 700;">Tipo</th>
-                <th style="padding: 0.75rem; color: #475569; font-weight: 700; text-align: right;">Valor (R$)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${lancamentosFiltrados.slice(0, 30).map(l => `
-                <tr style="border-bottom: 1px solid #F1F5F9;">
-                  <td style="padding: 0.75rem; font-weight: 600; color: #0F172A;">${l.data}</td>
-                  <td style="padding: 0.75rem; font-weight: 600; color: #334155;">${l.descricao}</td>
-                  <td style="padding: 0.75rem; color: #64748B;"><span class="badge" style="background: #F1F5F9; color: #475569; font-weight: 600;">${l.categoria}</span></td>
-                  <td style="padding: 0.75rem;">
-                    <span class="badge" style="background: ${l.tipo === 'Receita' ? '#DCFCE7' : '#FEE2E2'}; color: ${l.tipo === 'Receita' ? '#166534' : '#991B1B'}; font-weight: 700;">
-                      ${l.tipo === 'Receita' ? '🟢 Receita' : '🔴 Despesa'}
-                    </span>
-                  </td>
-                  <td style="padding: 0.75rem; text-align: right; font-weight: 800; color: ${l.tipo === 'Receita' ? '#10B981' : '#E11D48'};">
-                    ${l.tipo === 'Receita' ? '+' : '-'} R$ ${(l.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
-                  </td>
+        ${lancamentosFiltrados.length === 0 ? `
+          <div style="text-align: center; padding: 2.8rem 1rem; color: #64748B; background: #F8FAFC; border-radius: 12px; border: 1px dashed #CBD5E1;">
+            <span class="material-symbols-outlined" style="font-size: 3rem; color: #94A3B8; display: block; margin-bottom: 0.5rem;">folder_off</span>
+            <strong style="font-size: 1rem; color: #334155;">Sem Dados Cadastrados para ${this.selectedCompetencia}</strong>
+            <p style="font-size: 0.85rem; color: #64748B; margin-top: 0.35rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+              Nenhum arquivo de balancete (CSV, XLS, XLSX ou PDF) foi enviado para este mês. As informações permanecem em branco.
+            </p>
+          </div>
+        ` : `
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.88rem;">
+              <thead>
+                <tr style="background: #F8FAFC; border-bottom: 2px solid #E2E8F0; text-align: left;">
+                  <th style="padding: 0.75rem; color: #475569; font-weight: 700;">Data</th>
+                  <th style="padding: 0.75rem; color: #475569; font-weight: 700;">Descrição / Fornecedor</th>
+                  <th style="padding: 0.75rem; color: #475569; font-weight: 700;">Categoria</th>
+                  <th style="padding: 0.75rem; color: #475569; font-weight: 700;">Tipo</th>
+                  <th style="padding: 0.75rem; color: #475569; font-weight: 700; text-align: right;">Valor (R$)</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                ${lancamentosFiltrados.slice(0, 30).map(l => `
+                  <tr style="border-bottom: 1px solid #F1F5F9;">
+                    <td style="padding: 0.75rem; font-weight: 600; color: #0F172A;">${l.data}</td>
+                    <td style="padding: 0.75rem; font-weight: 600; color: #334155;">${l.descricao}</td>
+                    <td style="padding: 0.75rem; color: #64748B;"><span class="badge" style="background: #F1F5F9; color: #475569; font-weight: 600;">${l.categoria}</span></td>
+                    <td style="padding: 0.75rem;">
+                      <span class="badge" style="background: ${l.tipo === 'Receita' ? '#DCFCE7' : '#FEE2E2'}; color: ${l.tipo === 'Receita' ? '#166534' : '#991B1B'}; font-weight: 700;">
+                        ${l.tipo === 'Receita' ? '🟢 Receita' : '🔴 Despesa'}
+                      </span>
+                    </td>
+                    <td style="padding: 0.75rem; text-align: right; font-weight: 800; color: ${l.tipo === 'Receita' ? '#10B981' : '#E11D48'};">
+                      ${l.tipo === 'Receita' ? '+' : '-'} R$ ${(l.valor || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `}
       </div>
     `;
   },
@@ -745,33 +757,22 @@ window.DashboardFinanceiroComponent = {
     return 'Manutenção Predial';
   },
 
-  getLancamentosPadrao() {
-    const meses = [
-      'Janeiro/2026', 'Fevereiro/2026', 'Março/2026', 'Abril/2026',
-      'Maio/2026', 'Junho/2026', 'Julho/2026', 'Agosto/2026',
-      'Setembro/2026', 'Outubro/2026', 'Novembro/2026', 'Dezembro/2026'
+  getLancamentosPadrao(comp = 'Maio/2026') {
+    // Apenas a competência Maio/2026 possui lançamentos de demonstração inicial.
+    // Para qualquer outro mês onde não foram enviados arquivos, MANTÉM SEM DADOS (em branco) conforme instrução.
+    if (comp !== 'Maio/2026' && comp !== 'Todas') return [];
+
+    return [
+      { id: 'l_m5_1', competencia: 'Maio/2026', data: '05/05/2026', descricao: 'Taxa Condominial Ordinária (54 Unidades)', categoria: 'Taxa Condominial', tipo: 'Receita', valor: 53017.98, fornecedor: 'Condôminos' },
+      { id: 'l_m5_2', competencia: 'Maio/2026', data: '05/05/2026', descricao: 'Fundo de Reserva Regulamentar (5%)', categoria: 'Fundo de Reserva', tipo: 'Receita', valor: 2612.57, fornecedor: 'Condôminos' },
+      { id: 'l_m5_3', competencia: 'Maio/2026', data: '10/05/2026', descricao: 'Mão de Obra Terceirizada - Portaria 24h & Limpeza', categoria: 'Portaria & Limpeza', tipo: 'Despesa', valor: 28933.49, fornecedor: 'Empresa Terceirizada' },
+      { id: 'l_m5_4', competencia: 'Maio/2026', data: '12/05/2026', descricao: 'Fatura de Consumo de Água & Esgoto', categoria: 'Água & Esgoto', tipo: 'Despesa', valor: 9404.63, fornecedor: 'Concessionária' },
+      { id: 'l_m5_5', competencia: 'Maio/2026', data: '15/05/2026', descricao: 'Consumo de Energia Elétrica Áreas Comuns', categoria: 'Energia Elétrica', tipo: 'Despesa', valor: 2592.73, fornecedor: 'EDP / Enel' },
+      { id: 'l_m5_6', competencia: 'Maio/2026', data: '18/05/2026', descricao: 'Manutenção Preventiva de Elevadores e ART', categoria: 'Elevadores', tipo: 'Despesa', valor: 1050.00, fornecedor: 'Empresa Elevadores' },
+      { id: 'l_m5_7', competencia: 'Maio/2026', data: '20/05/2026', descricao: 'Honorários de Gestão Administrativa e Contábil', categoria: 'Administração', tipo: 'Despesa', valor: 2450.03, fornecedor: 'Administradora' },
+      { id: 'l_m5_8', competencia: 'Maio/2026', data: '22/05/2026', descricao: 'Seguro Predial e Placas Solares Fotovoltaicas', categoria: 'Manutenção Predial', tipo: 'Despesa', valor: 1512.95, fornecedor: 'Seguradora' },
+      { id: 'l_m5_9', competencia: 'Maio/2026', data: '25/05/2026', descricao: 'Manutenção do Sistema de CFTV e Câmeras', categoria: 'Segurança & CFTV', tipo: 'Despesa', valor: 485.00, fornecedor: 'Segurança Tec' }
     ];
-
-    const todosLancs = [];
-
-    meses.forEach((comp, index) => {
-      const mesNum = (index + 1).toString().padStart(2, '0');
-      const varMult = 1 + (index * 0.012 - 0.02);
-
-      todosLancs.push(
-        { id: `l_${index}_1`, competencia: comp, data: `05/${mesNum}/2026`, descricao: 'Taxa Condominial Ordinária (54 Unidades)', categoria: 'Taxa Condominial', tipo: 'Receita', valor: Math.round(53017.98 * varMult * 100) / 100, fornecedor: 'Condôminos' },
-        { id: `l_${index}_2`, competencia: comp, data: `05/${mesNum}/2026`, descricao: 'Fundo de Reserva Regulamentar (5%)', categoria: 'Fundo de Reserva', tipo: 'Receita', valor: Math.round(2612.57 * varMult * 100) / 100, fornecedor: 'Condôminos' },
-        { id: `l_${index}_3`, competencia: comp, data: `10/${mesNum}/2026`, descricao: 'Mão de Obra Terceirizada - Portaria 24h & Limpeza', categoria: 'Portaria & Limpeza', tipo: 'Despesa', valor: 28933.49, fornecedor: 'Empresa Terceirizada' },
-        { id: `l_${index}_4`, competencia: comp, data: `12/${mesNum}/2026`, descricao: 'Fatura de Consumo de Água & Esgoto', categoria: 'Água & Esgoto', tipo: 'Despesa', valor: Math.round((9404.63 + (index % 3) * 350) * 100) / 100, fornecedor: 'Concessionária' },
-        { id: `l_${index}_5`, competencia: comp, data: `15/${mesNum}/2026`, descricao: 'Consumo de Energia Elétrica Áreas Comuns', categoria: 'Energia Elétrica', tipo: 'Despesa', valor: Math.round((2592.73 + (index % 4) * 180) * 100) / 100, fornecedor: 'EDP / Enel' },
-        { id: `l_${index}_6`, competencia: comp, data: `18/${mesNum}/2026`, descricao: 'Manutenção Preventiva de Elevadores e ART', categoria: 'Elevadores', tipo: 'Despesa', valor: 1050.00, fornecedor: 'Empresa Elevadores' },
-        { id: `l_${index}_7`, competencia: comp, data: `20/${mesNum}/2026`, descricao: 'Honorários de Gestão Administrativa e Contábil', categoria: 'Administração', tipo: 'Despesa', valor: 2450.03, fornecedor: 'Administradora' },
-        { id: `l_${index}_8`, competencia: comp, data: `22/${mesNum}/2026`, descricao: 'Seguro Predial e Placas Solares Fotovoltaicas', categoria: 'Manutenção Predial', tipo: 'Despesa', valor: 1512.95, fornecedor: 'Seguradora' },
-        { id: `l_${index}_9`, competencia: comp, data: `25/${mesNum}/2026`, descricao: 'Manutenção do Sistema de CFTV e Câmeras', categoria: 'Segurança & CFTV', tipo: 'Despesa', valor: 485.00, fornecedor: 'Segurança Tec' }
-      );
-    });
-
-    return todosLancs;
   },
 
   // ----------------------------------------------------
