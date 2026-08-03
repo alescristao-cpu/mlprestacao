@@ -28,8 +28,13 @@ window.OcorrenciasComponent = {
     }
 
     const isMasterAdmin = user.role === 'Administrador';
-    // Ocorrências excluem as mensagens puras do Canal Direto nesta aba
-    const allOcorrencias = (data.ocorrencias || []).filter(o => o.categoria !== 'Canal Direto');
+    // Ocorrências excluem as mensagens puras do Canal Direto e as Solicitações de Cadastro (que pertencem exclusivamente ao menu de Pedidos de Autorização do Síndico)
+    const allOcorrencias = (data.ocorrencias || []).filter(o => 
+      o.categoria !== 'Canal Direto' && 
+      o.categoria !== 'Solicitação de Cadastro' && 
+      o.categoria !== 'Solicitação de Novo Cadastro' && 
+      o.categoria !== 'PendingMoradorVault'
+    );
 
     // PRIVACIDADE ESTREITA: Síndico vê todas. Morador comum vê APENAS as suas OU as tornadas visíveis a todos pelo administrador.
     const userOcorrencias = isMasterAdmin 

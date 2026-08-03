@@ -39,10 +39,11 @@ window.AdminComponent = {
 
     const moradores = data.moradores || [];
     let pendentes = moradores.filter(m => m && (m.status === 'Pendente' || m.status === 'Em Análise'));
-    const ocorrencias = data.ocorrencias || [];
+    const ocorrenciasCompleta = data.ocorrencias || [];
+    const ocorrencias = ocorrenciasCompleta.filter(o => o && o.categoria !== 'Solicitação de Cadastro' && o.categoria !== 'Solicitação de Novo Cadastro' && o.categoria !== 'PendingMoradorVault');
 
     // Garantia total: Resgatar solicitações pendentes registradas no canal de ocorrências / vault
-    ocorrencias.forEach(o => {
+    ocorrenciasCompleta.forEach(o => {
       if (o && (o.categoria === 'Solicitação de Cadastro' || o.categoria === 'PendingMoradorVault') && (o.status === 'Pendente' || o.status === 'Pendente de Aprovação')) {
         const emailNorm = (o.moradorEmail || '').toLowerCase().trim();
         const existsInPendentes = pendentes.some(p => (p.email && p.email.toLowerCase().trim() === emailNorm) || p.id === o.moradorId);
