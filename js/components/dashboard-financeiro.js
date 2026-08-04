@@ -7,7 +7,7 @@
 
 window.DashboardFinanceiroComponent = {
   activeTab: 'dashboard', // 'dashboard' ou 'arquivos'
-  selectedCompetencia: 'Todas',
+  selectedCompetencia: 'Maio/2026',
   selectedCategoria: 'Todas',
   selectedTipo: 'Todos',
   selectedFornecedor: 'Todos',
@@ -58,6 +58,10 @@ window.DashboardFinanceiroComponent = {
       return;
     }
 
+    if (!this.selectedCompetencia || this.selectedCompetencia === 'Todas') {
+      this.selectedCompetencia = 'Maio/2026';
+    }
+
     const arquivos = (data && data.arquivosFinanceiros) ? data.arquivosFinanceiros : [];
     const todosLancamentos = (data && data.lancamentosFinanceiros && data.lancamentosFinanceiros.length > 0)
       ? data.lancamentosFinanceiros 
@@ -100,8 +104,7 @@ window.DashboardFinanceiroComponent = {
               <!-- Seletor Destacado de Competência (Mês a Mês) -->
               <div style="display: flex; align-items: center; gap: 0.4rem; background: rgba(255,255,255,0.08); padding: 0.35rem 0.75rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);">
                 <span class="material-symbols-outlined" style="color: #60A5FA; font-size: 1.1rem;">calendar_month</span>
-                <select class="form-control" onchange="DashboardFinanceiroComponent.setFiltro('selectedCompetencia', this.value)" style="width: auto; font-weight: 700; background: #0F172A; color: #38BDF8; border: 1px solid #334155; border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 0.85rem; cursor: pointer;" title="Escolha o mês que deseja visualizar">
-                  <option value="Todas" ${this.selectedCompetencia === 'Todas' ? 'selected' : ''}>🌐 Todos os Meses (Visão Geral)</option>
+                <select class="form-control" onchange="DashboardFinanceiroComponent.setFiltro('selectedCompetencia', this.value)" style="width: auto; font-weight: 700; background: #0F172A; color: #38BDF8; border: 1px solid #334155; border-radius: 8px; padding: 0.4rem 0.8rem; font-size: 0.85rem; cursor: pointer;" title="Escolha o mês individual que deseja visualizar">
                   <option value="Janeiro/2026" ${this.selectedCompetencia === 'Janeiro/2026' ? 'selected' : ''}>📅 Janeiro/2026</option>
                   <option value="Fevereiro/2026" ${this.selectedCompetencia === 'Fevereiro/2026' ? 'selected' : ''}>📅 Fevereiro/2026</option>
                   <option value="Março/2026" ${this.selectedCompetencia === 'Março/2026' ? 'selected' : ''}>📅 Março/2026</option>
@@ -234,9 +237,8 @@ window.DashboardFinanceiroComponent = {
 
           <!-- Competência / Mês -->
           <div>
-            <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">📅 Competência:</label>
+            <label style="font-size: 0.78rem; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">📅 Competência Individual:</label>
             <select class="form-control" onchange="DashboardFinanceiroComponent.setFiltro('selectedCompetencia', this.value)" style="font-weight: 600;">
-              <option value="Todas" ${this.selectedCompetencia === 'Todas' ? 'selected' : ''}>Todas as Competências</option>
               ${competencias.map(c => `<option value="${c}" ${this.selectedCompetencia === c ? 'selected' : ''}>${c}</option>`).join('')}
             </select>
           </div>
@@ -902,7 +904,7 @@ window.DashboardFinanceiroComponent = {
   },
 
   limparFiltros() {
-    this.selectedCompetencia = 'Todas';
+    this.selectedCompetencia = 'Maio/2026';
     this.selectedCategoria = 'Todas';
     this.selectedTipo = 'Todos';
     this.searchQuery = '';
