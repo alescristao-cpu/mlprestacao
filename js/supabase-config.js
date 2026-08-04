@@ -263,6 +263,72 @@ window.SupabaseConfig = {
         try { await this.client.from('ocorrencias').upsert(rowsRecVault, { onConflict: 'id' }); } catch (err) {}
       }
 
+      // 9. Sincronizar Arquivos Financeiros de Balancete no Banco PostgreSQL Supabase
+      if (data.arquivosFinanceiros && data.arquivosFinanceiros.length > 0) {
+        const rowsArq = data.arquivosFinanceiros.map(a => ({
+          id: a.id.startsWith('arq_') ? a.id : 'arq_' + a.id,
+          nome: a.nome || '',
+          competencia: a.competencia || '',
+          data_upload: a.dataUpload || new Date().toISOString().split('T')[0],
+          tipo: a.tipo || 'CSV',
+          usuario: a.usuario || 'Síndico Administrador',
+          status: a.status || 'Processado'
+        }));
+        try { await this.client.from('arquivos_financeiros').upsert(rowsArq, { onConflict: 'id' }); } catch (err) {}
+
+        const rowsArqVault = data.arquivosFinanceiros.map(a => ({
+          id: a.id.startsWith('arq_') ? a.id : 'arq_' + a.id,
+          morador_id: 'usr_sindico',
+          morador_nome: 'Gestão Financeira',
+          morador_email: 'condominio.modern.life@gmail.com',
+          apartamento: 'Administração',
+          categoria: 'ArqFinVault_' + (a.competencia || 'Geral'),
+          assunto: a.nome || 'Arquivo de Balancete',
+          descricao: JSON.stringify(a),
+          status: a.status || 'Processado',
+          respostas: [{ competencia: a.competencia, dataUpload: a.dataUpload, usuario: a.usuario, tipo: a.tipo }],
+          data: a.dataUpload || new Date().toISOString().split('T')[0]
+        }));
+        try { await this.client.from('ocorrencias').upsert(rowsArqVault, { onConflict: 'id' }); } catch (err) {}
+      }
+
+      // 10. Sincronizar Lançamentos Financeiros Individuais no PostgreSQL Supabase
+      if (data.lancamentosFinanceiros && data.lancamentosFinanceiros.length > 0) {
+        const rowsLanc = data.lancamentosFinanceiros.map(l => ({
+          id: l.id,
+          arquivo_id: l.arquivoId || '',
+          competencia: l.competencia || '',
+          data: l.data || '',
+          descricao: l.descricao || '',
+          categoria: l.categoria || '',
+          tipo: l.tipo || 'Despesa',
+          valor: l.valor || 0,
+          fornecedor: l.fornecedor || ''
+        }));
+        try { await this.client.from('lancamentos_financeiros').upsert(rowsLanc, { onConflict: 'id' }); } catch (err) {}
+
+        const lancsPorComp = {};
+        data.lancamentosFinanceiros.forEach(l => {
+          const c = l.competencia || 'Outros';
+          if (!lancsPorComp[c]) lancsPorComp[c] = [];
+          lancsPorComp[c].push(l);
+        });
+
+        const rowsLancVault = Object.keys(lancsPorComp).map(compKey => ({
+          id: 'lanc_vault_' + compKey.replace(/[^a-zA-Z0-9]/g, '_'),
+          morador_id: 'usr_sindico',
+          morador_nome: 'Lançamentos Financeiros',
+          morador_email: 'condominio.modern.life@gmail.com',
+          apartamento: 'Administração',
+          categoria: 'LancFinVault_' + compKey,
+          assunto: 'Lançamentos da Competência ' + compKey,
+          descricao: JSON.stringify(lancsPorComp[compKey]),
+          status: 'Processado',
+          data: new Date().toISOString().split('T')[0]
+        }));
+        try { await this.client.from('ocorrencias').upsert(rowsLancVault, { onConflict: 'id' }); } catch (err) {}
+      }
+
     } catch (e) {
       console.warn('Sincronização Supabase:', e);
     }
@@ -274,7 +340,9 @@ window.SupabaseConfig = {
     try {
       let resMoradores = null, resReservas = null, resOcorrencias = null;
       let resBalancetes = null, resContratos = null, resDocumentos = null, resRecados = null;
+      let resArquivosFin = null, resLancamentosFin = null;
       let resMoradorVault = { data: [] }, resDocVault = { data: [] }, resGaleriaVault = { data: [] }, resRecadosVault = { data: [] }, resEncomendasVault = { data: [] };
+      let resArqFinVault = { data: [] }, resLancFinVault = { data: [] };
 
       try { resMoradores = await this.client.from('moradores').select('*'); } catch (e) {}
       try { resReservas = await this.client.from('reservas').select('*'); } catch (e) {}
@@ -283,6 +351,8 @@ window.SupabaseConfig = {
       try { resContratos = await this.client.from('contratos').select('*'); } catch (e) {}
       try { resDocumentos = await this.client.from('documentos').select('*'); } catch (e) {}
       try { resRecados = await this.client.from('recados').select('*'); } catch (e) {}
+      try { resArquivosFin = await this.client.from('arquivos_financeiros').select('*'); } catch (e) {}
+      try { resLancamentosFin = await this.client.from('lancamentos_financeiros').select('*'); } catch (e) {}
 
       if (resOcorrencias && Array.isArray(resOcorrencias.data)) {
         const all = resOcorrencias.data;
@@ -291,6 +361,8 @@ window.SupabaseConfig = {
         resGaleriaVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('GaleriaVault_')) };
         resRecadosVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('RecadosVault_')) };
         resEncomendasVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('EncomendasVault_')) };
+        resArqFinVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('ArqFinVault_')) };
+        resLancFinVault = { data: all.filter(o => o.categoria && o.categoria.startsWith('LancFinVault_')) };
       }
 
       let moradoresFromCloud = [];
@@ -471,9 +543,80 @@ window.SupabaseConfig = {
         });
       }
 
+      // 9. Extração de Arquivos e Lançamentos Financeiros (Das tabelas dedicadas ou do Vault)
+      let arqFinFromCloud = [];
+      if (resArquivosFin && resArquivosFin.data && resArquivosFin.data.length > 0) {
+        resArquivosFin.data.forEach(a => {
+          arqFinFromCloud.push({
+            id: a.id,
+            nome: a.nome,
+            competencia: a.competencia,
+            dataUpload: a.data_upload,
+            tipo: a.tipo,
+            usuario: a.usuario,
+            status: a.status
+          });
+        });
+      }
+      if (resArqFinVault && resArqFinVault.data && resArqFinVault.data.length > 0) {
+        resArqFinVault.data.forEach(v => {
+          try {
+            let obj = v.descricao && v.descricao.startsWith('{') ? JSON.parse(v.descricao) : null;
+            if (!obj) {
+              const meta = (v.respostas && v.respostas[0]) ? v.respostas[0] : {};
+              obj = {
+                id: v.id,
+                nome: v.assunto || 'Arquivo de Balancete',
+                competencia: meta.competencia || 'Maio/2026',
+                dataUpload: v.data || meta.dataUpload || new Date().toISOString().split('T')[0],
+                tipo: meta.tipo || 'CSV',
+                usuario: meta.usuario || 'Síndico Administrador',
+                status: v.status || 'Processado'
+              };
+            }
+            if (obj && obj.id && !arqFinFromCloud.some(x => x.id === obj.id)) {
+              arqFinFromCloud.push(obj);
+            }
+          } catch(e) {}
+        });
+      }
+
+      let lancFinFromCloud = [];
+      if (resLancamentosFin && resLancamentosFin.data && resLancamentosFin.data.length > 0) {
+        resLancamentosFin.data.forEach(l => {
+          lancFinFromCloud.push({
+            id: l.id,
+            arquivoId: l.arquivo_id,
+            competencia: l.competencia,
+            data: l.data,
+            descricao: l.descricao,
+            categoria: l.categoria,
+            tipo: l.tipo,
+            valor: l.valor,
+            fornecedor: l.fornecedor
+          });
+        });
+      }
+      if (resLancFinVault && resLancFinVault.data && resLancFinVault.data.length > 0) {
+        resLancFinVault.data.forEach(v => {
+          try {
+            if (v.descricao && v.descricao.startsWith('[')) {
+              const arr = JSON.parse(v.descricao);
+              if (Array.isArray(arr)) {
+                arr.forEach(l => {
+                  if (l && l.id && !lancFinFromCloud.some(x => x.id === l.id)) {
+                    lancFinFromCloud.push(l);
+                  }
+                });
+              }
+            }
+          } catch(e) {}
+        });
+      }
+
       // Filtrar ocorrências reais (removendo as entradas do cofre)
       const ocorrenciasReais = (resOcorrencias && resOcorrencias.data)
-        ? resOcorrencias.data.filter(o => !o.categoria || (!o.categoria.startsWith('DocVault_') && !o.categoria.startsWith('GaleriaVault_') && !o.categoria.startsWith('PendingMoradorVault') && !o.categoria.startsWith('RecadosVault_') && !o.categoria.startsWith('EncomendasVault_')))
+        ? resOcorrencias.data.filter(o => !o.categoria || (!o.categoria.startsWith('DocVault_') && !o.categoria.startsWith('GaleriaVault_') && !o.categoria.startsWith('PendingMoradorVault') && !o.categoria.startsWith('RecadosVault_') && !o.categoria.startsWith('EncomendasVault_') && !o.categoria.startsWith('ArqFinVault_') && !o.categoria.startsWith('LancFinVault_')))
         : null;
 
       return {
@@ -535,9 +678,11 @@ window.SupabaseConfig = {
 
         documentos: docsFromCloud.length > 0 ? docsFromCloud : null,
         galeria: galeriaFromCloud.length > 0 ? galeriaFromCloud : null,
-
         recados: recadosFromCloud.length > 0 ? recadosFromCloud : null,
-        encomendas: encomendasFromCloud.length > 0 ? encomendasFromCloud : null
+        encomendas: encomendasFromCloud.length > 0 ? encomendasFromCloud : null,
+
+        arquivosFinanceiros: arqFinFromCloud.length > 0 ? arqFinFromCloud : null,
+        lancamentosFinanceiros: lancFinFromCloud.length > 0 ? lancFinFromCloud : null
       };
     } catch (e) {
       console.warn('Erro ao puxar dados do Supabase:', e);

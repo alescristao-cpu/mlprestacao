@@ -717,6 +717,30 @@ class StoreEngine {
             });
           }
 
+          // 9. Arquivos Financeiros do Balancete
+          if (supaData.arquivosFinanceiros && supaData.arquivosFinanceiros.length > 0) {
+            if (!this.data.arquivosFinanceiros) this.data.arquivosFinanceiros = [];
+            supaData.arquivosFinanceiros.forEach(a => {
+              const idx = this.data.arquivosFinanceiros.findIndex(item => item.id === a.id || (item.nome === a.nome && item.competencia === a.competencia));
+              if (idx === -1) {
+                this.data.arquivosFinanceiros.unshift(a);
+                updatedSupa = true;
+              }
+            });
+          }
+
+          // 10. Lançamentos Financeiros Individuais
+          if (supaData.lancamentosFinanceiros && supaData.lancamentosFinanceiros.length > 0) {
+            if (!this.data.lancamentosFinanceiros) this.data.lancamentosFinanceiros = [];
+            supaData.lancamentosFinanceiros.forEach(l => {
+              const idx = this.data.lancamentosFinanceiros.findIndex(item => item.id === l.id);
+              if (idx === -1) {
+                this.data.lancamentosFinanceiros.push(l);
+                updatedSupa = true;
+              }
+            });
+          }
+
           if (updatedSupa) {
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data)); } catch (e) {}
             this.notify();
