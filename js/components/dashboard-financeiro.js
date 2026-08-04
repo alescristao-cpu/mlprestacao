@@ -1077,6 +1077,7 @@ window.DashboardFinanceiroComponent = {
     window.CondoStore.saveData();
 
     if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+      window.SupabaseConfig.deleteArquivoFinanceiroFromSupabase(id, comp);
       window.SupabaseConfig.pushDataToSupabase(window.CondoStore.data);
     }
 
@@ -1117,6 +1118,7 @@ window.DashboardFinanceiroComponent = {
     window.CondoStore.saveData();
 
     if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+      window.SupabaseConfig.deleteBalancetePorMesFromSupabase(comp);
       window.SupabaseConfig.pushDataToSupabase(window.CondoStore.data);
     }
 

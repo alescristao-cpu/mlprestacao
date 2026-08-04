@@ -733,6 +733,31 @@ window.SupabaseConfig = {
     } catch (err) {}
   },
 
+  async deleteArquivoFinanceiroFromSupabase(id, competencia) {
+    if (!this.client) return;
+    try {
+      if (id) {
+        await this.client.from('ocorrencias').delete().eq('id', id);
+        if (!id.startsWith('arq_')) {
+          await this.client.from('ocorrencias').delete().eq('id', 'arq_' + id);
+        }
+      }
+      if (competencia) {
+        await this.client.from('ocorrencias').delete().eq('categoria', 'ArqFinVault_' + competencia);
+      }
+    } catch (e) {}
+  },
+
+  async deleteBalancetePorMesFromSupabase(competencia) {
+    if (!this.client || !competencia) return;
+    try {
+      await this.client.from('ocorrencias').delete().eq('categoria', 'ArqFinVault_' + competencia);
+      const compSanitized = competencia.replace(/[^a-zA-Z0-9]/g, '_');
+      await this.client.from('ocorrencias').delete().eq('id', 'lanc_vault_' + compSanitized);
+      await this.client.from('ocorrencias').delete().eq('categoria', 'LancFinVault_' + competencia);
+    } catch (e) {}
+  },
+
   async deleteReservaFromSupabase(id) {
     if (!this.client || !id) return;
     try {
