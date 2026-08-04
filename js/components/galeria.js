@@ -20,7 +20,7 @@ window.GaleriaComponent = {
     // Se a galeria local estiver vazia, exibe fotos iniciais limpas sem arrobas
     if (rawList.length === 0) {
       rawList = [
-        { id: 'gal_01', titulo: 'Torre & Fachada Modern Life', categoria: 'Fachada', imagem: './assets/images/IMG_2956.jpg', dataUpload: '2026-01-10' },
+        { id: 'gal_01', titulo: 'Torre & Fachada Modern Life', categoria: 'Fachada', imagem: './assets/images/IMG_2956.JPG', dataUpload: '2026-01-10' },
         { id: 'gal_02', titulo: 'Nova Iluminação LED da Garagem', categoria: 'Garagem', imagem: './assets/images/IMG_2909.JPG', dataUpload: '2026-07-15' },
         { id: 'gal_03', titulo: 'Área da Piscina & Deck', categoria: 'Piscina', imagem: './assets/images/IMG_2932.JPG', dataUpload: '2026-04-12' },
         { id: 'gal_04', titulo: 'Salão de Festas Climatizado', categoria: 'Salão', imagem: './assets/images/IMG_2927.JPG', dataUpload: '2026-03-20' },

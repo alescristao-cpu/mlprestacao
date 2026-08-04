@@ -1,14 +1,14 @@
 /* ====================================================
    Modern Life Residence - PWA Service Worker & Cache
    ==================================================== */
-const CACHE_NAME = 'modern-life-pwa-v2';
+const CACHE_NAME = 'modern-life-pwa-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './favicon.ico',
   './assets/lnovo.jpeg',
   './css/main.css?v=13',
-  './js/loader.js?v=20260730_v999',
+  './js/loader.js',
   './js/supabase-config.js',
   './js/store.js',
   './js/app.js'
@@ -18,7 +18,13 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch(() => {});
+      return Promise.all(
+        ASSETS_TO_CACHE.map(url => {
+          return fetch(url).then(response => {
+            if (response.ok) return cache.put(url, response);
+          }).catch(() => {});
+        })
+      );
     })
   );
 });
@@ -40,7 +46,6 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = (event.request && event.request.url) ? event.request.url : '';
 
-  // Bypass total para requisições de antivírus (Kaspersky, Avast, etc), extensões e domínios externos
   if (
     event.request.method !== 'GET' || 
     !url.startsWith('http') ||
