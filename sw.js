@@ -1,16 +1,35 @@
 /* ====================================================
-   Modern Life Residence - PWA Service Worker & Cache
+   Modern Life Residence - PWA Service Worker & Complete Cache
    ==================================================== */
-const CACHE_NAME = 'modern-life-pwa-v3';
+const CACHE_NAME = 'modern-life-pwa-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './favicon.ico',
+  './manifest.json',
   './assets/lnovo.jpeg',
   './css/main.css?v=13',
   './js/loader.js',
   './js/supabase-config.js',
   './js/store.js',
+  './js/services/email-service.js',
+  './js/components/modal-service.js',
+  './js/components/auth.js',
+  './js/components/dashboard.js',
+  './js/components/prestacao.js',
+  './js/components/balancetes.js',
+  './js/components/contratos.js',
+  './js/components/transparencia.js',
+  './js/components/dashboard-financeiro.js',
+  './js/components/documentos.js',
+  './js/components/recados.js',
+  './js/components/ocorrencias.js',
+  './js/components/canal.js',
+  './js/components/utilidades.js',
+  './js/components/portaria.js',
+  './js/components/agenda.js',
+  './js/components/galeria.js',
+  './js/components/admin.js',
   './js/app.js'
 ];
 
