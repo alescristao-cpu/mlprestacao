@@ -516,21 +516,8 @@ window.SupabaseConfig = {
         });
       }
 
-      // 9. Extração de Arquivos e Lançamentos Financeiros (Das tabelas dedicadas ou do Vault)
+      // 9. Extração de Arquivos e Lançamentos Financeiros (Do Vault do Supabase)
       let arqFinFromCloud = [];
-      if (resArquivosFin && resArquivosFin.data && resArquivosFin.data.length > 0) {
-        resArquivosFin.data.forEach(a => {
-          arqFinFromCloud.push({
-            id: a.id,
-            nome: a.nome,
-            competencia: a.competencia,
-            dataUpload: a.data_upload,
-            tipo: a.tipo,
-            usuario: a.usuario,
-            status: a.status
-          });
-        });
-      }
       if (resArqFinVault && resArqFinVault.data && resArqFinVault.data.length > 0) {
         resArqFinVault.data.forEach(v => {
           try {
@@ -555,21 +542,6 @@ window.SupabaseConfig = {
       }
 
       let lancFinFromCloud = [];
-      if (resLancamentosFin && resLancamentosFin.data && resLancamentosFin.data.length > 0) {
-        resLancamentosFin.data.forEach(l => {
-          lancFinFromCloud.push({
-            id: l.id,
-            arquivoId: l.arquivo_id,
-            competencia: l.competencia,
-            data: l.data,
-            descricao: l.descricao,
-            categoria: l.categoria,
-            tipo: l.tipo,
-            valor: l.valor,
-            fornecedor: l.fornecedor
-          });
-        });
-      }
       if (resLancFinVault && resLancFinVault.data && resLancFinVault.data.length > 0) {
         resLancFinVault.data.forEach(v => {
           try {
