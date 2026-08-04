@@ -263,19 +263,8 @@ window.SupabaseConfig = {
         try { await this.client.from('ocorrencias').upsert(rowsRecVault, { onConflict: 'id' }); } catch (err) {}
       }
 
-      // 9. Sincronizar Arquivos Financeiros de Balancete no Banco PostgreSQL Supabase
+      // 9. Sincroniza      // 9. Sincronizar Arquivos Financeiros de Balancete no Banco PostgreSQL Supabase (via Vault)
       if (data.arquivosFinanceiros && data.arquivosFinanceiros.length > 0) {
-        const rowsArq = data.arquivosFinanceiros.map(a => ({
-          id: a.id.startsWith('arq_') ? a.id : 'arq_' + a.id,
-          nome: a.nome || '',
-          competencia: a.competencia || '',
-          data_upload: a.dataUpload || new Date().toISOString().split('T')[0],
-          tipo: a.tipo || 'CSV',
-          usuario: a.usuario || 'Síndico Administrador',
-          status: a.status || 'Processado'
-        }));
-        try { await this.client.from('arquivos_financeiros').upsert(rowsArq, { onConflict: 'id' }); } catch (err) {}
-
         const rowsArqVault = data.arquivosFinanceiros.map(a => ({
           id: a.id.startsWith('arq_') ? a.id : 'arq_' + a.id,
           morador_id: 'usr_sindico',
@@ -292,21 +281,8 @@ window.SupabaseConfig = {
         try { await this.client.from('ocorrencias').upsert(rowsArqVault, { onConflict: 'id' }); } catch (err) {}
       }
 
-      // 10. Sincronizar Lançamentos Financeiros Individuais no PostgreSQL Supabase
+      // 10. Sincronizar Lançamentos Financeiros Individuais no PostgreSQL Supabase (via Vault)
       if (data.lancamentosFinanceiros && data.lancamentosFinanceiros.length > 0) {
-        const rowsLanc = data.lancamentosFinanceiros.map(l => ({
-          id: l.id,
-          arquivo_id: l.arquivoId || '',
-          competencia: l.competencia || '',
-          data: l.data || '',
-          descricao: l.descricao || '',
-          categoria: l.categoria || '',
-          tipo: l.tipo || 'Despesa',
-          valor: l.valor || 0,
-          fornecedor: l.fornecedor || ''
-        }));
-        try { await this.client.from('lancamentos_financeiros').upsert(rowsLanc, { onConflict: 'id' }); } catch (err) {}
-
         const lancsPorComp = {};
         data.lancamentosFinanceiros.forEach(l => {
           const c = l.competencia || 'Outros';
@@ -340,7 +316,6 @@ window.SupabaseConfig = {
     try {
       let resMoradores = null, resReservas = null, resOcorrencias = null;
       let resBalancetes = null, resContratos = null, resDocumentos = null, resRecados = null;
-      let resArquivosFin = null, resLancamentosFin = null;
       let resMoradorVault = { data: [] }, resDocVault = { data: [] }, resGaleriaVault = { data: [] }, resRecadosVault = { data: [] }, resEncomendasVault = { data: [] };
       let resArqFinVault = { data: [] }, resLancFinVault = { data: [] };
 
@@ -351,8 +326,6 @@ window.SupabaseConfig = {
       try { resContratos = await this.client.from('contratos').select('*'); } catch (e) {}
       try { resDocumentos = await this.client.from('documentos').select('*'); } catch (e) {}
       try { resRecados = await this.client.from('recados').select('*'); } catch (e) {}
-      try { resArquivosFin = await this.client.from('arquivos_financeiros').select('*'); } catch (e) {}
-      try { resLancamentosFin = await this.client.from('lancamentos_financeiros').select('*'); } catch (e) {}
 
       if (resOcorrencias && Array.isArray(resOcorrencias.data)) {
         const all = resOcorrencias.data;
