@@ -1,7 +1,7 @@
 /* ====================================================
    Modern Life Residence - PWA Service Worker & Complete Cache
    ==================================================== */
-const CACHE_NAME = 'modern-life-pwa-v4';
+const CACHE_NAME = 'modern-life-pwa-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
