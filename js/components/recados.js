@@ -220,14 +220,41 @@ window.RecadosComponent = {
 
   handleFileSelect(e) {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        this.previewImageData = event.target.result;
+    if (!file) return;
+
+    App.showToast('⚙️ Otimizando e redimensionando imagem...', 'info');
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1280;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        this.previewImageData = canvas.toDataURL('image/jpeg', 0.78);
         this.updatePreview(this.previewImageData);
+        App.showToast('✓ Imagem otimizada!', 'success');
       };
-      reader.readAsDataURL(file);
-    }
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   },
 
   updatePreview(src) {

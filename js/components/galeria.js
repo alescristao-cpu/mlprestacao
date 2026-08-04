@@ -222,19 +222,47 @@ window.GaleriaComponent = {
     document.body.insertAdjacentHTML('beforeend', modalHtml);
   },
 
-  previewImagem(e) {
-    const file = e.target.files[0];
+  previewImagem(event) {
+    const file = event.target.files[0];
     if (!file) return;
 
+    App.showToast('⚙️ Otimizando e redimensionando foto...', 'info');
+
     const reader = new FileReader();
-    reader.onload = (event) => {
-      this.uploadedImageDataUrl = event.target.result;
-      const box = document.getElementById('galeriaPreviewBox');
-      const img = document.getElementById('galeriaImgPreview');
-      if (box && img) {
-        img.src = this.uploadedImageDataUrl;
-        box.style.display = 'block';
-      }
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1280;
+
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        this.uploadedImageDataUrl = canvas.toDataURL('image/jpeg', 0.78);
+
+        const box = document.getElementById('galeriaPreviewBox');
+        const imgPrev = document.getElementById('galeriaImgPreview');
+        if (box && imgPrev) {
+          imgPrev.src = this.uploadedImageDataUrl;
+          box.style.display = 'block';
+        }
+        App.showToast('✓ Imagem otimizada com sucesso!', 'success');
+      };
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   },
