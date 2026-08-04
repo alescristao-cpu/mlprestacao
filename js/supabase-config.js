@@ -49,6 +49,37 @@ window.SupabaseConfig = {
     return !!this.client;
   },
 
+  async safeUpsertOcorrencias(rows) {
+    if (!this.client || !rows || !Array.isArray(rows) || rows.length === 0) return;
+
+    const sanitizedRows = rows.map(r => ({
+      id: String(r.id || '').substring(0, 100),
+      morador_id: String(r.morador_id || '').substring(0, 100),
+      morador_nome: String(r.morador_nome || '').substring(0, 150),
+      morador_email: String(r.morador_email || '').toLowerCase().trim().substring(0, 150),
+      apartamento: String(r.apartamento || '').substring(0, 50),
+      categoria: String(r.categoria || 'Geral').substring(0, 100),
+      assunto: String(r.assunto || '').substring(0, 250),
+      descricao: String(r.descricao || '').substring(0, 30000),
+      status: String(r.status || 'Pendente').substring(0, 100),
+      respostas: Array.isArray(r.respostas) ? r.respostas : [],
+      data: String(r.data || new Date().toISOString().split('T')[0]).substring(0, 30)
+    }));
+
+    for (let i = 0; i < sanitizedRows.length; i += 3) {
+      const batch = sanitizedRows.slice(i, i + 3);
+      try {
+        await this.client.from('ocorrencias').upsert(batch, { onConflict: 'id' });
+      } catch (err) {
+        for (const singleRow of batch) {
+          try {
+            await this.client.from('ocorrencias').upsert([singleRow], { onConflict: 'id' });
+          } catch (e) {}
+        }
+      }
+    }
+  },
+
   async pushDataToSupabase(data) {
     if (!this.client || !data) return;
 
@@ -85,7 +116,7 @@ window.SupabaseConfig = {
             respostas: [{ email: p.email, telefone: p.telefone, senha: p.senha }],
             data: p.dataCadastro || new Date().toISOString().split('T')[0]
           }));
-          try { await this.client.from('ocorrencias').upsert(rowsVault, { onConflict: 'id' }); } catch (err) {}
+          try { await this.safeUpsertOcorrencias(rowsVault); } catch (err) {}
         }
       }
 
@@ -120,7 +151,7 @@ window.SupabaseConfig = {
           respostas: o.respostas || [],
           data: o.data || new Date().toISOString().split('T')[0]
         }));
-        try { await this.client.from('ocorrencias').upsert(rowsOcorrencias, { onConflict: 'id' }); } catch (err) {}
+        try { await this.safeUpsertOcorrencias(rowsOcorrencias); } catch (err) {}
       }
 
       // 4. Sincronizar Balancetes
@@ -191,7 +222,7 @@ window.SupabaseConfig = {
           ],
           data: d.dataUpload || new Date().toISOString().split('T')[0]
         }));
-        try { await this.client.from('ocorrencias').upsert(rowsDocVault, { onConflict: 'id' }); } catch (err) {}
+        try { await this.safeUpsertOcorrencias(rowsDocVault); } catch (err) {}
       }
 
       // 7. Sincronizar Fotos da Galeria no Banco PostgreSQL Supabase
@@ -209,7 +240,7 @@ window.SupabaseConfig = {
           respostas: [{ dataUpload: g.dataUpload || new Date().toISOString().split('T')[0] }],
           data: g.dataUpload || new Date().toISOString().split('T')[0]
         }));
-        try { await this.client.from('ocorrencias').upsert(rowsGaleria, { onConflict: 'id' }); } catch (err) {}
+        try { await this.safeUpsertOcorrencias(rowsGaleria); } catch (err) {}
       }
 
       // 7.1 Sincronizar Encomendas da Portaria no Banco PostgreSQL Supabase
@@ -234,7 +265,7 @@ window.SupabaseConfig = {
           }],
           data: e.dataChegada || new Date().toISOString().split('T')[0]
         }));
-        try { await this.client.from('ocorrencias').upsert(rowsEncomendas, { onConflict: 'id' }); } catch (err) {}
+        try { await this.safeUpsertOcorrencias(rowsEncomendas); } catch (err) {}
       }
 
       // 8. Sincronizar Recados (Garantia de salvamento infalível via RecadosVault no PostgreSQL Supabase Cloud)
@@ -260,10 +291,10 @@ window.SupabaseConfig = {
           ],
           data: r.data || new Date().toISOString().split('T')[0]
         }));
-        try { await this.client.from('ocorrencias').upsert(rowsRecVault, { onConflict: 'id' }); } catch (err) {}
+        try { await this.safeUpsertOcorrencias(rowsRecVault); } catch (err) {}
       }
 
-      // 9. Sincroniza      // 9. Sincronizar Arquivos Financeiros de Balancete no Banco PostgreSQL Supabase (via Vault)
+      // 9. Sincronizar Arquivos Financeiros de Balancete no Banco PostgreSQL Supabase (via Vault)
       if (data.arquivosFinanceiros && data.arquivosFinanceiros.length > 0) {
         const rowsArqVault = data.arquivosFinanceiros.map(a => ({
           id: a.id.startsWith('arq_') ? a.id : 'arq_' + a.id,
@@ -278,7 +309,7 @@ window.SupabaseConfig = {
           respostas: [{ competencia: a.competencia, dataUpload: a.dataUpload, usuario: a.usuario, tipo: a.tipo }],
           data: a.dataUpload || new Date().toISOString().split('T')[0]
         }));
-        try { await this.client.from('ocorrencias').upsert(rowsArqVault, { onConflict: 'id' }); } catch (err) {}
+        try { await this.safeUpsertOcorrencias(rowsArqVault); } catch (err) {}
       }
 
       // 10. Sincronizar Lançamentos Financeiros Individuais no PostgreSQL Supabase (via Vault)
@@ -302,7 +333,7 @@ window.SupabaseConfig = {
           status: 'Processado',
           data: new Date().toISOString().split('T')[0]
         }));
-        try { await this.client.from('ocorrencias').upsert(rowsLancVault, { onConflict: 'id' }); } catch (err) {}
+        try { await this.safeUpsertOcorrencias(rowsLancVault); } catch (err) {}
       }
 
     } catch (e) {
