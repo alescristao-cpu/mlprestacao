@@ -65,20 +65,20 @@ window.DashboardComponent = {
                 Último Balancete Publicado
               </div>
               <div style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: var(--primary-dark);">
-                ${ultimoBalancete.mes || 'Maio'} / ${ultimoBalancete.ano || '2026'}
+                ${ultimoBalancete.mes ? `${ultimoBalancete.mes} / ${ultimoBalancete.ano || '2026'}` : 'Sem Balancete'}
               </div>
               <div style="margin-top: 0.75rem; font-size: 0.88rem; color: var(--text-main); display: flex; justify-content: space-between; align-items: center;">
                 <span>Saldo Atual Consolidado:</span>
-                <strong style="color: #2E6B42; font-size: 1rem;">R$ ${(ultimoBalancete.saldoAtual || 498438.09).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
+                <strong style="color: #2E6B42; font-size: 1rem;">R$ ${(ultimoBalancete.saldoAtual || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</strong>
               </div>
             </div>
 
             <div class="card-widget" style="border-left: 4px solid #0288D1;">
               <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">
-                Receita Bruta (${ultimaPrestacao.mesAno || 'Maio 2026'})
+                Receita Bruta (${ultimaPrestacao.mesAno || (ultimoBalancete.mes ? `${ultimoBalancete.mes} ${ultimoBalancete.ano}` : 'Sem Dados')})
               </div>
               <div style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #0288D1;">
-                R$ ${(ultimaPrestacao.receitas || 100992.34).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                R$ ${(ultimaPrestacao.receitas || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
               </div>
               <div style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted);">
                 Taxas condominiais e receitas arrecadadas no mês.
@@ -87,10 +87,10 @@ window.DashboardComponent = {
 
             <div class="card-widget" style="border-left: 4px solid #D32F2F;">
               <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.3rem;">
-                Despesas Operacionais (${ultimaPrestacao.mesAno || 'Maio 2026'})
+                Despesas Operacionais (${ultimaPrestacao.mesAno || (ultimoBalancete.mes ? `${ultimoBalancete.mes} ${ultimoBalancete.ano}` : 'Sem Dados')})
               </div>
               <div style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; color: #D32F2F;">
-                R$ ${(ultimaPrestacao.despesas || 74706.09).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                R$ ${(ultimaPrestacao.despesas || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
               </div>
               <div style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--text-muted);">
                 Consumo, manutenção, folha e fornecedores.
