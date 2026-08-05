@@ -38,7 +38,7 @@ Object.assign(window.App, {
 
   isValidRoute(route) {
     const validRoutes = [
-      'dashboard', 'prestacao', 'balancetes', 'contratos',
+      'dashboard', 'dashboardFinanceiro', 'prestacao', 'balancetes', 'contratos',
       'transparencia', 'documentos', 'recados', 'ocorrencias',
       'canal', 'utilidades', 'portaria', 'agenda', 'galeria', 'admin'
     ];
@@ -223,7 +223,7 @@ Object.assign(window.App, {
     document.querySelectorAll('.nav-item').forEach(item => {
       const route = item.getAttribute('data-route');
 
-      if (['prestacao', 'balancetes', 'contratos'].includes(route)) {
+      if (['admin'].includes(route)) {
         item.style.display = isSindico ? 'flex' : 'none';
       } else if (isPortaria) {
         if (portariaAllowedRoutes.includes(route)) {
