@@ -69,14 +69,12 @@ Object.assign(window.App, {
     window.addEventListener('hashchange', () => {
       const hash = window.location.hash.replace('#', '');
       if (hash && this.isValidRoute(hash)) {
-        if (hash === 'balancetes' && window.PrestacaoComponent) {
-          window.PrestacaoComponent.activeTab = 'balancetes';
-          this.navigateTo('prestacao');
-        } else if (hash === 'contratos' && window.PrestacaoComponent) {
-          window.PrestacaoComponent.activeTab = 'contratos';
-          this.navigateTo('prestacao');
-        } else if (hash !== this.currentRoute) {
-          this.navigateTo(hash);
+        let targetRoute = hash;
+        if (['contas', 'prestacao', 'balancetes', 'contratos', 'transparencia'].includes(hash)) {
+          targetRoute = 'dashboardFinanceiro';
+        }
+        if (targetRoute !== this.currentRoute) {
+          this.navigateTo(targetRoute, false);
         }
       }
     });
@@ -112,7 +110,7 @@ Object.assign(window.App, {
     });
   },
 
-  async navigateTo(route) {
+  async navigateTo(route, updateHash = true) {
     const user = window.CondoStore.currentUser;
     const isPortaria = user && user.role === 'Portaria';
 
@@ -150,8 +148,14 @@ Object.assign(window.App, {
       route = 'dashboard';
     }
 
+    if (this.currentRoute === route && updateHash && window.location.hash === '#' + route) {
+      return;
+    }
+
     this.currentRoute = route;
-    window.location.hash = route;
+    if (updateHash && window.location.hash !== '#' + route) {
+      window.location.hash = route;
+    }
 
     const sidebar = document.getElementById('sidebar');
     if (sidebar) sidebar.classList.remove('mobile-open');

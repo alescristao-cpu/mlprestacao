@@ -39,10 +39,10 @@ window.SupabaseConfig = {
         .on('postgres_changes', { event: '*', schema: 'public' }, () => {
           if (this.realtimeDebounce) clearTimeout(this.realtimeDebounce);
           this.realtimeDebounce = setTimeout(() => {
-            if (window.CondoStore) {
+            if (window.CondoStore && !window.CondoStore.isSyncing && !window.CondoStore.isBroadcasting) {
               window.CondoStore.pullFromCloudSilently();
             }
-          }, 2000);
+          }, 5000);
         })
         .subscribe();
     } catch (e) {}
