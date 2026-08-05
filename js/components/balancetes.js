@@ -55,16 +55,7 @@ window.BalancetesComponent = {
 
     const categorias = (activeBal && activeBal.categoriasDespesa && activeBal.categoriasDespesa.length > 0)
       ? activeBal.categoriasDespesa
-      : [
-          { nome: 'Mão de Obra Terceirizada (Portaria & Limpeza)', valor: 28933.49, corGradiente: 'linear-gradient(90deg, #3B82F6 0%, #60A5FA 100%)', corSolida: '#3B82F6' },
-          { nome: 'Consumo de Água & Esgoto', valor: 9404.63, corGradiente: 'linear-gradient(90deg, #14B8A6 0%, #2DD4BF 100%)', corSolida: '#14B8A6' },
-          { nome: 'Consumo de Gás Encanado', valor: 2592.73, corGradiente: 'linear-gradient(90deg, #F59E0B 0%, #FBBF24 100%)', corSolida: '#F59E0B' },
-          { nome: 'Manutenção de Elevadores & CFTV', valor: 1535.00, corGradiente: 'linear-gradient(90deg, #8B5CF6 0%, #A78BFA 100%)', corSolida: '#8B5CF6' },
-          { nome: 'Honorários de Gestão & Contábil', valor: 2450.03, corGradiente: 'linear-gradient(90deg, #6366F1 0%, #818CF8 100%)', corSolida: '#6366F1' },
-          { nome: 'Seguro Predial & Placas Solares', valor: 1512.95, corGradiente: 'linear-gradient(90deg, #0284C7 0%, #38BDF8 100%)', corSolida: '#0284C7' },
-          { nome: 'Impostos & Retenções Tributárias', valor: 4305.34, corGradiente: 'linear-gradient(90deg, #EC4899 0%, #F472B6 100%)', corSolida: '#EC4899' },
-          { nome: 'Manutenção Predial & Materiais', valor: 1912.60, corGradiente: 'linear-gradient(90deg, #10B981 0%, #34D399 100%)', corSolida: '#10B981' }
-        ];
+      : [];
 
     const totalCatGastos = categorias.reduce((sum, c) => sum + (c.valor || 0), 0);
 
