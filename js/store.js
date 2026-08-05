@@ -546,10 +546,9 @@ class StoreEngine {
   }
 
   startCloudSyncLoop() {
+    // Executa UMA ÚNICA puxada inicial ao carregar o aplicativo.
+    // Atualizações em tempo real acontecem via WebSockets Supabase Realtime sem loops de chamadas fantasmas.
     this.pullFromCloudSilently();
-    setInterval(() => {
-      this.pullFromCloudSilently();
-    }, 3000);
   }
 
   async pullFromCloudSilently() {

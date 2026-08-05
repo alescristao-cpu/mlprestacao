@@ -37,9 +37,12 @@ window.SupabaseConfig = {
       this.client
         .channel('modern-life-realtime')
         .on('postgres_changes', { event: '*', schema: 'public' }, () => {
-          if (window.CondoStore) {
-            window.CondoStore.pullFromCloudSilently();
-          }
+          if (this.realtimeDebounce) clearTimeout(this.realtimeDebounce);
+          this.realtimeDebounce = setTimeout(() => {
+            if (window.CondoStore) {
+              window.CondoStore.pullFromCloudSilently();
+            }
+          }, 2000);
         })
         .subscribe();
     } catch (e) {}
