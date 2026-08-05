@@ -811,22 +811,9 @@ window.DashboardFinanceiroComponent = {
     return 'Manutenção Predial';
   },
 
-  getLancamentosPadrao(comp = 'Maio/2026') {
-    // Apenas a competência Maio/2026 possui lançamentos de demonstração inicial.
-    // Para qualquer outro mês onde não foram enviados arquivos, MANTÉM SEM DADOS (em branco) conforme instrução.
-    if (comp !== 'Maio/2026' && comp !== 'Todas') return [];
-
-    return [
-      { id: 'l_m5_1', competencia: 'Maio/2026', data: '05/05/2026', descricao: 'Taxa Condominial Ordinária (54 Unidades)', categoria: 'Taxa Condominial', tipo: 'Receita', valor: 53017.98, fornecedor: 'Condôminos' },
-      { id: 'l_m5_2', competencia: 'Maio/2026', data: '05/05/2026', descricao: 'Fundo de Reserva Regulamentar (5%)', categoria: 'Fundo de Reserva', tipo: 'Receita', valor: 2612.57, fornecedor: 'Condôminos' },
-      { id: 'l_m5_3', competencia: 'Maio/2026', data: '10/05/2026', descricao: 'Mão de Obra Terceirizada - Portaria 24h & Limpeza', categoria: 'Portaria & Limpeza', tipo: 'Despesa', valor: 28933.49, fornecedor: 'Empresa Terceirizada' },
-      { id: 'l_m5_4', competencia: 'Maio/2026', data: '12/05/2026', descricao: 'Fatura de Consumo de Água & Esgoto', categoria: 'Água & Esgoto', tipo: 'Despesa', valor: 9404.63, fornecedor: 'Concessionária' },
-      { id: 'l_m5_5', competencia: 'Maio/2026', data: '15/05/2026', descricao: 'Consumo de Energia Elétrica Áreas Comuns', categoria: 'Energia Elétrica', tipo: 'Despesa', valor: 2592.73, fornecedor: 'EDP / Enel' },
-      { id: 'l_m5_6', competencia: 'Maio/2026', data: '18/05/2026', descricao: 'Manutenção Preventiva de Elevadores e ART', categoria: 'Elevadores', tipo: 'Despesa', valor: 1050.00, fornecedor: 'Empresa Elevadores' },
-      { id: 'l_m5_7', competencia: 'Maio/2026', data: '20/05/2026', descricao: 'Honorários de Gestão Administrativa e Contábil', categoria: 'Administração', tipo: 'Despesa', valor: 2450.03, fornecedor: 'Administradora' },
-      { id: 'l_m5_8', competencia: 'Maio/2026', data: '22/05/2026', descricao: 'Seguro Predial e Placas Solares Fotovoltaicas', categoria: 'Manutenção Predial', tipo: 'Despesa', valor: 1512.95, fornecedor: 'Seguradora' },
-      { id: 'l_m5_9', competencia: 'Maio/2026', data: '25/05/2026', descricao: 'Manutenção do Sistema de CFTV e Câmeras', categoria: 'Segurança & CFTV', tipo: 'Despesa', valor: 485.00, fornecedor: 'Segurança Tec' }
-    ];
+  getLancamentosPadrao(comp) {
+    // Retorna vazio para todos os meses quando não há arquivos cadastrados
+    return [];
   },
 
   // ----------------------------------------------------
@@ -1093,6 +1080,7 @@ window.DashboardFinanceiroComponent = {
     window.CondoStore.saveData();
 
     if (window.SupabaseConfig && window.SupabaseConfig.isConfigured()) {
+      window.SupabaseConfig.deleteAllFinancialDataFromSupabase();
       window.SupabaseConfig.pushDataToSupabase(window.CondoStore.data);
     }
 

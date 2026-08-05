@@ -758,6 +758,23 @@ window.SupabaseConfig = {
     } catch (e) {}
   },
 
+  async deleteAllFinancialDataFromSupabase() {
+    if (!this.client) return;
+    try {
+      const { data: rows } = await this.client.from('ocorrencias').select('id, categoria');
+      if (Array.isArray(rows)) {
+        const finIds = rows
+          .filter(r => r.categoria && (r.categoria.startsWith('ArqFinVault_') || r.categoria.startsWith('LancFinVault_')))
+          .map(r => r.id);
+        
+        for (let i = 0; i < finIds.length; i += 10) {
+          const chunk = finIds.slice(i, i + 10);
+          await this.client.from('ocorrencias').delete().in('id', chunk).catch(() => {});
+        }
+      }
+    } catch (e) {}
+  },
+
   async deleteReservaFromSupabase(id) {
     if (!this.client || !id) return;
     try {
