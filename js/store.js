@@ -4,7 +4,7 @@
    Resgate de Moradores de Todas as Versões Anteriores + Backup Direto no Supabase Cloud Database
    ---------------------------------------------------- */
 
-const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V51';
+const STORAGE_KEY = 'MODERN_LIFE_CONDO_DATA_V52';
 const CURRENT_USER_KEY = 'MODERN_LIFE_CURRENT_USER_V49';
 const DELETED_MORADORES_KEY = 'MODERN_LIFE_DELETED_MORADORES_LIST_V2';
 const DELETED_DOCS_KEY = 'MODERN_LIFE_DELETED_DOCS_LIST_V2';
@@ -377,19 +377,9 @@ class StoreEngine {
       return true;
     });
 
-    loadedData.balancetes = loadedData.balancetes.filter(b => {
-      if (!b) return false;
-      if (this.isDocDeleted(b.id, `${b.mes}_${b.ano}`)) return false;
-      return true;
-    });
-
-    if (loadedData.prestacaoContas) {
-      loadedData.prestacaoContas = loadedData.prestacaoContas.filter(p => {
-        if (!p) return false;
-        if (this.isDocDeleted(p.id, `${p.mes}_${p.ano}`) || this.isDocDeleted(p.id, p.mesAno)) return false;
-        return true;
-      });
-    }
+    // Zerar balancetes e prestação de contas legados salvos em versões anteriores no navegador
+    loadedData.balancetes = (loadedData.balancetes || []).filter(b => b && b.arquivoId && !this.isDocDeleted(b.id, `${b.mes}_${b.ano}`));
+    loadedData.prestacaoContas = (loadedData.prestacaoContas || []).filter(p => p && p.arquivoId && !this.isDocDeleted(p.id, p.mesAno));
 
     // Garantir moradores padrão (respeitando exclusão de moradores)
     INITIAL_DATA.moradores.forEach(m => {
