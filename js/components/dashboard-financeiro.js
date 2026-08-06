@@ -643,7 +643,9 @@ window.DashboardFinanceiroComponent = {
                     </td>
                     <td style="padding: 0.75rem; text-align: right;">
                       <div style="display: flex; gap: 0.35rem; justify-content: flex-end;">
-                        <button class="btn-secondary btn-sm" onclick="DashboardFinanceiroComponent.setTab('dashboard')" title="Visualizar Dashboard">👁️</button>
+                        <button class="btn-primary btn-sm" style="background: #2563EB; color: white; font-weight: 700; font-size: 0.78rem; padding: 0.4rem 0.8rem; border-radius: 6px; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.3rem;" onclick="DashboardFinanceiroComponent.setFiltro('selectedCompetencia', '${a.competencia}')" title="Carregar Dashboard Automático de ${a.competencia}">
+                          <span class="material-symbols-outlined" style="font-size: 0.95rem;">analytics</span> 📊 Ver Dash de ${a.competencia}
+                        </button>
                         ${isSindico ? `
                           <button class="btn-secondary btn-sm" onclick="DashboardFinanceiroComponent.editarInfoArquivo('${a.id}')" title="Editar Informações">✏️</button>
                           <button class="btn-secondary btn-sm" onclick="DashboardFinanceiroComponent.reprocessarArquivo('${a.id}')" title="Reprocessar Arquivo">🔄</button>
@@ -1146,5 +1148,37 @@ window.DashboardFinanceiroComponent = {
   exportarPNG() {
     App.showToast('Visualização de Imagem PNG pronta.', 'info');
     window.print();
+  },
+
+  setFiltro(key, value) {
+    this[key] = value;
+    if (key === 'selectedCompetencia') {
+      this.activeTab = 'dashboard';
+      if (window.App && window.App.showToast) {
+        window.App.showToast(`📊 Dashboard de ${value} carregado automaticamente!`, 'info');
+      }
+    }
+    if (window.App && window.App.render) {
+      window.App.render();
+    }
+  },
+
+  setSearchQuery(query) {
+    this.searchQuery = query;
+    if (window.App && window.App.render) {
+      window.App.render();
+    }
+  },
+
+  limparFiltros() {
+    this.selectedCategoria = 'Todas';
+    this.selectedTipo = 'Todos';
+    this.selectedFornecedor = 'Todos';
+    this.valMin = null;
+    this.valMax = null;
+    this.searchQuery = '';
+    if (window.App && window.App.render) {
+      window.App.render();
+    }
   }
 };
