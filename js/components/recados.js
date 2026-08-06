@@ -110,10 +110,10 @@ window.RecadosComponent = {
             <div style="background: white; border-radius: 16px; overflow: hidden; border: 1px solid #E2E8F0; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
               
               <!-- Imagem da Capa -->
-              <div style="min-height: 280px; max-height: 420px; overflow: hidden; position: relative; background: #0F172A;">
-                <img src="${leadArticle.imagem || './assets/images/IMG_2909.JPG'}" alt="${leadArticle.titulo}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
+              <div style="min-height: 280px; max-height: 420px; overflow: hidden; position: relative; background: #0F172A; cursor: pointer;" onclick="ModalService.openImageViewer('${leadArticle.imagem || './assets/images/IMG_2909.JPG'}', '${(leadArticle.titulo || '').replace(/'/g, "\\'")}')">
+                <img src="${leadArticle.imagem || './assets/images/IMG_2909.JPG'}" alt="${leadArticle.titulo}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; cursor: zoom-in;" onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'" title="Clique para ampliar a imagem em tela cheia">
                 <span class="badge" style="position: absolute; top: 1rem; left: 1rem; background: #E11D48; color: white; font-weight: 800; font-size: 0.78rem; padding: 6px 14px; border-radius: 20px; box-shadow: 0 4px 12px rgba(225,29,72,0.4);">
-                  📌 MATÉRIA EM DESTAQUE
+                  📌 MATÉRIA EM DESTAQUE (CLIQUE NA FOTO)
                 </span>
               </div>
 
@@ -182,10 +182,10 @@ window.RecadosComponent = {
                     
                     <div>
                       ${item.imagem ? `
-                        <div style="height: 180px; overflow: hidden; position: relative; background: #0F172A;">
-                          <img src="${item.imagem}" alt="${item.titulo}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="height: 180px; overflow: hidden; position: relative; background: #0F172A; cursor: pointer;" onclick="ModalService.openImageViewer('${item.imagem}', '${(item.titulo || '').replace(/'/g, "\\'")}')" title="Clique para ampliar a imagem em tela cheia">
+                          <img src="${item.imagem}" alt="${item.titulo}" style="width: 100%; height: 100%; object-fit: cover; cursor: zoom-in;">
                           <span class="badge" style="position: absolute; bottom: 0.75rem; left: 0.75rem; background: rgba(15, 23, 42, 0.85); color: white; font-size: 0.72rem; font-weight: 700; backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 4px;">
-                            ${item.categoria || 'Informe'}
+                            🔍 ${item.categoria || 'Informe'}
                           </span>
                         </div>
                       ` : ''}
@@ -296,8 +296,9 @@ window.RecadosComponent = {
             </div>
 
             ${post.imagem ? `
-              <div style="margin-bottom: 1.75rem; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0; max-height: 380px; background: #0F172A;">
-                <img src="${post.imagem}" alt="${post.titulo}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              <div style="margin-bottom: 1.75rem; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0; max-height: 380px; background: #0F172A; cursor: pointer; position: relative;" onclick="ModalService.openImageViewer('${post.imagem}', '${(post.titulo || '').replace(/'/g, "\\'")}')" title="Clique para ampliar a imagem em tela cheia">
+                <img src="${post.imagem}" alt="${post.titulo}" style="width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in;">
+                <span style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; backdrop-filter: blur(4px);">🔍 Clique para Ampliar</span>
               </div>
             ` : ''}
 
