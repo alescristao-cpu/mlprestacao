@@ -140,6 +140,9 @@ window.DashboardFinanceiroComponent = {
                   <button onclick="DashboardFinanceiroComponent.exportarPNG()" style="width: 100%; text-align: left; padding: 0.65rem 1rem; background: none; border: none; color: white; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; border-top: 1px solid #1E293B;">
                     <span class="material-symbols-outlined" style="color: #60A5FA;">image</span> Imagem PNG
                   </button>
+                  <button onclick="AdminComponent.exportarBackupJSON()" style="width: 100%; text-align: left; padding: 0.65rem 1rem; background: none; border: none; color: white; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; border-top: 1px solid #1E293B;" title="Baixar cópia de segurança completa em JSON">
+                    <span class="material-symbols-outlined" style="color: #FBBF24;">data_object</span> 💾 Backup JSON (1 Clique)
+                  </button>
                 </div>
               </div>
             </div>

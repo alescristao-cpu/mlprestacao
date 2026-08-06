@@ -83,9 +83,14 @@ window.AdminComponent = {
               </p>
             </div>
 
-            <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.65rem 1rem;" onclick="AdminComponent.openAlterarSenhaSindicoModal()">
-              <span class="material-symbols-outlined">key</span> Alterar Minha Senha
-            </button>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn-secondary" style="background: rgba(255,255,255,0.25); color: white; border: 1px solid rgba(255,255,255,0.5); font-weight: 700; padding: 0.65rem 1rem; display: flex; align-items: center; gap: 0.4rem; border-radius: 8px;" onclick="AdminComponent.exportarBackupJSON()">
+                <span class="material-symbols-outlined" style="font-size: 1.2rem;">download</span> 💾 Backup JSON em 1 Clique
+              </button>
+              <button class="btn-secondary" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); font-weight: 600; padding: 0.65rem 1rem;" onclick="AdminComponent.openAlterarSenhaSindicoModal()">
+                <span class="material-symbols-outlined">key</span> Alterar Minha Senha
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1015,6 +1020,37 @@ window.AdminComponent = {
       App.render();
     } else {
       alert(res.message);
+    }
+  },
+
+  exportarBackupJSON() {
+    try {
+      const data = window.CondoStore ? window.CondoStore.data : {};
+      const backupPayload = {
+        condominio: "Condomínio do Edifício Modern Life",
+        cnpj: "22.182.170/0001-77",
+        versao: "v1053",
+        dataExportacao: new Date().toISOString(),
+        dataFormatted: new Date().toLocaleString('pt-BR'),
+        dados: data
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupPayload, null, 2));
+      const downloadAnchor = document.createElement('a');
+      const nowStr = new Date().toISOString().split('T')[0];
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `Backup_ModernLife_${nowStr}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+
+      if (window.App && window.App.showToast) {
+        window.App.showToast(`💾 Backup em 1 Clique baixado com sucesso (Backup_ModernLife_${nowStr}.json)!`, 'success');
+      } else {
+        alert('💾 Backup baixado com sucesso!');
+      }
+    } catch (e) {
+      alert('Erro ao exportar backup: ' + e.message);
     }
   }
 };
